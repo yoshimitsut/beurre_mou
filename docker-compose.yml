@@ -20,6 +20,7 @@ services:
     container_name: beurre_mou-backend
     restart: always
     environment:
+      - RESEND_API_KEY=re_QAqb6vt3_N2C9auH8p8tVuzb4HAG4uMiC
       - DB_HOST=db
       - DB_USER=yoshi
       - DB_PASSWORD=yoshipass
