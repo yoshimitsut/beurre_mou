@@ -25,7 +25,6 @@ services:
       - DB_USER=yoshi
       - DB_PASSWORD=yoshipass
       - DB_NAME=beurre_mou
-      - VIRTUAL_HOST=yoyaku.beurre-mou.com
       - LETSENCRYPT_HOST=yoyaku.beurre-mou.com
       - LETSENCRYPT_EMAIL=shimitsutanaka@gmail.com
       - VIRTUAL_HOST=yoyaku.beurre-mou.com
@@ -45,7 +44,6 @@ services:
     container_name: patisserie-frontend
     restart: always
     environment:
-      - VIRTUAL_HOST=yoyaku.beurre-mou.com
       - LETSENCRYPT_HOST=yoyaku.beurre-mou.com
       - LETSENCRYPT_EMAIL=shimitsutanaka@gmail.com
       - VIRTUAL_HOST=yoyaku.beurre-mou.com
