@@ -1,4 +1,4 @@
-version: '1'
+version: '3.9'
 
 services:
   db:
@@ -25,10 +25,9 @@ services:
       - DB_USER=yoshi
       - DB_PASSWORD=yoshipass
       - DB_NAME=beurre_mou
-      - LETSENCRYPT_HOST=yoyaku.beurre-mou.com
+      - LETSENCRYPT_HOST=api.yoyaku.beurre-mou.com
       - LETSENCRYPT_EMAIL=shimitsutanaka@gmail.com
-      # - VIRTUAL_HOST=yoyaku.beurre-mou.com
-      # - VIRTUAL_HOST=api.yoyaku.beurre-mou.com 
+      - VIRTUAL_HOST=api.yoyaku.beurre-mou.com
       - VIRTUAL_PORT=3001
     depends_on:
       - db
@@ -49,11 +48,10 @@ services:
       - LETSENCRYPT_EMAIL=shimitsutanaka@gmail.com
       - VIRTUAL_HOST=yoyaku.beurre-mou.com
       - VIRTUAL_PORT=80
+      - REACT_APP_API_URL=https://yoyaku.beurre-mou.com/api 
     networks:
       - backend-network
       - proxy-tier
-    ports:
-      - "3000:80"
     expose:
       - "80"
     env_file:
