@@ -48,6 +48,8 @@ services:
       - LETSENCRYPT_EMAIL=shimitsutanaka@gmail.com
     # networks:
       # - proxy-tier
+    ports:
+      - "3000:80"
     expose:
       - "80"
     env_file:
