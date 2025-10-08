@@ -28,6 +28,8 @@ services:
       - VIRTUAL_HOST=yoyaku.beurre-mou.com
       - LETSENCRYPT_HOST=yoyaku.beurre-mou.com
       - LETSENCRYPT_EMAIL=shimitsutanaka@gmail.com
+      - VIRTUAL_HOST=yoyaku.beurre-mou.com
+      - VIRTUAL_PORT=3001
     depends_on:
       - db
     networks:
@@ -46,7 +48,10 @@ services:
       - VIRTUAL_HOST=yoyaku.beurre-mou.com
       - LETSENCRYPT_HOST=yoyaku.beurre-mou.com
       - LETSENCRYPT_EMAIL=shimitsutanaka@gmail.com
+      - VIRTUAL_HOST=yoyaku.beurre-mou.com
+      - VIRTUAL_PORT=80
     networks:
+      - backend-network
       - proxy-tier
     ports:
       - "3000:80"
@@ -60,5 +65,6 @@ volumes:
 
 networks:
   backend-network:
+    driver: bridge
   proxy-tier:
     external: true
