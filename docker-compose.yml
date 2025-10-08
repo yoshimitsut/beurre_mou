@@ -1,0 +1,57 @@
+version: '1'
+
+services:
+  db:
+    image: mysql:8.0
+    container_name: mysql-beurre_mou
+    restart: always
+    environment:
+      MYSQL_ROOT_PASSWORD: 1234
+      MYSQL_DATABASE: beurre_mou
+      MYSQL_USER: yoshi
+      MYSQL_PASSWORD: 1234
+    volumes:
+      - mysql_data:/var/lib/mysql
+    networks:
+      - backend-network
+
+  backend:
+    build: ./backend
+    container_name: beurre_mou-backend
+    restart: always
+    environment:
+      - DB_HOST=db
+      - DB_USER=yoshi
+      - DB_PASSWORD=yoshipass
+      - DB_NAME=beurre_mou
+      - VIRTUAL_HOST=yoyaku.beurre-mou.com
+      - LETSENCRYPT_HOST=yoyaku.beurre-mou.com
+      - LETSENCRYPT_EMAIL=shimitsutanaka@gmail.com
+    depends_on:
+      - db
+    networks:
+      - backend-network
+      - proxy-tier
+    expose:
+      - "5000"
+
+  frontend:
+    build: ./frontend
+    container_name: patisserie-frontend
+    restart: always
+    environment:
+      - VIRTUAL_HOST=yoyaku.beurre-mou.com
+      - LETSENCRYPT_HOST=yoyaku.beurre-mou.com
+      - LETSENCRYPT_EMAIL=shimitsutanaka@gmail.com
+    networks:
+      - proxy-tier
+    expose:
+      - "80"
+
+volumes:
+  mysql_data:
+
+networks:
+  backend-network:
+  proxy-tier:
+    external: true
