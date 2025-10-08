@@ -35,8 +35,8 @@ services:
       # - proxy-tier
     ports:
       - "3001:5000"
-    volumes:
-      - ./.env:/app/.env
+    env_file:
+      - .env
 
   frontend:
     build: ./frontend
