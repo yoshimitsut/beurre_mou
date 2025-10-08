@@ -28,7 +28,7 @@ services:
       - LETSENCRYPT_HOST=yoyaku.beurre-mou.com
       - LETSENCRYPT_EMAIL=shimitsutanaka@gmail.com
       # - VIRTUAL_HOST=yoyaku.beurre-mou.com
-      - VIRTUAL_HOST=api.yoyaku.beurre-mou.com 
+      # - VIRTUAL_HOST=api.yoyaku.beurre-mou.com 
       - VIRTUAL_PORT=3001
     depends_on:
       - db
