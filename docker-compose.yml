@@ -21,9 +21,9 @@ services:
     restart: always
     environment:
       - RESEND_API_KEY=re_QAqb6vt3_N2C9auH8p8tVuzb4HAG4uMiC
-      - DB_HOST=db
+      - DB_HOST=mysql-beurre_mou 
       - DB_USER=yoshi
-      - DB_PASSWORD=yoshipass
+      - DB_PASSWORD=1234
       - DB_NAME=beurre_mou
       - LETSENCRYPT_HOST=api.yoyaku.beurre-mou.com
       - LETSENCRYPT_EMAIL=shimitsutanaka@gmail.com
