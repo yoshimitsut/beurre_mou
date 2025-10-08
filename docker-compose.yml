@@ -41,7 +41,7 @@ services:
 
   frontend:
     build: ./frontend
-    container_name: patisserie-frontend
+    container_name: beurre-mou-frontend
     restart: always
     environment:
       - LETSENCRYPT_HOST=yoyaku.beurre-mou.com
