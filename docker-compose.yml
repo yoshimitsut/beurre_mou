@@ -1,42 +1,10 @@
 version: '3.9'
 
 services:
-  nginx-proxy:
-    image: jwilder/nginx-proxy:latest
-    container_name: nginx-proxy
-    restart: always
-    ports:
-      - "80:80"
-      - "443:443"
-    volumes:
-      - /var/run/docker.sock:/tmp/docker.sock:ro
-      - ./certs:/etc/nginx/certs:ro
-      - ./vhost.d:/etc/nginx/vhost.d
-      - ./html:/usr/share/nginx/html
-      # ❌ REMOVER: - ./conf.d:/etc/nginx/conf.d:ro
-    networks:
-      - proxy-tier
-
-  nginx-letsencrypt:
-    image: jrcs/letsencrypt-nginx-proxy-companion:latest
-    container_name: nginx-letsencrypt
-    restart: always
-    depends_on:
-      - nginx-proxy
-    volumes:
-      - /var/run/docker.sock:/var/run/docker.sock:ro
-      - ./certs:/etc/nginx/certs:rw
-      - ./vhost.d:/etc/nginx/vhost.d
-      - ./html:/usr/share/nginx/html
-    networks:
-      - proxy-tier
-
   db:
     image: mysql:8.0
     container_name: mysql-beurre_mou
     restart: always
-    ports:
-      - "3306:3306"  # ✅ ADICIONAR
     environment:
       MYSQL_ROOT_PASSWORD: 1234
       MYSQL_DATABASE: beurre_mou
@@ -51,37 +19,43 @@ services:
     build: ./backend
     container_name: beurre_mou-backend
     restart: always
-    ports:
-      - "3001:3001"  # ✅ ADICIONAR
     environment:
       - RESEND_API_KEY=re_QAqb6vt3_N2C9auH8p8tVuzb4HAG4uMiC
       - DB_HOST=db
       - DB_USER=yoshi
-      - DB_PASSWORD=1234
+      - DB_PASSWORD=yoshipass
       - DB_NAME=beurre_mou
-      - VIRTUAL_HOST=api.yoyaku.beurre-mou.com
-      - VIRTUAL_PORT=3001
       - LETSENCRYPT_HOST=api.yoyaku.beurre-mou.com
       - LETSENCRYPT_EMAIL=shimitsutanaka@gmail.com
+      - VIRTUAL_HOST=api.yoyaku.beurre-mou.com
+      - VIRTUAL_PORT=3001
     depends_on:
       - db
     networks:
       - backend-network
       - proxy-tier
+    ports:
+      - "3001:3001"
+    env_file:
+      - ./backend/.env 
 
   frontend:
     build: ./frontend
-    container_name: beurre_mou-frontend
+    container_name: patisserie-frontend
     restart: always
     environment:
-      - VIRTUAL_HOST=yoyaku.beurre-mou.com
-      - VIRTUAL_PORT=80
       - LETSENCRYPT_HOST=yoyaku.beurre-mou.com
       - LETSENCRYPT_EMAIL=shimitsutanaka@gmail.com
-      - REACT_APP_API_URL=https://api.yoyaku.beurre-mou.com
+      - VIRTUAL_HOST=yoyaku.beurre-mou.com
+      - VIRTUAL_PORT=80
+      - REACT_APP_API_URL=https://yoyaku.beurre-mou.com/api 
     networks:
       - backend-network
       - proxy-tier
+    expose:
+      - "80"
+    env_file:
+      - ./frontend/.env 
 
 volumes:
   mysql_data:
