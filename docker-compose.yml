@@ -46,7 +46,8 @@ services:
     environment:
       - LETSENCRYPT_HOST=yoyaku.beurre-mou.com
       - LETSENCRYPT_EMAIL=shimitsutanaka@gmail.com
-      - VIRTUAL_HOST=yoyaku.beurre-mou.com
+      # - VIRTUAL_HOST=yoyaku.beurre-mou.com
+      - VIRTUAL_HOST=api.yoyaku.beurre-mou.com 
       - VIRTUAL_PORT=80
     networks:
       - backend-network
