@@ -31,9 +31,11 @@ services:
       - db
     networks:
       - backend-network
-      - proxy-tier
+      # - proxy-tier
     expose:
       - "5000"
+    volumes:
+      - ./.env:/app/.env
 
   frontend:
     build: ./frontend
@@ -43,8 +45,8 @@ services:
       - VIRTUAL_HOST=yoyaku.beurre-mou.com
       - LETSENCRYPT_HOST=yoyaku.beurre-mou.com
       - LETSENCRYPT_EMAIL=shimitsutanaka@gmail.com
-    networks:
-      - proxy-tier
+    # networks:
+      # - proxy-tier
     expose:
       - "80"
 
