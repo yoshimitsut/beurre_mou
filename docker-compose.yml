@@ -36,7 +36,7 @@ services:
     ports:
       - "3001:5000"
     env_file:
-      - .env
+      - ./backend/.env 
 
   frontend:
     build: ./frontend
@@ -50,6 +50,8 @@ services:
       # - proxy-tier
     expose:
       - "80"
+    env_file:
+      - ./frontend/.env 
 
 volumes:
   mysql_data:
