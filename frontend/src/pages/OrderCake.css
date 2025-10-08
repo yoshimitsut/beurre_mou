@@ -1,0 +1,439 @@
+
+body {
+  justify-content: center;
+}
+
+
+.reservation-main {
+  display: flex;
+  align-items: center;
+  flex-direction: column;
+}
+
+.container{
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  margin-top: 120px;
+  box-sizing: border-box;
+
+  h2 {
+    align-content: center;
+    align-items: center;
+    display: flex;
+    flex: none;
+    flex-direction: column;
+    flex-wrap: nowrap;
+    gap: 10px;
+    justify-content: center;
+    overflow: hidden;
+    padding: 0;
+    position: relative;
+  }
+
+  .notification {
+    align-content: center;
+    align-items: center;
+    display: flex;
+    flex-direction: column;
+    gap: 21px;
+    position: relative;
+    margin: 25px;
+    color: red;
+  }
+
+}
+
+.title-information {
+  text-align: center;
+  font-size: x-large;
+}
+
+.text-center {
+  text-align: center;
+}
+
+
+.form-order {
+  gap: 20px;
+  display: flex;
+  flex-direction: column;
+  padding: 1.5rem;
+  
+  /* opacity: 1; */
+
+  input, select, textarea {
+    /* padding: 10px; */
+    background: transparent;
+    font-family: inter;
+    font-weight: 400;
+    font-size: 16px;
+    color: #000;
+    border: none;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    overflow: hidden;
+    letter-spacing: 0em;
+    line-height: 1.2em;
+    background-color: rgb(255, 255, 255);
+    border: 1px solid rgb(43, 43, 43);
+    border-radius: 10px;
+  }
+
+
+  .cake-information{
+    .box-cake {
+      position: relative;
+      border-radius: 8px;
+      margin-bottom: 20px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      
+        
+      .cake-img {
+        width: 200px;
+      }
+      
+      .box-selection {
+        /* width: 100vh; */
+        border: 1px solid;
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+        
+        .option-cake {
+          padding: 10px;
+          
+        }
+      }
+    }
+    
+    .btn-remove-div {
+      height: 30px;
+      padding-bottom: 20px;
+    }
+
+    .btn-remove-cake {
+      padding-top: 30px;
+      position: absolute;
+      top: 8px;
+      right: 8px;
+      background: transparent;
+      border: none;
+      cursor: pointer;
+      font-size: 18px;
+      color: #d11a2a;
+    }
+    
+    .img-cake-order {
+      width: 300px;
+      padding: 35px;
+    }
+  }
+
+
+  .client-information{
+    .full-name {
+      display: flex;
+      gap: 5px;
+      flex-direction: column;
+    }
+  }
+  
+  .datepicker {
+    z-index: 1;
+  }
+
+  .react-datepicker-popper {
+  position: fixed !important;
+  top: 0 !important;
+  left: 0 !important;
+  transform: none !important;
+  width: 100% !important;
+  height: 100% !important;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  background: white; /* fundo */
+  z-index: 9999; /* acima de tudo */
+}
+
+.react-datepicker {
+  font-size: 1.2rem;
+  width: 100%;
+  height: auto;
+  /* max-width: 500px; centraliza se quiser */
+}
+
+  .react-datepicker__header h2 {
+    font-size: 1.5rem;
+    padding-bottom: 0.4rem;
+  } 
+
+  .react-datepicker {
+    font-size: 2rem;
+    border-radius: 8px;
+    /* width: 120%;
+    height: 120%; */
+  }
+
+  .react-datepicker__month-container {
+    font-size: large;
+    width: 100%;
+    height: 100%;
+  }
+
+  .react-datepicker-wrapper{
+    width: 100%;
+  }
+
+
+  .react-datepicker__input-container input {
+    /* padding: 12px 16px; */
+    font-size: 1.2rem;
+    /* border: 1px solid #ccc; */
+    /* border-radius: 6px; */
+  }
+
+  .react-datepicker__day{
+    width: 11vw;
+    aspect-ratio: 1 / 1.3;
+    max-width: 65px;
+    border: #000 1px solid;
+    text-align: left;
+    margin: 0px !important;
+  }
+  
+  .react-datepicker__day-name {
+    width: 11vw;
+    max-width: 65px;
+    height: 5vh;
+    aspect-ratio: 1 / .65;
+    font-size: larger;
+    margin: 0px !important;
+    margin-top: 3px !important;
+  }
+
+  .calendar-notice {
+    display: flex;
+    align-items: center;
+    flex-direction: column;
+    padding-top: 10px;
+  }
+
+  .calendar-notice .notice {
+    display: flex;
+    flex-direction: row;
+    background-color: transparent;
+    align-content: center;
+    align-items: center;
+    display: flex;
+    gap: 3px;
+    position: relative;
+    margin: 5px;
+  }
+  .rowgroup {
+    text-align: center;
+  }
+
+  .selectable {
+    border: 4px solid red;
+    inline-size: 3vw;
+    /* aspect-ratio: 1 / 1; */
+    border-radius: 50%;
+    -webkit-border-radius: 50%;
+    max-inline-size: 20px;
+    margin-top: 8px;
+    
+    /* width: 3vw; */
+    /* height: 3vw; */
+    max-width: 25px;
+    max-height: 25px;
+    box-sizing: border-box;
+
+
+    width: clamp(20px, 3vw, 25px);
+    height: clamp(20px, 3vw, 25px);
+  }
+  
+  .yassumi {
+    color:#a1a1a1;
+    font-size: 1.8rem;
+    font-family: sans-serif;
+    margin-top: 3px;
+  }
+  
+  .react-datepicker__day--disabled .selectable{
+     display: none;
+  }
+
+  .day-cell {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    height: 4.5rem;
+  }
+
+  .cake-information, .date-information, .client-information {
+    display: flex;
+    flex-direction: column;
+    /* gap: 15px; */
+    border-bottom: 3px solid #000;
+    padding-bottom: 30px;
+  }
+
+
+  .input-group {
+    position: relative;
+    margin: 16px 0;
+    width: 100%;
+    font-weight: bold;
+    font-size: 1.2rem;
+  }
+  
+  .input-group input,
+  .input-group textarea {
+    width: 100%;
+    padding: 20px 0px 13px 10px;
+    /* padding-bottom: 10px; */
+    font-size: 18px;
+    border: 1px solid #000;
+    border-radius:  10px;
+    background-color: #fff;
+    color: #000;
+    outline: none;
+    /* appearance: none; */
+    font-weight: bold;
+    font-size: 1.2rem;
+    box-sizing: border-box;
+  }
+
+
+  .input-group label {
+    position: absolute;
+    /* top: 50%; */
+    left: 12px;
+    background-color: white;
+    padding: 0 4px;
+    transform: translateY(-50%);
+    color: #666;
+    font-size: 18px;
+    pointer-events: none;
+    transition: 0.2s ease all;
+  }
+
+  .input-group label.select-group {
+    transform: translateY(-285%);
+  }
+
+  .btn-div {
+    display:flex;
+    justify-content: center;
+    
+    .btn  {
+      transition: 0.5s all;
+      padding: 15px;
+      cursor: pointer;
+      border-radius: 10px;
+      font-size: 18px;
+      background-color: #2d2a2a;
+      color: #fff;
+    }
+    .btn:hover{
+      background-color: #131313d2;
+    }
+
+    .send {
+      width: 80%;
+    }
+  }
+
+}
+
+.react-datepicker__day.hoje-azul {
+  background-color: #007bff;
+  color: white;
+  border-radius: 0.3rem;
+}
+
+/* Domingo no cabeçalho */
+.react-datepicker__day-name:nth-child(1) {
+  color: red !important;
+}
+
+.react-datepicker__day.domingo-vermelho {
+  color: red !important;
+}
+
+/* Sábado no cabeçalho */
+.react-datepicker__day-name:nth-child(7) {
+  color: #0e56ff !important;
+}
+
+.react-datepicker__day.sabado-azul {
+  color: #0e56ff !important;
+}
+
+.react-datepicker__day--disabled{
+  color: #ccc !important;
+}
+
+.react-datepicker__day-names {
+  text-align: center;
+}
+
+/* Tablets */
+@media (min-width: 640px) and (max-width: 767px) {
+  .container {
+    /* background: orange; */
+    width: 100vw;
+    
+  }
+}
+
+/* Laptops */
+@media (min-width: 768px) and (max-width: 1023px) {
+  .container {
+    width: 670px;
+  }
+}
+
+/* Telas grandes */
+@media (min-width: 1024px) {
+  .container {
+    width: 980px;
+    align-items: center;
+    display: flex;
+    justify-content: center;
+    flex-direction: column;
+    
+  }
+}
+
+
+/* Telas pequenas (celulares) */
+@media (max-width: 639px) {
+  .container {
+    width: 100vw;
+
+    .box-cake {
+      width: 94vw;
+    }
+
+    .full-name {
+      flex-direction: column;
+
+      .name-label {
+        flex-direction: column;
+        display: flex;
+        gap: 10px;
+      }
+    }
+  }
+  .react-datepicker__day{
+    /* width: 12vw; */
+  }
+  .react-datepicker__day-name {
+    width: 12vw;
+  }
+}

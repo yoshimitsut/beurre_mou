@@ -1,0 +1,40 @@
+* {
+  margin: 0;
+  padding: 0;
+}
+
+.center-vertical-container {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: 100vh;
+  width: 100%;
+}
+
+.check-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  width: 100%;
+
+  .line1 {
+    font-size: 5rem;
+  }
+  .line2 {
+    font-size: 3rem;
+  }
+  .line3 {
+    padding-top: 3rem;
+    font-size: 2rem;
+    color: red;
+  }
+  .line4 {
+    font-size: 2rem;
+    color: red;
+  }
+
+}
+
+.check-container div {
+  padding: 0.5rem;
+}

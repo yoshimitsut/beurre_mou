@@ -1,0 +1,80 @@
+.hero-main {
+background-color: #990000;
+}
+
+.hero-wrapper {
+  padding: 13vh 5vw;
+  width: 90vw;
+  height: 76vh;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.hero-grid {
+  padding: 1vw 1vh 1vw 1vh;
+  display: grid;
+  grid-template-columns: repeat(3, 1fr); /* 3 colunas iguais */
+  grid-template-rows: repeat(2, 1fr);    /* 2 linhas iguais */
+  grid-auto-rows: 1fr;
+  width: 100%;
+  height: 100%;
+  gap: 10px;
+  background-color: #fff;
+}
+
+.hero-cell {
+  position: relative;
+  overflow: hidden;
+  cursor: pointer;
+}
+
+.hero-cell::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.3); 
+  opacity: 0;
+  transition: opacity 0.3s ease;
+}
+
+.hero-cell:hover::after {
+  opacity: 1; /* só a imagem em hover escurece */
+}
+
+.hero-img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover; /* preenche a área sem distorcer */
+  display: block;
+  transition: transform 0.3s ease;
+}
+
+.hero-cell:hover .hero-img {
+  transform: scale(1.05);
+}
+
+.hero-cell.hero-cell.disabled {
+  filter: grayscale(100%) 
+}
+
+.hero-cell.disabled .overlay {
+  position: absolute;
+  inset: 0;
+  background-color: rgba(0, 0, 0, 0.397);
+  color: white;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  font-weight: bold;
+  font-size: 2rem;
+  letter-spacing: 2px;
+  opacity: 1; /* sempre visível */
+  transition: background-color 0.3s ease;
+}
+
+@media (max-width: 768px) {
+  .hero-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
