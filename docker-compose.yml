@@ -32,7 +32,7 @@ services:
       - db
     networks:
       - backend-network
-      # - proxy-tier
+      - proxy-tier
     ports:
       - "3001:3001"
     env_file:
@@ -46,8 +46,8 @@ services:
       - VIRTUAL_HOST=yoyaku.beurre-mou.com
       - LETSENCRYPT_HOST=yoyaku.beurre-mou.com
       - LETSENCRYPT_EMAIL=shimitsutanaka@gmail.com
-    # networks:
-      # - proxy-tier
+    networks:
+      - proxy-tier
     ports:
       - "3000:80"
     expose:
