@@ -5,6 +5,8 @@ services:
     image: mysql:8.0
     container_name: mysql-beurre_mou
     restart: always
+    ports:
+      - "3306:3306"
     environment:
       MYSQL_ROOT_PASSWORD: 1234
       MYSQL_DATABASE: beurre_mou
