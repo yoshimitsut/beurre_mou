@@ -27,9 +27,9 @@ services:
       - DB_USER=yoshi
       - DB_PASSWORD=1234
       - DB_NAME=beurre_mou
-      - LETSENCRYPT_HOST=api.yoyaku.beurre-mou.com
+      - LETSENCRYPT_HOST=api.beurre-mou.com
       - LETSENCRYPT_EMAIL=shimitsutanaka@gmail.com
-      - VIRTUAL_HOST=api.yoyaku.beurre-mou.com
+      - VIRTUAL_HOST=api.beurre-mou.com
       - VIRTUAL_PORT=3001
     depends_on:
       - db
