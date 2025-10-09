@@ -32,6 +32,17 @@ export default function Hero() {
   };
 
   return (
+
+    <div>
+      
+      <div className="christmas-cake-open">
+        <div>
+          <h2>2025</h2>
+          <h2 className="title-christmas-cake">Christmas Cake</h2>
+          <p>ご予約締切日12月20日迄</p>
+        </div>
+      </div>
+
     <div className="hero-main">
     <div className="hero-wrapper">
   <div className="hero-grid">
@@ -62,6 +73,6 @@ export default function Hero() {
   </div>
 </div>
 </div>
-
+</div>
   );
 }

@@ -32,6 +32,7 @@ export default function ListOrder() {
 
   const location = useLocation();
   const [refreshKey, setRefreshKey] = useState(0);
+// const [editingOrder, setEditingOrder] = useState<Order | null>(null);
 
   type FilterOption = {
     value: string;
@@ -633,13 +634,17 @@ export default function ListOrder() {
                             <td>{order.tel}</td>
                             <td>{order.email}</td>
                             {/* <td>
-                        <button onClick={() => handleEditOrder(order.id_order)}>編集</button>
+                        <button onClick={() => handleEditOrder(order)}>編集</button>
                       </td> */}
                           </tr>
                         ))}
                   </tbody>
 
                 </table>
+
+
+
+                
               </div>
             );
           })}

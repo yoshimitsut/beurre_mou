@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { useSearchParams, useNavigate } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
 import type { Cake } from "../types/types";
 import './CakeInformations.css'
 
@@ -8,8 +8,8 @@ const API_URL = import.meta.env.VITE_API_URL;
 export default function CakeInformations() {
   const [cakes, setCakes] = useState<Cake[]>([]);
 
-  const [searchParams] = useSearchParams();
-  const cakeName = searchParams.get("cake");
+  // const [searchParams] = useSearchParams();
+  // const cakeName = searchParams.get("cake");
 
   const navigate = useNavigate();
 
@@ -29,34 +29,31 @@ export default function CakeInformations() {
       });
   }, []);
 
-  const selectedCake = cakes.find(
-    (cake) => cake.name.trim().toLowerCase() === cakeName?.trim().toLowerCase()
-  );
+  // const selectedCake = cakes.find(
+  //   (cake) => cake.name.trim().toLowerCase() === cakeName?.trim().toLowerCase()
+  // );
 
-  const handleReserve = () => {
-    if (!selectedCake) return;
-    navigate(`/order?cake=${encodeURIComponent(selectedCake.name.trim())}`);
+  const handleReserve = (cakeName: string) => {
+    navigate(`/order?cake=${encodeURIComponent(cakeName.trim())}`);
   };
 
-
-  if (!selectedCake) {
-    return <div></div>;
-  }
-
   return (
+  <div className="cake-screen">
     <div className="cake-wrapper" >
-      <div className="cake-main" >
+
+      {cakes.map((cake, index) => (
+      <div key={index} className="cake-main" >
         <div className="main-right">
           <img
-            src={`image/${selectedCake.image}`}
-            alt={selectedCake.name}
-            style={{ maxWidth: "400px"}}
+            src={`image/${cake.image}`}
+            alt={cake.name}
+            style={{ maxWidth: "448px"}}
             />
         </div>
 
         <div className="main-left">
-            <h2 className="cake-name">{selectedCake.name}</h2>
-            <p className="cake-description">{selectedCake.description}</p>
+            <h2 className="cake-name">{cake.name}</h2>
+            <p className="cake-description">{cake.description}</p>
           {/* <p><strong>Estoque:</strong> {selectedCake.stock}</p> */}
 
           <table
@@ -67,7 +64,7 @@ export default function CakeInformations() {
             }}
           >
             <tbody>
-              {selectedCake.sizes.map((size, index) => (
+              {cake.sizes.map((size, index) => (
                 
                 <tr key={index}>
                   <td style={{ border: "1px solid #ccc", padding: "8px" }}>
@@ -82,7 +79,7 @@ export default function CakeInformations() {
           </table>
 
           <button
-              onClick={handleReserve}
+              onClick={() => handleReserve(cake.name)}
               className="reserve-btn"
           >
             予約
@@ -90,6 +87,8 @@ export default function CakeInformations() {
         </div>
 
       </div>
+      ))}
     </div>
+  </div>
   );
 }
