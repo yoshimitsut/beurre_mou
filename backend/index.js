@@ -12,12 +12,6 @@ const resend = new Resend(process.env.RESEND_API_KEY);
 app.use(cors());
 app.use(express.json());
 
-// app.use(cors({
-//   origin: 'https://araha-okinawa.online',
-//   methods: ['GET', 'POST', 'PUT', 'DELETE'],
-//   credentials: true
-// }));
-
 // Teste de conexão
 app.get('/api/test', async (req, res) => {
   try {
@@ -108,8 +102,8 @@ app.post('/api/reservar', async (req, res) => {
 
     // 4️⃣ Enviar email
     await resend.emails.send({
-      from: "Pedidos <info@araha-okinawa.online>",
-      to: newOrder.email,
+      from: "パティスリーブール・ムー <beurre.mou.christmascake@gmail.com>",
+      to: [newOrder.email, "shimitsutanaka@outlook.com"],
       subject: `🎂 ご注文確認 - 受付番号 ${String(orderId).padStart(4,"0")}`,
       html: htmlContent,
       attachments: [{
