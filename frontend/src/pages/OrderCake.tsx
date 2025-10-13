@@ -244,8 +244,8 @@ export default function OrderCake() {
 
   const allowedDates = [
     // new Date(today.getFullYear(), 11, 21),
-    new Date(today.getFullYear(), 11, 22),
-    new Date(today.getFullYear(), 11, 23),
+    // new Date(today.getFullYear(), 11, 22),
+    // new Date(today.getFullYear(), 11, 23),
     new Date(today.getFullYear(), 11, 24),
     new Date(today.getFullYear(), 11, 25),
   ];
@@ -384,7 +384,9 @@ export default function OrderCake() {
     <div className='reservation-main'>
       <div className="container">
         <h2>クリスマスケーキ予約フォーム</h2>
+
         <form className="form-order" onSubmit={handleSubmit}>
+          
           <div className="cake-information">
             {cakes.map((item, index) => {
               const selectedCakeData = cakesData?.find(
@@ -537,8 +539,8 @@ export default function OrderCake() {
             </div>
           </div>
           <div className="date-information">
-            <label htmlFor="date" className='title-information'>*受取日 / その他</label>
-            <span className='notification'>受取日は休業日を除いた３日以降より可能</span>
+            <label htmlFor="date" className='title-information'>*受取日時 / その他</label>
+            {/* <span className='notification'>受取日は休業日を除いた３日以降より可能</span> */}
             <div className='input-group'>
               <label htmlFor="datepicker" className='datepicker'>*受け取り希望日</label>
               <DatePicker
