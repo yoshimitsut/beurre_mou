@@ -719,7 +719,7 @@ async function handleSaveEdit() {
           />
         </div>
       </div>
-      
+{/*       
       <Select<SizeOption>
                               options={getSizeOptionsWithStock(selectedCakeData, index)} // opções já com stock atualizado
                               value={getSizeOptionsWithStock(selectedCakeData, index).find(s => s.size === item.size) || null}
@@ -742,7 +742,7 @@ async function handleSaveEdit() {
                                   ? `${option.size} ￥${option.price.toLocaleString()}  （${(option.price+option.price*0.08).toLocaleString("ja-JP")}税込）（残り${option.stock}個）`
                                   : <p>{option.size} ￥${option.price.toLocaleString()} <span style={{ color: 'red', fontSize: '0.8rem' }}>（定員に達した為、選択できません。）</span></p>;
                               }}
-                            />
+                            /> */}
 
       {/* ケーキ名:
       ケーキのサイズ
