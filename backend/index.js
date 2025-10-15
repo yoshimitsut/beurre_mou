@@ -55,18 +55,17 @@ app.get('/api/timeslots', async (req, res) => {
 app.post('/api/reservar', async (req, res) => {
   const newOrder = req.body;
   const conn = await pool.getConnection();
-
   try {
     await conn.beginTransaction();
-
+    
     // 1️⃣ Inserir pedido
     const [orderResult] = await conn.query(
       'INSERT INTO orders (first_name,last_name,tel,email,date,pickupHour,status,message) VALUES (?,?,?,?,?,?,?,?)',
       [newOrder.first_name,newOrder.last_name,newOrder.tel,newOrder.email,newOrder.date,newOrder.pickupHour,'a',newOrder.message]
     );
-
+    
     const orderId = orderResult.insertId;
-
+    
     // 2️⃣ Inserir relação pedido <-> bolos e atualizar estoque
     for (const orderCake of newOrder.cakes) {
       // inserir na tabela order_cakes
@@ -74,48 +73,125 @@ app.post('/api/reservar', async (req, res) => {
         'INSERT INTO order_cakes (order_id, cake_id, size, amount, message_cake) VALUES (?,?,?,?,?)',
         [orderId, orderCake.cake_id, orderCake.size, orderCake.amount, orderCake.message_cake]
       );
-
+      
       // atualizar estoque
       await conn.query(
         'UPDATE cake_sizes SET stock = GREATEST(stock - ?, 0) WHERE cake_id=? AND size=?',
         [orderCake.amount, orderCake.cake_id, orderCake.size]
       );
     }
-
+    
     // 3️⃣ Gerar QR Code
     const qrCodeBuffer = await QRCode.toBuffer(String(orderId), { type:'png', width:400 });
-
+    
     const qrCodeContentId = 'qrcode_order_id';
     const htmlContent = `
-      <h2>🎂 注文ありがとうございます！</h2>
-      <p>受付番号: <strong>${String(orderId).padStart(4,"0")}</strong></p>
-      <p>お名前: ${newOrder.first_name} ${newOrder.last_name}</p>
-      <p>電話番号: ${newOrder.tel}</p>
-      <p>受け取り日時: ${newOrder.date} - ${newOrder.pickupHour}</p>
+    <h2>🎂 注文ありがとうございます！</h2>
+    <p>受付番号: <strong>${String(orderId).padStart(4,"0")}</strong></p>
+    <p>お名前: ${newOrder.first_name} ${newOrder.last_name}</p>
+    <p>電話番号: ${newOrder.tel}</p>
+    <p>受け取り日時: ${newOrder.date} - ${newOrder.pickupHour}</p>
       <p>ご注文内容:</p>
       <ul>
-        ${newOrder.cakes.map(c => `<li>${c.name} - ${c.size} - ${c.amount}個 - ${c.message_cake}</li>`).join('')}
+      ${newOrder.cakes.map(c => `<li>${c.name} - ${c.size} - ${c.amount}個 - ${c.message_cake}</li>`).join('')}
       </ul>
       <p>受付用QRコード:</p>
       <img src="cid:${qrCodeContentId}" width="400" />
-    `;
-
-    // 4️⃣ Enviar email
-    await resend.emails.send({
-      from: "パティスリーブール・ムー <beurre.mou.christmascake@gmail.com>",
-      to: [newOrder.email, "shimitsutanaka@outlook.com"],
-      subject: `🎂 ご注文確認 - 受付番号 ${String(orderId).padStart(4,"0")}`,
-      html: htmlContent,
-      attachments: [{
-        filename: 'qrcode.png',
-        content: qrCodeBuffer,
-        contentDisposition: 'inline',
-        contentId: qrCodeContentId
-      }]
-    });
+      `;
+      // 4️⃣ Enviar email
+      await resend.emails.send({
+        from: "パティスリーブール・ムー <beurre.mou.christmascake@gmail.com>",
+        to: [newOrder.email, "shimitsutanaka@outlook.com"],
+        subject: `🎂 ご注文確認 - 受付番号 ${String(orderId).padStart(4,"0")}`,
+        html: htmlContent,
+        attachments: [{
+          filename: 'qrcode.png',
+          content: qrCodeBuffer,
+          contentDisposition: 'inline',
+          contentId: qrCodeContentId
+        }]
+      });
 
     await conn.commit();
     res.json({ success: true, id: orderId });
+  } catch (err) {
+    await conn.rollback();
+    console.error(err);
+    res.status(500).json({ success: false, error: err.message });
+  } finally {
+    conn.release();
+  }
+});
+
+app.put('/api/orders/:id_order', async (req, res) => {
+  const {
+    first_name,
+    last_name,
+    email,
+    tel,
+    date,
+    pickupHour,
+    message,
+    cakes,
+    status
+  } = req.body;
+  
+  const id_order = parseInt(req.params.id_order, 10);
+  const conn = await pool.getConnection();
+
+  try {
+    await conn.beginTransaction();
+
+    // 1. Verificar se o pedido existe
+    const [existingOrder] = await conn.query('SELECT * FROM orders WHERE id_order = ?', [id_order]);
+    if (existingOrder.length === 0) {
+      throw new Error('Pedido não encontrado');
+    }
+
+    const previousStatus = existingOrder[0].status;
+
+    // 2. Atualizar dados principais do pedido
+    await conn.query(
+      `UPDATE orders 
+       SET first_name = ?, last_name = ?, email = ?, tel = ?, 
+           date = ?, pickupHour = ?, message = ?, status = ?
+       WHERE id_order = ?`,
+      [first_name, last_name, email, tel, date, pickupHour, message, status, id_order]
+    );
+
+    // 3. Remover cakes antigos e adicionar novos
+    await conn.query('DELETE FROM order_cakes WHERE order_id = ?', [id_order]);
+
+    // 4. Inserir novos cakes
+    for (const cake of cakes) {
+      await conn.query(
+        `INSERT INTO order_cakes (order_id, cake_id, amount, size, message_cake)
+         VALUES (?, ?, ?, ?, ?)`,
+        [id_order, cake.cake_id, cake.amount, cake.size, cake.message_cake || '']
+      );
+    }
+
+    // 5. Lógica de estoque (se necessário)
+    if (status === 'e' && previousStatus !== 'e') {
+      // Cancelamento - devolver estoque
+      for (const cake of cakes) {
+        await conn.query(
+          'UPDATE cake_sizes SET stock = stock + ? WHERE cake_id = ? AND size = ?',
+          [cake.amount, cake.cake_id, cake.size]
+        );
+      }
+    } else if (previousStatus === 'e' && status !== 'e') {
+      // Reativação - remover estoque novamente
+      for (const cake of cakes) {
+        await conn.query(
+          'UPDATE cake_sizes SET stock = stock - ? WHERE cake_id = ? AND size = ?',
+          [cake.amount, cake.cake_id, cake.size]
+        );
+      }
+    }
+
+    await conn.commit();
+    res.json({ success: true, message: 'Pedido atualizado com sucesso', id_order });
   } catch (err) {
     await conn.rollback();
     console.error(err);
