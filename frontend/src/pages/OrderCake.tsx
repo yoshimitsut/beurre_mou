@@ -52,45 +52,45 @@ export default function OrderCake() {
   const [timeSlotsData, setTimeSlotsData] = useState<TimeslotSQL[]>([]);
 
   useEffect(() => {
-  fetch(`${API_URL}/api/timeslots`)
-    .then(res => res.json())
-    .then((data) => {
-      // Verifica se existe 'timeslots' e é array
-      if (Array.isArray(data.timeslots)) {
-        setTimeSlotsData(data.timeslots);
-      } else {
-        console.error("Formato inesperado de timeslots:", data);
-        setTimeSlotsData([]);
-      }
+    fetch(`${API_URL}/api/timeslots`)
+      .then(res => res.json())
+      .then((data) => {
+        // Verifica se existe 'timeslots' e é array
+        if (Array.isArray(data.timeslots)) {
+          setTimeSlotsData(data.timeslots);
+        } else {
+          console.error("Formato inesperado de timeslots:", data);
+          setTimeSlotsData([]);
+        }
 
-      // opcional — salvar as datas permitidas
-      // if (Array.isArray(data.availableDates)) {
-      //   const dates = data.availableDates.map(d => new Date(d));
-      //   setAllowedDates(dates);
-      // }
-    })
-    .catch(err => console.error("Erro ao carregar datas:", err));
-}, []);
+        // opcional — salvar as datas permitidas
+        // if (Array.isArray(data.availableDates)) {
+        //   const dates = data.availableDates.map(d => new Date(d));
+        //   setAllowedDates(dates);
+        // }
+      })
+      .catch(err => console.error("Erro ao carregar datas:", err));
+  }, []);
 
 
 
       
   useEffect(() => {
-  if (!selectedDate) return;
+    if (!selectedDate) return;
 
-  const formattedDate = selectedDate.toISOString().split("T")[0];
+    const formattedDate = selectedDate.toISOString().split("T")[0];
 
-  const daySlots = timeSlotsData.filter(slot => slot.date.split("T")[0] === formattedDate);
+    const daySlots = timeSlotsData.filter(slot => slot.date.split("T")[0] === formattedDate);
 
-  const options = daySlots.map(slot => ({
-    value: slot.time,
-    label: slot.time,
-    stock: slot.limit_slots,
-    isDisabled: slot.limit_slots <= 0
-  }));
+    const options = daySlots.map(slot => ({
+      value: slot.time,
+      label: slot.time,
+      stock: slot.limit_slots,
+      isDisabled: slot.limit_slots <= 0
+    }));
 
-  setHoursOptions(options);
-}, [selectedDate, timeSlotsData]);
+    setHoursOptions(options);
+  }, [selectedDate, timeSlotsData]);
 
   const [searchParams] = useSearchParams();
   const selectedCakeName = searchParams.get("cake");
@@ -224,7 +224,7 @@ export default function OrderCake() {
     setCakes(prev =>
       prev.map((item, i) =>
         i === index ? { ...item, [field]: value } : item,
-    console.log(prev)
+    // console.log(prev)
   )
     );
   };

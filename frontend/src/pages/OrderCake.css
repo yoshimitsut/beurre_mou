@@ -8,14 +8,18 @@ body {
   display: flex;
   align-items: center;
   flex-direction: column;
+  background-color: #d9d9d9;
+
 }
 
 .container{
   display: flex;
   flex-direction: column;
   align-items: center;
-  margin-top: 120px;
+  padding-top: 120px;
   box-sizing: border-box;
+  background-color: #fff;
+  padding-bottom: 4rem;
 
   h2 {
     align-content: center;
@@ -394,14 +398,14 @@ body {
 /* Laptops */
 @media (min-width: 768px) and (max-width: 1023px) {
   .container {
-    width: 670px;
+    width: 600px;
   }
 }
 
 /* Telas grandes */
 @media (min-width: 1024px) {
   .container {
-    width: 980px;
+    width: 896px;
     align-items: center;
     display: flex;
     justify-content: center;

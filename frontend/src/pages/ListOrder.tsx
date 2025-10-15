@@ -6,11 +6,11 @@ import Select from "react-select";
 import ExcelExportButton from '../components/ExcelExportButton';
 
 import type { StylesConfig, SingleValue } from 'react-select';
-import type { Order, StatusOption } from '../types/types';
+import type { Cake, Order, OrderCake, StatusOption } from '../types/types';
 import { STATUS_OPTIONS } from '../types/types';
 
 import './ListOrder.css';
-
+import EditOrderModal from "../components/EditOrderModal";
 
 export default function ListOrder() {
   const [orders, setOrders] = useState<Order[]>([]);
@@ -32,7 +32,11 @@ export default function ListOrder() {
 
   const location = useLocation();
   const [refreshKey, setRefreshKey] = useState(0);
+
 const [editingOrder, setEditingOrder] = useState<Order | null>(null);
+const [cakes, setCakes] = useState<OrderCake[]>([]);
+const [selectedDate, setSelectedDate] = useState<Date | null>(null);
+const [selectedTime, setSelectedTime] = useState("");
 
   type FilterOption = {
     value: string;
@@ -126,10 +130,10 @@ const [editingOrder, setEditingOrder] = useState<Order | null>(null);
       if (found) {
         setScannedOrderId(found.id_order);
       } else {
-        alert('Pedido não encontrado.');
+        alert('注文が見つかりません。');
       }
     },
-    (err) => console.warn('Erro ao ler QR Code:', err)
+    (err) => console.warn('QR コードの読み取りエラー:', err)
   );
 
   return () => {
@@ -264,40 +268,80 @@ const [editingOrder, setEditingOrder] = useState<Order | null>(null);
     }
   }
 
-async function handleSaveEdit() {
-  if (!editingOrder) return;
+// async function handleSaveEdit() {
+//   if (!editingOrder) return;
+
+//   const confirmed = window.confirm("変更を保存しますか？");
+//   if (!confirmed) return;
+
+//   try {
+//     const res = await fetch(`${import.meta.env.VITE_API_URL}/api/reservar/${editingOrder.id_order}`, {
+//       method: "PUT",
+//       headers: { "Content-Type": "application/json" },
+//       body: JSON.stringify(editingOrder),
+//     });
+
+//     const data = await res.json();
+
+//     if (!res.ok || !data.success) {
+//       throw new Error(data.error || "更新に失敗しました。");
+//     }
+
+//     // atualiza localmente
+//     setOrders((old) =>
+//       old.map((o) =>
+//         o.id_order === editingOrder.id_order ? editingOrder : o
+//       )
+//     );
+
+//     setEditingOrder(null);
+//     alert("注文が更新されました。");
+//   } catch (err) {
+//     console.error("Erro ao salvar edição:", err);
+//     alert("更新エラーが発生しました。");
+//   }
+// }
+
+const handleSaveEdit = async (updatedOrder: Order) => {
+  if (!updatedOrder) return;
 
   const confirmed = window.confirm("変更を保存しますか？");
   if (!confirmed) return;
 
   try {
-    const res = await fetch(`${import.meta.env.VITE_API_URL}/api/reservar/${editingOrder.id_order}`, {
+    console.log("📤 Enviando para API:", updatedOrder);
+
+    // 🔄 Mude para o novo endpoint
+    const res = await fetch(`${import.meta.env.VITE_API_URL}/api/orders/${updatedOrder.id_order}`, {
       method: "PUT",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(editingOrder),
+      body: JSON.stringify(updatedOrder),
     });
 
     const data = await res.json();
+    console.log("📥 Resposta da API:", data);
 
     if (!res.ok || !data.success) {
       throw new Error(data.error || "更新に失敗しました。");
     }
 
-    // atualiza localmente
+    // Atualiza localmente E força refresh
     setOrders((old) =>
       old.map((o) =>
-        o.id_order === editingOrder.id_order ? editingOrder : o
+        o.id_order === updatedOrder.id_order ? updatedOrder : o
       )
     );
 
+    // Força refresh dos dados do servidor
+    setRefreshKey(prev => prev + 1);
+    
     setEditingOrder(null);
-    alert("注文が更新されました。");
+    alert("✅ 注文が更新されました。");
   } catch (err) {
-    console.error("Erro ao salvar edição:", err);
+    console.error("❌ Erro ao salvar edição:", err);
     alert("更新エラーが発生しました。");
   }
-}
-
+};
 
   const customStyles: StylesConfig<StatusOption, false> = {
     control: (provided, state) => {
@@ -388,6 +432,8 @@ async function handleSaveEdit() {
     }),
   };
 
+
+  
   return (
     <div className='list-order-container'>
       <div className="list-order-actions">
@@ -432,7 +478,7 @@ async function handleSaveEdit() {
               isSearchable={false}
             />
           </strong>
-          <strong>受付番号: </strong> {foundScannedOrder.id_order}<br />
+          <strong>受付番号: </strong> {String(foundScannedOrder.id_order).padStart(4, "0")}<br />
           <strong>お名前: </strong> {foundScannedOrder.first_name} {foundScannedOrder.last_name}<br />
           <strong>電話番号: </strong> {foundScannedOrder.tel}<br />
           <strong>受取日: </strong> {foundScannedOrder.date} - {foundScannedOrder.pickupHour}<br />
@@ -505,7 +551,7 @@ async function handleSaveEdit() {
                                 .sort((a, b) => new Date(a).getTime() - new Date(b).getTime())
                                 .map((date) => (
                                   <option key={date} value={date}>
-                                    {date}
+                                    {formatDate(date)}
                                   </option>
                                 ))}
                             </select>
@@ -667,9 +713,14 @@ async function handleSaveEdit() {
                             </td>
                             <td>{order.tel}</td>
                             <td>{order.email}</td>
-                            <td>
-                        <button onClick={() => setEditingOrder(order)}>編集</button>
+                            
+                      <td>
+                        <button onClick={() => setEditingOrder(order)}>
+                          編集
+                        </button>
                       </td>
+
+                    
                           </tr>
                         ))}
                   </tbody>
@@ -678,131 +729,12 @@ async function handleSaveEdit() {
 
 
 {editingOrder && (
-  <div className="modal-overlay">
-    <div className="modal-content">
-      <h2>注文の編集 - 受付番号 {String(editingOrder.id_order).padStart(4,"0")}</h2>
-
-      <div style={{display: 'flex'}}>
-        <div>
-          <label>姓(カタカナ)：</label>
-          <input
-            type="text"
-            value={editingOrder.first_name}
-            onChange={(e) =>
-              setEditingOrder({ ...editingOrder, first_name: e.target.value })
-            }
-          />
-        </div>
-        <div>
-          <label>名(カタカナ)</label>
-          <input
-            type="text" 
-            value={editingOrder.last_name}
-            onChange={(e) => setEditingOrder({ ...editingOrder, last_name: e.target.value })}
-          />
-        </div>
-      </div>
-      
-      <div style={{display: 'flex'}}>
-        <div>
-          <label>メールアドレス</label>
-          <input type="text" 
-            value={editingOrder.email}
-            onChange={(e) => setEditingOrder({ ...editingOrder, date: e.target.value })}
-          />
-        </div>
-        <div>
-          <label>お電話番号</label>
-          <input type="text" 
-            value={editingOrder.tel}
-            onChange={(e) => setEditingOrder({ ...editingOrder, date: e.target.value })}
-          />
-        </div>
-      </div>
-{/*       
-      <Select<SizeOption>
-                              options={getSizeOptionsWithStock(selectedCakeData, index)} // opções já com stock atualizado
-                              value={getSizeOptionsWithStock(selectedCakeData, index).find(s => s.size === item.size) || null}
-                              onChange={(selected) => {
-                                if (selected) {
-                                  setCakes(prev =>
-                                    prev.map((c, i) =>
-                                      i === index ? { ...c, size: selected.size, price: selected.price } : c
-                                    )
-                                  );
-                                }
-                              }}
-                              placeholder='サイズを選択'
-                              isSearchable={false}
-                              classNamePrefix='react-select'
-                              required
-                              isOptionDisabled={(option) => !!option.isDisabled}
-                              formatOptionLabel={(option) => {
-                                return option.stock > 0
-                                  ? `${option.size} ￥${option.price.toLocaleString()}  （${(option.price+option.price*0.08).toLocaleString("ja-JP")}税込）（残り${option.stock}個）`
-                                  : <p>{option.size} ￥${option.price.toLocaleString()} <span style={{ color: 'red', fontSize: '0.8rem' }}>（定員に達した為、選択できません。）</span></p>;
-                              }}
-                            /> */}
-
-      {/* ケーキ名:
-      ケーキのサイズ
-      個数
-
-      受け取り希望日
-      受け取り希望時間 */}
-      
-      <label>受取日：</label>
-      <input
-        type="date"
-        value={editingOrder.date}
-        onChange={(e) =>
-          setEditingOrder({ ...editingOrder, date: e.target.value })
-        }
-      />
-
-      <div style={{display: 'flex'}}>
-        <div>
-          <label>受け取り希望日</label>
-
-        </div>
-        <div>
-<label>受け取り希望時間</label>
-      <input
-        type="text"
-        value={editingOrder.pickupHour}
-        onChange={(e) =>
-          setEditingOrder({ ...editingOrder, pickupHour: e.target.value })
-        }
-      />
-        </div>
-      </div>
-      
-
-      <label>その他</label>
-      <input type="text"
-        value={editingOrder.message}
-        onChange={(e) => setEditingOrder({ ...editingOrder, date: e.target.value })}
-      />
-
-      
-
-      <label>メッセージ：</label>
-      <textarea
-        value={editingOrder.message || ""}
-        onChange={(e) =>
-          setEditingOrder({ ...editingOrder, message: e.target.value })
-        }
-      />
-
-      <div className="modal-buttons">
-        <button onClick={() => setEditingOrder(null)}>閉じる</button>
-        <button onClick={handleSaveEdit}>保存</button>
-      </div>
-    </div>
-  </div>
+  <EditOrderModal
+    editingOrder={editingOrder}
+    setEditingOrder={setEditingOrder}
+    handleSaveEdit={handleSaveEdit}
+  />
 )}
-
-
 
 
 
