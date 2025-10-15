@@ -33,6 +33,7 @@
 
   .cake-description {
     width: 25rem;
+    white-space: pre-line;
   }
   img {
     width: 25em;
