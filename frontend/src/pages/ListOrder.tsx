@@ -4,13 +4,13 @@ import { Html5QrcodeScanner } from 'html5-qrcode';
 import Select from "react-select";
 
 import ExcelExportButton from '../components/ExcelExportButton';
+import EditOrderModal from "../components/EditOrderModal";
 
 import type { StylesConfig, SingleValue } from 'react-select';
-import type { Cake, Order, OrderCake, StatusOption } from '../types/types';
+import type { Order, StatusOption } from '../types/types';
 import { STATUS_OPTIONS } from '../types/types';
 
 import './ListOrder.css';
-import EditOrderModal from "../components/EditOrderModal";
 
 export default function ListOrder() {
   const [orders, setOrders] = useState<Order[]>([]);
@@ -29,14 +29,10 @@ export default function ListOrder() {
   const [hourFilter, setHourFilter] = useState("すべて");
 
   const [expandedOrderId, setExpandedOrderId] = useState<number | null>(null);
+  const [editingOrder, setEditingOrder] = useState<Order | null>(null);
 
   const location = useLocation();
   const [refreshKey, setRefreshKey] = useState(0);
-
-const [editingOrder, setEditingOrder] = useState<Order | null>(null);
-const [cakes, setCakes] = useState<OrderCake[]>([]);
-const [selectedDate, setSelectedDate] = useState<Date | null>(null);
-const [selectedTime, setSelectedTime] = useState("");
 
   type FilterOption = {
     value: string;
@@ -46,28 +42,22 @@ const [selectedTime, setSelectedTime] = useState("");
   const statusOptions = STATUS_OPTIONS;
 
   const filterOptions: FilterOption[] = [
-    { value: "すべて", label: "すべて" }, // Mantém "Todos"
-    ...statusOptions.filter(opt => opt.value !== "e"), // Filtra o 'e' (キャンセル)
+    { value: "すべて", label: "すべて" },
+    ...statusOptions.filter(opt => opt.value !== "e"),
   ];
 
-  // const cakeLimitOfDay = 0;
-  // const limityHours = 0;
-
   const navigate = useNavigate();
-
   const handleSearch = useRef<number | null>(null);
 
-  // NOVO EFEITO: Lida apenas com a navegação e a chave de recarga
+  // Efeito para lidar com navegação e recarga
   useEffect(() => {
     if (location.state?.newOrderCreated) {
-      // 1. Limpe o sinal imediatamente
       navigate(location.pathname, { replace: true, state: {} });
-
-      // 2. Força o re-fetch no SEGUNDO useEffect
       setRefreshKey(prev => prev + 1);
     }
   }, [location.state, navigate, location.pathname]);
 
+  // Efeito para carregar pedidos
   useEffect(() => {
     setLoading(true);
     if (handleSearch.current) {
@@ -78,10 +68,10 @@ const [selectedTime, setSelectedTime] = useState("");
       const searchUrl = search
         ? `${import.meta.env.VITE_API_URL}/api/list?search=${encodeURIComponent(search)}`
         : `${import.meta.env.VITE_API_URL}/api/list`;
-        fetch(searchUrl)
+      
+      fetch(searchUrl)
         .then((res) => res.json())
         .then((data) => {
-          // 🔑 garante que orders sempre é array
           const normalized = Array.isArray(data) ? data : (data.orders || []);
           setOrders(normalized);
         })
@@ -98,8 +88,7 @@ const [selectedTime, setSelectedTime] = useState("");
     };
   }, [search, refreshKey]);
 
-
-  // Use o useMemo para encontrar o objeto Order na lista orders
+  // UseMemo para encontrar o pedido escaneado
   const foundScannedOrder = useMemo(() => {
     if (scannedOrderId) {
       return orders.find((o) => o.id_order === scannedOrderId);
@@ -107,7 +96,7 @@ const [selectedTime, setSelectedTime] = useState("");
     return null;
   }, [scannedOrderId, orders]);
 
-  // Agora, você não precisa mais do filteredOrders, use apenas 'orders' diretamente
+  // Agrupar pedidos por data
   const groupedOrders = useMemo(() => {
     return orders.reduce((acc, order) => {
       if (!acc[order.date]) acc[order.date] = [];
@@ -116,68 +105,38 @@ const [selectedTime, setSelectedTime] = useState("");
     }, {} as Record<string, Order[]>);
   }, [orders]);
 
+  // Efeito para o scanner QR Code
   useEffect(() => {
-  if (!showScanner) return;
+    if (!showScanner) return;
 
-  const scanner = new Html5QrcodeScanner('reader', { fps: 10, qrbox: 250 }, false);
+    const scanner = new Html5QrcodeScanner('reader', { fps: 10, qrbox: 250 }, false);
 
-  scanner.render(
-    async (decodedText: string) => {
-      setShowScanner(false);
-      await scanner.clear();
+    scanner.render(
+      async (decodedText: string) => {
+        setShowScanner(false);
+        await scanner.clear();
 
-      const found = orders.find((o) => o.id_order === Number(decodedText));
-      if (found) {
-        setScannedOrderId(found.id_order);
-      } else {
-        alert('注文が見つかりません。');
-      }
-    },
-    (err) => console.warn('QR コードの読み取りエラー:', err)
-  );
+        const found = orders.find((o) => o.id_order === Number(decodedText));
+        if (found) {
+          setScannedOrderId(found.id_order);
+        } else {
+          alert('注文が見つかりません。');
+        }
+      },
+      (err) => console.warn('QR コードの読み取りエラー:', err)
+    );
 
-  return () => {
-    scanner.clear().catch(() => {});
-  };
-}, [showScanner]);
+    return () => {
+      scanner.clear().catch(() => {});
+    };
+  }, [showScanner, orders]);
 
-  // useEffect(() => {
-  //   if (showScanner) {
-  //     const scanner = new Html5QrcodeScanner('reader', { fps: 10, qrbox: 250 }, false);
-
-  //     scanner.render(
-  //       async (decodedText: string) => {
-  //         setShowScanner(false);
-  //         scanner.clear();
-  //         try {
-  //           const found = orders.find((o) => o.id_order === Number(decodedText));
-  //           if (found) {
-  //             // 🔑 Armazene apenas o ID no estado
-  //             setScannedOrderId(found.id_order);
-  //           } else {
-  //             alert('Pedido não encontrado.');
-  //           }
-  //         } catch (error) {
-  //           console.error('Erro ao buscar pedidos:', error);
-  //         }
-  //       },
-  //       (err) => {
-  //         console.warn('Erro ao ler QR Code:', err);
-  //       }
-  //     );
-  //   }
-  // }, [showScanner, orders, refreshKey]);
-
-  // transforma em array e ordena pelas datas
+  // Ordenar pedidos agrupados
   const sortedGroupedOrders = useMemo(() => {
     return Object.entries(groupedOrders) as [string, Order[]][];
-    // return (Object.entries(groupedOrders) as [string, Order[]][]).sort(
-    //   ([dateA], [dateB]) => new Date(dateA).getTime() - new Date(dateB).getTime()
-    // );
   }, [groupedOrders]);
 
-  // const activeOrders = orders.filter((order) => order.status !== "e");
-
+  // Definir como exibir os pedidos
   const displayOrders: [string, Order[]][] = useMemo(() => {
     if (viewMode === 'date') {
       return sortedGroupedOrders;
@@ -191,6 +150,7 @@ const [selectedTime, setSelectedTime] = useState("");
     return date.toLocaleDateString('ja-JP', { year: 'numeric', month: '2-digit', day: '2-digit' });
   };
 
+  // Função para alterar status
   async function handleStatusChange(id: number, newStatus: "a" | "b" | "c" | "d" | "e") {
     const order = orders.find((o) => o.id_order === id);
     if (!order) return;
@@ -216,19 +176,16 @@ const [selectedTime, setSelectedTime] = useState("");
 
     const previousStatus = order.status;
 
-    // bloqueia todos os selects e marca qual pedido está sendo atualizado
     setIsUpdating(true);
     setUpdatingOrderId(id);
 
     try {
-      // aguarda a resposta do servidor antes de aplicar a mudança localmente
       const res = await fetch(`${import.meta.env.VITE_API_URL}/api/reservar/${id}`, {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ status: newStatus }),
       });
 
-      // tenta parsear JSON (tratando caso o servidor retorne erro)
       let data;
       try {
         data = await res.json();
@@ -241,12 +198,9 @@ const [selectedTime, setSelectedTime] = useState("");
         throw new Error(data?.error || `Falha ao salvar (status ${res.status})`);
       }
 
-      // só agora atualiza localmente (garante consistência)
       setOrders((old) =>
         old.map((o) => (o.id_order === id ? { ...o, status: newStatus } : o))
       );
-
-      // await fetchOrders();
 
       console.log("Status atualizado no servidor:", data);
 
@@ -254,94 +208,58 @@ const [selectedTime, setSelectedTime] = useState("");
       console.error("Erro ao atualizar status:", err);
       alert("Erro ao salvar status no servidor. A lista será recarregada.");
 
-      // re-sincroniza pegando a lista do servidor (você já tem refreshKey)
       setRefreshKey((k) => k + 1);
 
-      // opcional: reverte visualmente para o status anterior
       setOrders((old) =>
         old.map((o) => (o.id_order === id ? { ...o, status: previousStatus } : o))
       );
     } finally {
-      // somente ao FINAL (sucesso ou erro) libera os selects
       setIsUpdating(false);
       setUpdatingOrderId(null);
     }
   }
 
-// async function handleSaveEdit() {
-//   if (!editingOrder) return;
+  // Função para salvar edição
+  const handleSaveEdit = async (updatedOrder: Order) => {
+    if (!updatedOrder) return;
 
-//   const confirmed = window.confirm("変更を保存しますか？");
-//   if (!confirmed) return;
+    const confirmed = window.confirm("変更を保存しますか？");
+    if (!confirmed) return;
 
-//   try {
-//     const res = await fetch(`${import.meta.env.VITE_API_URL}/api/reservar/${editingOrder.id_order}`, {
-//       method: "PUT",
-//       headers: { "Content-Type": "application/json" },
-//       body: JSON.stringify(editingOrder),
-//     });
+    try {
+      console.log("📤 Enviando para API:", updatedOrder);
 
-//     const data = await res.json();
+      // Use o novo endpoint para edição completa
+      const res = await fetch(`${import.meta.env.VITE_API_URL}/api/orders/${updatedOrder.id_order}`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(updatedOrder),
+      });
 
-//     if (!res.ok || !data.success) {
-//       throw new Error(data.error || "更新に失敗しました。");
-//     }
+      const data = await res.json();
+      console.log("📥 Resposta da API:", data);
 
-//     // atualiza localmente
-//     setOrders((old) =>
-//       old.map((o) =>
-//         o.id_order === editingOrder.id_order ? editingOrder : o
-//       )
-//     );
+      if (!res.ok || !data.success) {
+        throw new Error(data.error || "更新に失敗しました。");
+      }
 
-//     setEditingOrder(null);
-//     alert("注文が更新されました。");
-//   } catch (err) {
-//     console.error("Erro ao salvar edição:", err);
-//     alert("更新エラーが発生しました。");
-//   }
-// }
+      // Atualiza localmente
+      setOrders((old) =>
+        old.map((o) =>
+          o.id_order === updatedOrder.id_order ? updatedOrder : o
+        )
+      );
 
-const handleSaveEdit = async (updatedOrder: Order) => {
-  if (!updatedOrder) return;
-
-  const confirmed = window.confirm("変更を保存しますか？");
-  if (!confirmed) return;
-
-  try {
-    console.log("📤 Enviando para API:", updatedOrder);
-
-    // 🔄 Mude para o novo endpoint
-    const res = await fetch(`${import.meta.env.VITE_API_URL}/api/orders/${updatedOrder.id_order}`, {
-      method: "PUT",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(updatedOrder),
-    });
-
-    const data = await res.json();
-    console.log("📥 Resposta da API:", data);
-
-    if (!res.ok || !data.success) {
-      throw new Error(data.error || "更新に失敗しました。");
+      // Força refresh dos dados do servidor
+      setRefreshKey(prev => prev + 1);
+      
+      setEditingOrder(null);
+      alert("✅ 注文が更新されました。");
+    } catch (err) {
+      console.error("❌ Erro ao salvar edição:", err);
+      alert("更新エラーが発生しました。");
     }
-
-    // Atualiza localmente E força refresh
-    setOrders((old) =>
-      old.map((o) =>
-        o.id_order === updatedOrder.id_order ? updatedOrder : o
-      )
-    );
-
-    // Força refresh dos dados do servidor
-    setRefreshKey(prev => prev + 1);
-    
-    setEditingOrder(null);
-    alert("✅ 注文が更新されました。");
-  } catch (err) {
-    console.error("❌ Erro ao salvar edição:", err);
-    alert("更新エラーが発生しました。");
-  }
-};
+  };
 
   const customStyles: StylesConfig<StatusOption, false> = {
     control: (provided, state) => {
@@ -432,8 +350,6 @@ const handleSaveEdit = async (updatedOrder: Order) => {
     }),
   };
 
-
-  
   return (
     <div className='list-order-container'>
       <div className="list-order-actions">
@@ -503,7 +419,6 @@ const handleSaveEdit = async (updatedOrder: Order) => {
         <>
           {/* Tabelas (desktop) */}
           {displayOrders.map(([groupTitles, ordersForGroup]: [string, Order[]]) => {
-            // const activeOrdersForGroup = ordersForGroup.filter(order => order.status !== "e");
             const activeOrdersForGroup = ordersForGroup.filter(order => {
               if (search.trim() === "キャンセル") return order.status === "e";
               return order.status !== "e";
@@ -511,10 +426,7 @@ const handleSaveEdit = async (updatedOrder: Order) => {
 
             return (
               <div key={groupTitles} className="table-wrapper scroll-cell table-order-container">
-
                 <table className="list-order-table table-order">
-
-
                   <thead>
                     <tr>
                       <th className='id-cell'>受付番号</th>
@@ -538,12 +450,11 @@ const handleSaveEdit = async (updatedOrder: Order) => {
                         <div className='filter-column'>
                           受取希望日時
                           <div className='filter-column-date'>
-                            {/* Filtro por data */}
                             <select
                               value={dateFilter}
                               onChange={(e) => {
                                 setDateFilter(e.target.value);
-                                setHourFilter("すべて"); // reset do horário quando muda o dia
+                                setHourFilter("すべて");
                               }}
                             >
                               <option value="すべて">すべて</option>
@@ -556,7 +467,6 @@ const handleSaveEdit = async (updatedOrder: Order) => {
                                 ))}
                             </select>
 
-                            {/* Filtro por horário (dependente do dia) */}
                             <select
                               value={hourFilter}
                               onChange={(e) => setHourFilter(e.target.value)}
@@ -587,7 +497,6 @@ const handleSaveEdit = async (updatedOrder: Order) => {
                       <th>
                         <div className='filter-column'>
                           ご注文のケーキ
-                          {/* Filtro por bolo */}
                           <select value={cakeFilter} onChange={(e) => setCakeFilter(e.target.value)}>
                             <option value="すべて">すべて</option>
                             {Array.from(
@@ -600,148 +509,134 @@ const handleSaveEdit = async (updatedOrder: Order) => {
                           </select>
                         </div>
                       </th>
-                      {/* <th>値段</th> */}
                       <th>個数</th>
                       <th className='message-cell'>メッセージ</th>
                       <th>その他</th>
                       <th>電話番号</th>
                       <th>メールアドレス</th>
+                      <th>編集</th>
                     </tr>
                   </thead>
                   <tbody>
-                    {
-                      activeOrdersForGroup
-                        .filter((order) => {
-                          // const term = search.trim().toLowerCase();
-
-                          // if (search.trim() !== "キャンセル" && order.status === "e") return false;
-
-                          const matchesStatus = statusFilter === "すべて" || order.status === statusFilter;
-                          const matchesCake = cakeFilter === "すべて" || order.cakes.some(cake => cake.name === cakeFilter);
-                          const matchesDate = dateFilter === "すべて" || order.date === dateFilter;
-                          const matchesHour = hourFilter === "すべて" || order.pickupHour === hourFilter;
-                          // const matchesSearch = !term || 
-                          //   order.id_order.toString().includes(term) ||
-                          //   order.first_name.toLowerCase().includes(term) ||
-                          //   order.last_name.toLowerCase().includes(term) ||
-                          //   order.tel.includes(term) ||
-                          //   order.cakes.some(cake => cake.name.toLowerCase().includes(term)); 
-
-                          return matchesStatus && matchesCake && matchesDate && matchesHour;
-                          // && matchesSearch
-                          ;
-                        }).sort((a, b) => {
-                          if (dateFilter !== "すべて") {
-                            // 🔹 Quando filtra por data → ordenar por horário
-                            const hourA = a.pickupHour || "";
-                            const hourB = b.pickupHour || "";
-                            return hourA.localeCompare(hourB, "ja");
-                          } else {
-                            // 🔹 Quando mostra tudo → ordenar por ID (ordem de criação)
-                            const idA = Number(a.id_order) || 0;
-                            const idB = Number(b.id_order) || 0;
-                            return idA - idB;
-                          }
-                        })
-
-                        .map((order) => (
-                          <tr key={order.id_order}>
-                            <td>{String(order.id_order).padStart(4, "0")}</td>
-                            <td className='situation-cell'>
-                              <Select<StatusOption, false>
-                                options={statusOptions}
-                                value={statusOptions.find((opt) => opt.value === order.status)}
-                                onChange={(selected: SingleValue<StatusOption>) => {
-                                  if (selected) handleStatusChange(order.id_order, selected.value);
-                                }}
-                                styles={customStyles}
-                                isSearchable={false}
-                                isDisabled={isUpdating} // bloqueia TODOS os selects enquanto isUpdating === true
-                                isLoading={isUpdating && updatingOrderId === order.id_order} // spinner só no select em progresso
-                              />
-
-
-                            </td>
-                            <td>
-                              {order.first_name} {order.last_name}
-                            </td>
-                            <td>{formatDate(order.date)} {order.pickupHour}</td>
-                            <td>
-                              <ul>
-                                {order.cakes.map((cake, index) => (
-                                  <li key={`${order.id_order}-${cake.cake_id}-${index}`}>
-                                    {cake.name}
-                                    {cake.size} - ¥{cake.price}<br />
-                                  </li>
-                                ))}
-                              </ul>
-                            </td>
-                            <td style={{ textAlign: "left" }}>
-                              <ul>
-                                {order.cakes.map((cake, index) => (
-                                  <li key={`${order.id_order}-${cake.cake_id}-${index}`}>
-                                    {cake.amount}
-                                  </li>
-                                ))}
-                              </ul>
-                            </td>
-                            <td className='message-cell' style={{ textAlign: "left" }}>
-                              <ul>
-                                {order.cakes.map((cake, index) => (
-                                  <li key={`${order.id_order}-${cake.cake_id}-${index}`} >
-                                    <div
-                                      className={`ellipsis-text ${expandedOrderId === order.id_order ? 'expanded' : ''}`}
-                                      onClick={() => setExpandedOrderId(expandedOrderId === order.id_order ? null : order.id_order)}
-                                      title={expandedOrderId ? "" : "クリックして全メッセージを表示"}
-                                      style={{ cursor: "pointer" }}
-                                    >
-                                      {cake.message_cake}
-                                    </div>
-                                  </li>
-                                ))}
-                              </ul>
-                            </td>
-                            <td className='message-cell'>
-                              <div
-                                className={`ellipsis-text ${expandedOrderId === order.id_order ? 'expanded' : ''}`}
-                                onClick={() => setExpandedOrderId(expandedOrderId === order.id_order ? null : order.id_order)}
-                                title={expandedOrderId ? "" : "クリックして全メッセージを表示"}
-                                style={{ cursor: "pointer" }}
-                              >
-                                {order.message || " "}
-                              </div>
-                            </td>
-                            <td>{order.tel}</td>
-                            <td>{order.email}</td>
-                            
-                      <td>
-                        <button onClick={() => setEditingOrder(order)}>
-                          編集
-                        </button>
-                      </td>
-
-                    
-                          </tr>
-                        ))}
+                    {activeOrdersForGroup
+                      .filter((order) => {
+                        const matchesStatus = statusFilter === "すべて" || order.status === statusFilter;
+                        const matchesCake = cakeFilter === "すべて" || order.cakes.some(cake => cake.name === cakeFilter);
+                        const matchesDate = dateFilter === "すべて" || order.date === dateFilter;
+                        const matchesHour = hourFilter === "すべて" || order.pickupHour === hourFilter;
+                        
+                        return matchesStatus && matchesCake && matchesDate && matchesHour;
+                      })
+                      .sort((a, b) => {
+                        if (dateFilter !== "すべて") {
+                          const hourA = a.pickupHour || "";
+                          const hourB = b.pickupHour || "";
+                          return hourA.localeCompare(hourB, "ja");
+                        } else {
+                          const idA = Number(a.id_order) || 0;
+                          const idB = Number(b.id_order) || 0;
+                          return idA - idB;
+                        }
+                      })
+                      .map((order) => (
+                        <tr key={order.id_order}>
+                          <td>{String(order.id_order).padStart(4, "0")}</td>
+                          <td className='situation-cell'>
+                            <Select<StatusOption, false>
+                              options={statusOptions}
+                              value={statusOptions.find((opt) => opt.value === order.status)}
+                              onChange={(selected: SingleValue<StatusOption>) => {
+                                if (selected) handleStatusChange(order.id_order, selected.value);
+                              }}
+                              styles={customStyles}
+                              isSearchable={false}
+                              isDisabled={isUpdating}
+                              isLoading={isUpdating && updatingOrderId === order.id_order}
+                            />
+                          </td>
+                          <td>
+                            {order.first_name} {order.last_name}
+                          </td>
+                          <td>{formatDate(order.date)} {order.pickupHour}</td>
+                          <td>
+                            <ul>
+                              {order.cakes.map((cake, index) => (
+                                <li key={`${order.id_order}-${cake.cake_id}-${index}`}>
+                                  {cake.name}
+                                  {cake.size} - ¥{cake.price}<br />
+                                </li>
+                              ))}
+                            </ul>
+                          </td>
+                          <td style={{ textAlign: "left" }}>
+                            <ul>
+                              {order.cakes.map((cake, index) => (
+                                <li key={`${order.id_order}-${cake.cake_id}-${index}`}>
+                                  {cake.amount}
+                                </li>
+                              ))}
+                            </ul>
+                          </td>
+                          <td className='message-cell' style={{ textAlign: "left" }}>
+                            <ul>
+                              {order.cakes.map((cake, index) => (
+                                <li key={`${order.id_order}-${cake.cake_id}-${index}`} >
+                                  <div
+                                    className={`ellipsis-text ${expandedOrderId === order.id_order ? 'expanded' : ''}`}
+                                    onClick={() => setExpandedOrderId(expandedOrderId === order.id_order ? null : order.id_order)}
+                                    title={expandedOrderId ? "" : "クリックして全メッセージを表示"}
+                                    style={{ cursor: "pointer" }}
+                                  >
+                                    {cake.message_cake}
+                                  </div>
+                                </li>
+                              ))}
+                            </ul>
+                          </td>
+                          <td className='message-cell'>
+                            <div
+                              className={`ellipsis-text ${expandedOrderId === order.id_order ? 'expanded' : ''}`}
+                              onClick={() => setExpandedOrderId(expandedOrderId === order.id_order ? null : order.id_order)}
+                              title={expandedOrderId ? "" : "クリックして全メッセージを表示"}
+                              style={{ cursor: "pointer" }}
+                            >
+                              {order.message || " "}
+                            </div>
+                          </td>
+                          <td>{order.tel}</td>
+                          <td>{order.email}</td>
+                          <td>
+                            <button
+                              onClick={() => setEditingOrder(order)}
+                              style={{
+                                padding: "0.25rem 0.5rem",
+                                backgroundColor: "#007bff",
+                                color: "white",
+                                border: "none",
+                                borderRadius: "4px",
+                                cursor: "pointer",
+                                fontSize: "0.8rem"
+                              }}
+                            >
+                              編集
+                            </button>
+                          </td>
+                        </tr>
+                      ))}
                   </tbody>
-
                 </table>
-
-
-{editingOrder && (
-  <EditOrderModal
-    editingOrder={editingOrder}
-    setEditingOrder={setEditingOrder}
-    handleSaveEdit={handleSaveEdit}
-  />
-)}
-
-
-
-                
               </div>
             );
           })}
+
+          {/* Modal de edição */}
+          {editingOrder && (
+            <EditOrderModal
+              editingOrder={editingOrder}
+              setEditingOrder={setEditingOrder}
+              handleSaveEdit={handleSaveEdit}
+            />
+          )}
 
           {/* Cards (mobile) */}
           <div className="mobile-orders">
@@ -755,8 +650,8 @@ const handleSaveEdit = async (updatedOrder: Order) => {
                   }}
                   styles={customStyles}
                   isSearchable={false}
-                  isDisabled={isUpdating} // bloqueia TODOS os selects enquanto isUpdating === true
-                  isLoading={isUpdating && updatingOrderId === order.id_order} // spinner só no select em progresso
+                  isDisabled={isUpdating}
+                  isLoading={isUpdating && updatingOrderId === order.id_order}
                 />
                 <div className="order-header">
                   <span>受付番号: {String(order.id_order).padStart(4, "0")}</span>
@@ -775,12 +670,25 @@ const handleSaveEdit = async (updatedOrder: Order) => {
                   <p>電話番号: {order.tel}</p>
                   <p>メッセージ: {order.message || " "}</p>
                 </details>
+                <button
+                  onClick={() => setEditingOrder(order)}
+                  style={{
+                    marginTop: "0.5rem",
+                    padding: "0.5rem 1rem",
+                    backgroundColor: "#007bff",
+                    color: "white",
+                    border: "none",
+                    borderRadius: "4px",
+                    cursor: "pointer"
+                  }}
+                >
+                  編集
+                </button>
               </div>
-
             ))}
           </div>
         </>
       )}
     </div>
   );
-};
+}
