@@ -10,7 +10,7 @@ services:
       - "443:443"
     volumes:
       - /var/run/docker.sock:/tmp/docker.sock:ro
-      - ./certs:/etc/nginx/certs:rw
+      - nginx-certs:/etc/nginx/certs:rw 
       - ./vhost.d:/etc/nginx/vhost.d
       - ./html:/usr/share/nginx/html
     networks:
@@ -27,7 +27,7 @@ services:
       - NGINX_PROXY_CONTAINER=nginx-proxy
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock:ro
-      - ./certs:/etc/nginx/certs:rw
+      - nginx-certs:/etc/nginx/certs:rw 
       - ./vhost.d:/etc/nginx/vhost.d
       - ./html:/usr/share/nginx/html
     networks:
@@ -83,9 +83,10 @@ services:
 
 volumes:
   mysql_data:
+  nginx-certs:
 
 networks:
   backend-network:
     driver: bridge
   proxy-tier:
-    external: true
+    driver: bridge 
