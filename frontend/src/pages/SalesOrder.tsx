@@ -3,6 +3,7 @@ import "./SalesOrder.css";
 import type { Order } from "../types/types";
 import { STATUS_OPTIONS } from "../types/types";
 import { useNavigate } from "react-router-dom";
+import { formatDateJP } from "../utils/formatDateJP";
 
 export default function SalesOrder() {
   const [summary, setSummary] = useState<Record<string, Record<string, Record<string, number>>>>({});
@@ -130,7 +131,7 @@ export default function SalesOrder() {
               <tr>
                 <th>日付毎の合計</th>
                 {dates.map((date) => (
-                  <th key={date}>{date.replace("2025-", "")}</th>
+                  <th key={date}>{formatDateJP(date)}</th>
                 ))}
                 <th>合計</th>
               </tr>
@@ -170,7 +171,7 @@ export default function SalesOrder() {
                   <tr>
                     <th>{cakeName}</th>
                     {dates.map((date) => (
-                      <th key={date}>{date.replace("2025-", "")}</th>
+                      <th key={date}>{formatDateJP(date)}</th>
                     ))}
                     <th>合計</th>
                   </tr>
@@ -214,7 +215,7 @@ export default function SalesOrder() {
             <tr>
               <th>支払い状況</th>
               {dates.map((date) => (
-                <th key={date}>{date.replace("2025-", "")}</th>
+                <th key={date}>{formatDateJP(date)}</th>
               ))}
               <th>合計</th>
             </tr>
