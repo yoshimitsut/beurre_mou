@@ -27,6 +27,7 @@ type MyContainerProps = {
   children: ReactNode;
 };
 
+
 export default function DateTimePicker({
   selectedDate,
   setSelectedDate,
@@ -91,7 +92,7 @@ export default function DateTimePicker({
           maxDate={allowedDates[allowedDates.length - 1]}
           dateFormat="yyyy年MM月dd日"
           placeholderText={placeholderDate}
-          className="react-datepicker"
+          className="input-text-modal"
           locale={ja}
           calendarClassName="datepicker-calendar"
           calendarContainer={MyContainer}
@@ -99,7 +100,7 @@ export default function DateTimePicker({
         />
       </div>
 
-      <div className="input-group">
+      <div className="input-group-edit" style={{'paddingTop': '3px'}}>
         <label>受け取り希望時間</label>
         <Select<TimeOptionType>
           options={hoursOptions}
@@ -110,7 +111,7 @@ export default function DateTimePicker({
           placeholder={placeholderTime}
           isSearchable={false}
           required
-          classNamePrefix="react-select"
+          classNamePrefix="react-select-edit"
           formatOptionLabel={(option, { context }) =>
             context === "menu" && option.isDisabled ? (
               <span style={{ color: "red", fontSize: "0.8rem" }}>

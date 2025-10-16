@@ -1,8 +1,9 @@
 // components/EditOrderModal.tsx
 import { useState, useEffect } from "react";
-import Select, { type SingleValue } from "react-select";
+import Select, { type SingleValue, type StylesConfig } from "react-select";
+import type { CSSObjectWithLabel, GroupBase } from "react-select";
 import DateTimePicker from "./DateTimePicker";
-import type { Order, Cake, OrderCake, OptionType, TimeslotSQL, SizeOption } from "../types/types";
+import type { Order, Cake, OrderCake, TimeslotSQL, SizeOption } from "../types/types";
 import './EditOrderModal.css';
 
 type Props = {
@@ -121,16 +122,63 @@ export default function EditOrderModal({ editingOrder, setEditingOrder, handleSa
     handleSaveEdit(updatedOrder);
   };
 
+  type OptionType = {
+  value: string;
+  label: string;
+};
+
+ const customStyles: StylesConfig<OptionType, false, GroupBase<OptionType>> = {
+  control: (base: CSSObjectWithLabel): CSSObjectWithLabel => ({
+    ...base,
+    minWidth: "200px",
+    width: "100%",
+    borderRadius: "6px",
+    borderColor: "#ccc",
+    boxShadow: "none",
+    "&:hover": {
+      borderColor: "#007bff",
+    },
+  }),
+  menu: (base: CSSObjectWithLabel): CSSObjectWithLabel => ({
+    ...base,
+    zIndex: 9999,
+  }),
+  valueContainer: (base: CSSObjectWithLabel): CSSObjectWithLabel => ({
+    ...base,
+    padding: "4px 8px",
+  }),
+  placeholder: (base: CSSObjectWithLabel): CSSObjectWithLabel => ({
+    ...base,
+    color: "#aaa",
+  }),
+};
+
+
   return (
     <div className="modal-overlay">
       <div className="modal-content">
-        <h2>注文の編集 - 受付番号 {String(editingOrder.id_order).padStart(4, "0")}</h2>
-
+        <div className="modal-top">
+          <h2>注文の編集 - 受付番号 {String(editingOrder.id_order).padStart(4, "0")}</h2>
+          <button 
+              onClick={() => setEditingOrder(null)}
+              style={{
+                padding: "0.75rem 1.5rem",
+                backgroundColor: "#6c757d",
+                color: "white",
+                border: "none",
+                borderRadius: "4px",
+                cursor: "pointer"
+              }}
+            >
+              閉じる
+            </button>
+        </div>
         {/* Dados do cliente */}
-        <div style={{ display: "flex", gap: "1rem" }}>
+        <div style={{ display: "flex", gap: "2rem" }}>
           <div>
             <label>姓(カタカナ)：</label>
             <input 
+            className="input-text-modal"
               type="text" 
               value={editingOrder.first_name || ""} 
               onChange={(e) => setEditingOrder({ ...editingOrder, first_name: e.target.value })} 
@@ -140,6 +188,7 @@ export default function EditOrderModal({ editingOrder, setEditingOrder, handleSa
             <label>名(カタカナ)：</label>
             <input 
               type="text" 
+              className="input-text-modal"
               value={editingOrder.last_name || ""} 
               onChange={(e) => setEditingOrder({ ...editingOrder, last_name: e.target.value })} 
             />
@@ -151,6 +200,7 @@ export default function EditOrderModal({ editingOrder, setEditingOrder, handleSa
             <label>メールアドレス：</label>
             <input 
               type="text" 
+              className="input-text-modal"
               value={editingOrder.email || ""} 
               onChange={(e) => setEditingOrder({ ...editingOrder, email: e.target.value })} 
             />
@@ -159,6 +209,7 @@ export default function EditOrderModal({ editingOrder, setEditingOrder, handleSa
             <label>お電話番号：</label>
             <input 
               type="text" 
+              className="input-text-modal"
               value={editingOrder.tel || ""} 
               onChange={(e) => setEditingOrder({ ...editingOrder, tel: e.target.value })} 
             />
@@ -215,7 +266,8 @@ export default function EditOrderModal({ editingOrder, setEditingOrder, handleSa
               <div style={{ marginBottom: 8, display: "flex", gap: "1rem", alignItems: "center" }}>
                 <div style={{ flex: 1 }}>
                   <label>ケーキ名:</label>
-                  <Select
+                  <Select<OptionType, false, GroupBase<OptionType>>
+  styles={customStyles}
                     options={cakeOptions}
                     value={cakeOptions.find(opt => String(opt.value) === String(cake.cake_id))}
                     onChange={(val: SingleValue<OptionType>) => {
@@ -244,41 +296,43 @@ export default function EditOrderModal({ editingOrder, setEditingOrder, handleSa
 
                 <div style={{ flex: 1 }}>
                   <label>サイズを選択:</label>
-                  <Select<SizeOption>
-                    options={getSizeOptionsWithStock(cake.cake_id, index)}
-                    value={getSizeOptionsWithStock(cake.cake_id, index).find(s => s.size === cake.size) || null}
-                    onChange={(selected) => {
-                      if (selected) {
-                        setCakes(prev =>
-                          prev.map((c, i) =>
-                            i === index ? { ...c, size: selected.size, price: selected.price } : c
-                          )
-                        );
-                      }
-                    }}
-                    placeholder='サイズを選択'
-                    isSearchable={false}
-                    classNamePrefix='react-select'
-                    required
-                    isOptionDisabled={(option) => !!option.isDisabled}
-                    formatOptionLabel={(option) => {
-                      return !option.isDisabled
-                        ? `${option.size} ￥${option.price.toLocaleString()}  （${(option.price + option.price * 0.08).toLocaleString("ja-JP")}税込）（残り${option.stock}個）`
-                        : (
-                          <span>
-                            {option.size} ￥${option.price.toLocaleString()} 
-                            <span style={{ color: 'red', fontSize: '0.8rem' }}>
-                              （定員に達した為、選択できません。）
-                            </span>
-                          </span>
-                        );
-                    }}
-                  />
+                  <Select<SizeOption, false, GroupBase<SizeOption>>
+  options={getSizeOptionsWithStock(cake.cake_id, index)}
+  value={getSizeOptionsWithStock(cake.cake_id, index).find(s => s.size === cake.size) || null}
+  onChange={(selected) => {
+    if (selected) {
+      setCakes(prev =>
+        prev.map((c, i) =>
+          i === index ? { ...c, size: selected.size, price: selected.price } : c
+        )
+      );
+    }
+  }}
+  placeholder='サイズを選択'
+  isSearchable={false}
+  classNamePrefix='react-select-edit'
+  required
+  isOptionDisabled={(option) => !!option.isDisabled}
+  formatOptionLabel={(option) =>
+    !option.isDisabled
+      ? `${option.size} ￥${option.price.toLocaleString()} （${(option.price + option.price * 0.08).toLocaleString("ja-JP")}税込）`
+      : (
+        <span>
+          {option.size} ￥{option.price.toLocaleString()}
+          <span style={{ color: 'red', fontSize: '0.8rem' }}>
+            （定員に達した為、選択できません。）
+          </span>
+        </span>
+      )
+  }
+/>
+
                 </div>
                 
                 <div>
                   <label>数量:</label>
                   <input 
+                  className="input-text-modal"
                     type="number"
                     min="1"
                     value={cake.amount} 
@@ -292,17 +346,19 @@ export default function EditOrderModal({ editingOrder, setEditingOrder, handleSa
                 <label>メッセージプレート:</label>
                 <input 
                   type="text" 
+                  className="input-text-modal"
                   value={cake.message_cake || ""} 
                   onChange={(e) => updateCake(index, "message_cake", e.target.value)} 
-                  style={{ width: "100%" }}
+                  style={{ width: "97%" }}
                   placeholder="メッセージを入力（任意）"
                 />
               </div>
             </div>
           ))}
         </div>
+<div >
+        <div style={{ display: "flex", gap: "2rem", marginTop: "1rem" }}>
 
-        <div style={{ display: "flex", gap: "1rem", marginTop: "1rem" }}>
           <DateTimePicker
             selectedDate={selectedDate}
             setSelectedDate={setSelectedDate}
@@ -312,7 +368,7 @@ export default function EditOrderModal({ editingOrder, setEditingOrder, handleSa
             allowedDates={allowedDates}
           />
         </div>
-
+</div>
         <div style={{ marginTop: "1rem" }}>
           <label>メッセージ：</label>
           <textarea 
@@ -323,20 +379,9 @@ export default function EditOrderModal({ editingOrder, setEditingOrder, handleSa
           />
         </div>
 
-        <div className="modal-buttons" style={{ marginTop: "1rem", display: "flex", gap: "1rem" }}>
-          <button 
-            onClick={() => setEditingOrder(null)}
-            style={{
-              padding: "0.75rem 1.5rem",
-              backgroundColor: "#6c757d",
-              color: "white",
-              border: "none",
-              borderRadius: "4px",
-              cursor: "pointer"
-            }}
-          >
-            閉じる
-          </button>
+
+        <div className="modal-buttons" style={{ marginTop: "1rem", display: "flex", gap: "1rem", flexDirection: "row-reverse" }}>
+          
           <button 
             onClick={handleSave}
             style={{

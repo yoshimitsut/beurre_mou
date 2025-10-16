@@ -157,7 +157,7 @@ export default function ListOrder() {
 
     const statusMap: Record<string, string> = {
       a: "未",
-      b: "ネット決済済",
+      b: "オンライン予約",
       c: "店頭支払い済",
       d: "お渡し済",
       e: "キャンセル",
