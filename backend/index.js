@@ -63,9 +63,9 @@ app.post('/api/reservar', async (req, res) => {
     // 1️⃣ Inserir pedido
     const [orderResult] = await conn.query(
       'INSERT INTO orders (first_name,last_name,tel,email,date,pickupHour,status,message) VALUES (?,?,?,?,?,?,?,?)',
-      [newOrder.first_name,newOrder.last_name,newOrder.tel,newOrder.email,newOrder.date,newOrder.pickupHour,'a',newOrder.message]
+      [newOrder.first_name,newOrder.last_name,newOrder.tel,newOrder.email,newOrder.date,newOrder.pickupHour,newOrder.status,newOrder.message]
     );
-    
+
     const orderId = orderResult.insertId;
     
     // 2️⃣ Inserir relação pedido <-> bolos e atualizar estoque
@@ -102,8 +102,8 @@ app.post('/api/reservar', async (req, res) => {
       `;
       // 4️⃣ Enviar email
       await resend.emails.send({
-        from: "パティスリーブール・ムー <beurre.mou.christmascake@gmail.com>",
-        to: [newOrder.email, "shimitsutanaka@outlook.com"],
+        from: "パティスリーブール・ムー <onboarding@resend.dev>",
+        to: [newOrder.email, "shimitsutanaka@gmail.com"],
         subject: `🎂 ご注文確認 - 受付番号 ${String(orderId).padStart(4,"0")}`,
         html: htmlContent,
         attachments: [{
@@ -250,7 +250,8 @@ app.get('/api/list', async (req, res) => {
         oc.size,
         oc.amount,
         oc.message_cake,
-        cs.price AS price
+        cs.price AS price,
+        cs.stock AS stock
       FROM orders o
       LEFT JOIN order_cakes oc ON o.id_order = oc.order_id
       LEFT JOIN cakes c ON oc.cake_id = c.id
@@ -301,7 +302,8 @@ app.get('/api/list', async (req, res) => {
           size: row.size,
           amount: row.amount,
           message_cake: row.message_cake,
-          price: row.price
+          price: row.price,
+          stock: row.stock
         });
       }
     }

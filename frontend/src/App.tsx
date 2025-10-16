@@ -6,6 +6,7 @@ import SalesOrder from './pages/SalesOrder';
 import Check from './pages/Check';
 import Hero from './pages/Hero';
 import CakeInformation from './pages/CakeInformations';
+import OrderCakeStore from './pages/OrderCakeStore';
 function App() {
   return (
     <Router>
@@ -13,6 +14,7 @@ function App() {
         <Route path="/" element={<Hero />} />
         <Route path="/cakeinformation" element={<CakeInformation />} />
         <Route path="/order" element={<OrderCake />} />
+        <Route path="/orderstore" element={<OrderCakeStore />} />
         <Route path="/list" element={<ListOrder />} />
         <Route path="/ordertable" element={<SalesOrder />} />
         <Route path="/order/check" element={<Check />} />
