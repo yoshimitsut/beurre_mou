@@ -36,6 +36,7 @@ export type OrderCake = {
   message_cake?: string;
   price: number;           // opcional
   name: string;            // útil para exibição
+  stock?: number;
 };
 
 export type Order = {
@@ -99,7 +100,7 @@ export type StatusOption = {
 
 export const STATUS_OPTIONS: StatusOption[] = [
   { value: "a", label: "未" },
-  { value: "b", label: "ネット決済済" },
+  { value: "b", label: "オンライン予約" },
   { value: "c", label: "店頭支払い済" },
   { value: "d", label: "お渡し済" },
   { value: "e", label: "キャンセル" },
