@@ -20,7 +20,7 @@ type TimeOptionType = OptionType & {
   isDisabled?: boolean;
 };
 
-export default function OrderCake() {
+export default function OrderCakeStore() {
   const navigate = useNavigate();
 
   const [cakesData, setCakesData] = useState<Cake[]>();
@@ -320,7 +320,7 @@ export default function OrderCake() {
       date: selectedDate?.toISOString().split('T')[0] || "",
       date_order: formattedDate,
       pickupHour,
-      status: 'b',
+      status: 'c',
       message: (document.getElementById("message") as HTMLTextAreaElement).value,
       cakes: cakes.map(c => {
         const cakeData = cakesData?.find(cake => Number(cake.id) === Number(c.cake_id));
