@@ -1,27 +1,48 @@
 * {
   margin: 0;
   padding: 0;
+  box-sizing: border-box; 
+}
+
+
+.check-container div {
+  padding: 0.5rem;
+}
+
+
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
 }
 
 .center-vertical-container {
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  height: 100vh;
-  width: 100%;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 100vh; 
+    width: 100%;
+    text-align: center; 
 }
 
 .check-container {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  width: 100%;
+    display: flex;
+    flex-direction: column;
+    align-items: center; 
+    width: 90%; 
+    max-width: 600px; 
+}
+
+.check-container div {
+    padding: 0.8rem 0; 
+}
 
   .line1 {
     font-size: 5rem;
   }
   .line2 {
-    font-size: 3rem;
+    font-size: 2.6rem;
+    margin-bottom: 2rem;
   }
   .line3 {
     padding-top: 3rem;
@@ -33,8 +54,24 @@
     color: red;
   }
 
-}
 
-.check-container div {
-  padding: 0.5rem;
+/* OTIMIZAÇÃO PARA CELULAR (Media Query) */
+/* Aplica estes estilos APENAS para telas com largura de 600px ou menos */
+@media screen and (max-width: 600px) {
+    .line1 {
+        font-size: 2.9rem; /* Tamanho menor para o celular */
+    }
+    
+    .line2 {
+        font-size: 1.2rem; /* Tamanho menor para o celular */
+    }
+    
+    .line3 {
+        padding-top: 1.2rem !important;
+        font-size: 1.1rem; /* Tamanho menor para o celular */
+    }
+    
+    .line4 {
+        font-size: 1.1rem; /* Tamanho menor para o celular */
+    }
 }
