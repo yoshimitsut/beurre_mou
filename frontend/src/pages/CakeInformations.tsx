@@ -74,7 +74,7 @@ export default function CakeInformations() {
                       {size.size}
                     </td>
                      <td style={{ border: "1px solid #ccc", padding: "8px" }}>
-                      ¥{size.price.toLocaleString("ja-JP")}（税込{(size.price * 1.08).toLocaleString("ja-JP")}）
+                      ¥{size.price.toLocaleString("ja-JP")}（税込{Math.trunc(size.price * 1.08).toLocaleString("ja-JP")}）
                       {size.stock === 0 && <span style={{ color: "red"}}>完売</span>}
                     </td>
                   </tr>

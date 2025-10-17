@@ -118,7 +118,7 @@ body {
     }
 
     .btn-remove-cake {
-      padding-top: 30px;
+      /* padding-top: 30px; */
       position: absolute;
       top: 8px;
       right: 8px;

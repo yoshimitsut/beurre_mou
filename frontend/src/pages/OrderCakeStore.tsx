@@ -472,7 +472,7 @@ export default function OrderCakeStore() {
                         isOptionDisabled={(option) => !!option.isDisabled}
                         formatOptionLabel={(option) => {
                           return option.stock > 0
-                            ? `${option.size} ￥${option.price.toLocaleString()}  （${(option.price+option.price*0.08).toLocaleString("ja-JP")}税込）`
+                            ? `${option.size} ￥${option.price.toLocaleString()}  （${Math.trunc(option.price+option.price*0.08).toLocaleString("ja-JP")}税込）`
                             : <p>{option.size} ￥${option.price.toLocaleString()} <span style={{ color: 'red', fontSize: '0.8rem' }}>（定員に達した為、選択できません。）</span></p>;
                         }}
                       />
