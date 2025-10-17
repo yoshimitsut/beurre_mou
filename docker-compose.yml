@@ -46,8 +46,10 @@ services:
       MYSQL_DATABASE: beurre_mou
       MYSQL_USER: yoshi
       MYSQL_PASSWORD: 1234
+      TZ: "Asia/Tokyo"
     volumes:
       - mysql_data:/var/lib/mysql
+      - ./mysql-config/my.cnf:/etc/mysql/conf.d/my.cnf
     networks:
       - backend-network
 
