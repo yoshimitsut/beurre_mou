@@ -52,7 +52,6 @@ export default function CakeInformations() {
               <img
                 src={`image/${selectedCake.image}`}
                 alt={selectedCake.name}
-                style={{ maxWidth: "448px" }}
               />
             )}
           </div>

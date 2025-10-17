@@ -6,12 +6,13 @@
 
 .hero-main {
 background-color: #990000;
+height: 100hv;
 }
 
 .hero-wrapper {
-  padding: 13vh 5vw;
-  width: 90vw;
-  height: 76vh;
+  padding: 10vh 5vw;
+  width: 100vw;
+  height: 100vh;
   display: flex;
   justify-content: center;
   align-items: center;

@@ -44,7 +44,8 @@
     object-fit: cover;
   }
   .main-right {
-    object-fit: cover;  
+    object-fit: cover;
+    width: 442px; 
   }
   .main-left {
     display: flex;
@@ -81,9 +82,17 @@
     max-width: 100vh;
     img {
       padding: 1em;
+      width: 100%;
     }
   }
   .main-right, .main-left {
-    flex: none;    
+    flex: none; 
+    width: 100% !important;    
+  }
+  .main-right {
+    object-fit: cover;
+  }
+  .cake-description {
+    width: 80vw;
   }
 }

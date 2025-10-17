@@ -4,6 +4,7 @@ const pool = require('./db');
 require('dotenv').config();
 const { Resend } = require('resend');
 const QRCode = require('qrcode');
+const nodemailer = require('nodemailer');
 
 const app = express();
 const PORT = process.env.PORT || 3001;
@@ -93,6 +94,7 @@ app.post('/api/reservar', async (req, res) => {
     <p>お名前: ${newOrder.first_name} ${newOrder.last_name}</p>
     <p>電話番号: ${newOrder.tel}</p>
     <p>受け取り日時: ${newOrder.date} - ${newOrder.pickupHour}</p>
+    <p>その他: ${newOrder.message}</p>
       <p>ご注文内容:</p>
       <ul>
       ${newOrder.cakes.map(c => `<li>${c.name} - ${c.size} - ${c.amount}個 - ${c.message_cake}</li>`).join('')}
@@ -125,6 +127,7 @@ app.post('/api/reservar', async (req, res) => {
   }
 });
 
+// editarpedido
 app.put('/api/orders/:id_order', async (req, res) => {
   const {
     first_name,
@@ -138,6 +141,16 @@ app.put('/api/orders/:id_order', async (req, res) => {
     status
   } = req.body;
   
+  const transporter = nodemailer.createTransport({
+    host: "smtp.gmail.com", // Ex: smtp.gmail.com
+    port: 587,
+    secure: false, // Use true para 465, false para outras portas
+    auth: {
+        user: "shimitsutanaka@gmail.com",
+        pass: "vmiepzoxltefekcr" // Use uma senha de app para serviços como Gmail
+    }
+});
+
   const id_order = parseInt(req.params.id_order, 10);
   const conn = await pool.getConnection();
 
@@ -190,6 +203,52 @@ app.put('/api/orders/:id_order', async (req, res) => {
           [cake.amount, cake.cake_id, cake.size]
         );
       }
+    }
+
+    const cakeListHtml = cakes.map(c => 
+        `<li>${c.name || 'ケーキ'} (サイズ: ${c.size}, 数量: ${c.amount}, メッセージ: ${c.message_cake || 'なし'})</li>`
+    ).join('');
+
+    const statusMap = {
+        'a': '未',
+        'b': 'オンライン予約',
+        'c': '店頭支払い済',
+        'd': 'お渡し済',
+        'e': 'キャンセル'
+    };
+
+    const currentStatusJa = statusMap[status] || status; 
+
+    const mailOptions = {
+        from: '"パティスリーブール・ムー" <shimitsutanaka@gmail.com>', 
+        to: email, 
+        subject: `🚨 ご注文 ${String(id_order).padStart(4,"0")} の変更が確認されました`,
+        html: `
+          <h2>ご注文内容が変更されました！</h2>
+            <p>拝啓 ${first_name} ${last_name}様</p>
+            
+            <p>お客様のご注文 **番号 ${String(id_order).padStart(4,"0")}** がシステムで更新されました。 </p>
+            
+            <p><strong>現在のステータス:</strong> ${currentStatusJa}</p>
+            <p><strong>新しい受取日時:</strong> ${date} - ${pickupHour}</p>
+            <p><strong>追加メッセージ:</strong> ${message || 'なし'}</p>
+
+            <h3>更新されたケーキの詳細:</h3>
+            <ul>${cakeListHtml}</ul>
+            
+            <p>上記詳細をご確認ください。</p>
+            <p>よろしくお願いいたします。</p>
+        `
+    };
+
+    try {
+        const info = await transporter.sendMail(mailOptions);
+        console.log("更新メールを送信しました:", info.messageId);
+    } catch (emailError) {
+        // É crucial registrar o erro do e-mail, mas você pode optar por 
+        // NÃO reverter o COMMIT aqui, pois o BD já foi atualizado com sucesso.
+        console.error("更新メールの送信中にエラーが発生しました:", emailError);
+        // Continue sem reverter o commit
     }
 
     await conn.commit();
