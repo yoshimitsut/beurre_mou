@@ -104,7 +104,7 @@ app.post('/api/reservar', async (req, res) => {
       `;
       // 4️⃣ Enviar email
       await resend.emails.send({
-        from: "パティスリーブール・ムー <onboarding@resend.dev>",
+        from: "パティスリーブール・ムー <order@yoyaku.beurre-mou.com>",
         to: [newOrder.email, "shimitsutanaka@gmail.com"],
         subject: `🎂 ご注文確認 - 受付番号 ${String(orderId).padStart(4,"0")}`,
         html: htmlContent,
