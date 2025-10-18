@@ -46,9 +46,17 @@ app.get('/api/cake', async (req, res) => {
 
 app.get('/api/timeslots', async (req, res) => {
   try {
-    const [timeslots] = await pool.query('SELECT * FROM timeslots ORDER BY date,time');
-    const availableDates = [...new Set(timeslots.map(t => t.date))];
-    res.json({ success: true, availableDates, timeslots });
+    const [timeslots] = await pool.query('SELECT * FROM timeslots ORDER BY date, time');
+
+    // Converte as datas para string YYYY-MM-DD
+    const formattedTimeslots = timeslots.map(t => ({
+      ...t,
+      date: t.date ? t.date.toISOString().split('T')[0] : null
+    }));
+
+    const availableDates = [...new Set(formattedTimeslots.map(t => t.date))];
+
+    res.json({ success: true, availableDates, timeslots: formattedTimeslots });
   } catch (err) {
     console.error(err);
     res.status(500).json({ success: false, error: 'Erro ao buscar horários' });
