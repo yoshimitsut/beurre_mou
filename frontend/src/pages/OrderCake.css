@@ -33,6 +33,7 @@ body {
     overflow: hidden;
     padding: 0;
     position: relative;
+    font-size: 1.5rem;
   }
 
   .notification {
@@ -130,7 +131,7 @@ body {
     }
     
     .img-cake-order {
-      width: 300px;
+      width: 350px;
       padding: 35px;
     }
   }
@@ -208,6 +209,11 @@ body {
     margin: 0px !important;
   }
   
+  .react-datepicker__day--selected {
+    background-color: #fff176 !important; 
+    color: #000;
+  }
+
   .react-datepicker__day-name {
     width: 11vw;
     max-width: 65px;

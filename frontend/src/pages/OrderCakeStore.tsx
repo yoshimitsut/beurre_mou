@@ -20,7 +20,7 @@ type TimeOptionType = OptionType & {
   isDisabled?: boolean;
 };
 
-export default function OrderCakeStore() {
+export default function OrderCake() {
   const navigate = useNavigate();
 
   const [cakesData, setCakesData] = useState<Cake[]>();
@@ -285,18 +285,70 @@ export default function OrderCakeStore() {
 
 
   const customStyles: StylesConfig<OptionType, false, GroupBase<OptionType>> = {
-    control: (provided) => ({
+      option: (provided, state) => ({
       ...provided,
-      boxShadow: 'none',
-      border: '1px solid #000',
-      borderRadius: '10px',
-      minHeight: "38px",
-      cursor: "pointer",
+      backgroundColor: state.isSelected
+        ? '#fdd111' // fundo da opção selecionada (ex: bege claro)
+        : state.isFocused
+        ? '#fdeca2' // cor no hover (ex: rosa claro)
+        : 'white',  // fundo normal
+      color: state.isDisabled ? '#999' : '#333', // cor do texto
+      cursor: state.isDisabled ? 'not-allowed' : 'pointer',
     }),
+
+    control: (provided, state) => ({
+      ...provided,
+      borderColor: state.isFocused ? '#fdeca2' : '#ddd',
+      boxShadow: state.isFocused ? '0 0 0 1px #fdeca2' : 'none',
+      '&:hover': {
+        borderColor: '#fdeca2',
+      },
+    }),
+
+    singleValue: (provided) => ({
+      ...provided,
+      color: '#333', // texto da opção selecionada
+      borderRadius: '4px',
+      padding: '2px 6px',
+    }),
+
+    menu: (provided) => ({
+      ...provided,
+      zIndex: 9999,
+    }),
+  };
+
+  const customStylesSize: StylesConfig<SizeOption, false> = {
     option: (provided, state) => ({
       ...provided,
-      color: state.isDisabled ? '#888' : 'black',
-      cursor: state.isDisabled ? "not-allowed" : "pointer",
+      backgroundColor: state.isSelected
+        ? '#fdd111' // fundo da opção selecionada (ex: bege claro)
+        : state.isFocused
+        ? '#fdeca2' // cor no hover (ex: rosa claro)
+        : 'white',  // fundo normal
+      color: state.isDisabled ? '#999' : '#333', // cor do texto
+      cursor: state.isDisabled ? 'not-allowed' : 'pointer',
+    }),
+
+    control: (provided, state) => ({
+      ...provided,
+      borderColor: state.isFocused ? '#fdeca2' : '#ddd',
+      boxShadow: state.isFocused ? '0 0 0 1px #fdeca2' : 'none',
+      '&:hover': {
+        borderColor: '#fdeca2',
+      },
+    }),
+
+    singleValue: (provided) => ({
+      ...provided,
+      color: '#333', // texto da opção selecionada
+      borderRadius: '4px',
+      padding: '2px 6px',
+    }),
+
+    menu: (provided) => ({
+      ...provided,
+      zIndex: 9999,
     }),
   };
 
@@ -469,6 +521,7 @@ export default function OrderCakeStore() {
                         isSearchable={false}
                         classNamePrefix='react-select'
                         required
+                        styles={customStylesSize}
                         isOptionDisabled={(option) => !!option.isDisabled}
                         formatOptionLabel={(option) => {
                           return option.stock > 0

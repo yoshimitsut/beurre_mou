@@ -70,10 +70,10 @@ export default function CakeInformations() {
               <tbody>
                 {selectedCake.sizes?.map((size, index) => (
                   <tr key={index}>
-                    <td style={{ border: "1px solid #ccc", padding: "8px" }}>
+                    <td style={{ padding: "8px" }}>
                       {size.size}
                     </td>
-                     <td style={{ border: "1px solid #ccc", padding: "8px" }}>
+                     <td style={{ padding: "8px" }}>
                       ¥{size.price.toLocaleString("ja-JP")}（税込{Math.trunc(size.price * 1.08).toLocaleString("ja-JP")}）
                       {size.stock === 0 && <span style={{ color: "red"}}>完売</span>}
                     </td>

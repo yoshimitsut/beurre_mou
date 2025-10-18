@@ -11,8 +11,8 @@
   min-height: 100vh;
   flex-direction: column;
   align-items: center;
-  padding-top: 3rem; 
-  padding-bottom: 3rem; 
+  /* padding-top: 3rem; 
+  padding-bottom: 3rem;  */
   gap: 3rem;
   background-color: #d9d9d9;
 }
@@ -24,12 +24,12 @@
   flex-direction: row;
   align-items: stretch;
   text-align: center;
-  justify-content: center;
+  justify-content: flex-start;
   /* gap: 2rem; */
   flex-wrap: wrap;
   border: #484848 3px solid;
-  width: 56em;
-  min-height: 28em;
+  width: 100vw;
+  min-height: 100vh;
   background-color: rgba(255, 255, 255, 0.7);
   overflow: hidden;
 
@@ -45,15 +45,24 @@
   }
   .main-right {
     object-fit: cover;
-    width: 442px; 
+    width: 50vw; 
   }
   .main-left {
+    width: 49vw; 
     display: flex;
     gap: .75em;
     flex-direction: column;
     align-items: center;
     padding: 1.5rem;
     justify-content: space-around;
+
+    .cake-name {
+      font-size: 2rem;;
+    }
+
+    .cake-description {
+      font-size: 1.2rem;
+    }
   }
 }
 
@@ -62,7 +71,7 @@
 }
 
 .reserve-btn {
-  width: 7rem;
+  width: 9rem;
   height: 3rem;
   border-radius: 30px;
   font-size: 20px;
@@ -95,4 +104,25 @@
   .cake-description {
     width: 80vw;
   }
+}
+
+@media (max-width: 450px) {
+  .cake-wrapper {
+    flex-direction: row;
+  }
+  .cake-main {
+    .cake-description {
+      width: 85vw;
+    }
+
+    .main-left {
+
+    .cake-name {
+      font-size: 1.5rem;
+    }
+    .cake-description {
+      font-size: 1rem;
+    }
+    }
+  } 
 }

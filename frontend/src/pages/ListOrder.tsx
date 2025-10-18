@@ -420,8 +420,8 @@ export default function ListOrder() {
           {/* Tabelas (desktop) */}
           {displayOrders.map(([groupTitles, ordersForGroup]: [string, Order[]]) => {
             const activeOrdersForGroup = ordersForGroup.filter(order => {
-              if (search.trim() === "キャンセル") return order.status === "e";
-              return order.status !== "e";
+              if (statusFilter === "すべて") return true;
+              return order.status === statusFilter;
             });
 
             return (
