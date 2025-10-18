@@ -10,6 +10,8 @@ import type { StylesConfig, SingleValue } from 'react-select';
 import type { Order, StatusOption } from '../types/types';
 import { STATUS_OPTIONS } from '../types/types';
 
+import { formatDateJP } from "../utils/formatDateJP";
+
 import './ListOrder.css';
 
 export default function ListOrder() {
@@ -99,8 +101,9 @@ export default function ListOrder() {
   // Agrupar pedidos por data
   const groupedOrders = useMemo(() => {
     return orders.reduce((acc, order) => {
-      if (!acc[order.date]) acc[order.date] = [];
-      acc[order.date].push(order);
+      const dateKey = formatDateJP(order.date); 
+      if (!acc[dateKey]) acc[dateKey] = [];
+      acc[dateKey].push(order);
       return acc;
     }, {} as Record<string, Order[]>);
   }, [orders]);
@@ -397,7 +400,7 @@ export default function ListOrder() {
           <strong>受付番号: </strong> {String(foundScannedOrder.id_order).padStart(4, "0")}<br />
           <strong>お名前: </strong> {foundScannedOrder.first_name} {foundScannedOrder.last_name}<br />
           <strong>電話番号: </strong> {foundScannedOrder.tel}<br />
-          <strong>受取日: </strong> {foundScannedOrder.date} - {foundScannedOrder.pickupHour}<br />
+          <strong>受取日: </strong> {formatDateJP(foundScannedOrder.date)} - {foundScannedOrder.pickupHour}<br />
           <strong>ご注文のケーキ: </strong>
           <ul className='cake-list'>
             {foundScannedOrder.cakes.map((cake, index) => (
@@ -420,8 +423,8 @@ export default function ListOrder() {
           {/* Tabelas (desktop) */}
           {displayOrders.map(([groupTitles, ordersForGroup]: [string, Order[]]) => {
             const activeOrdersForGroup = ordersForGroup.filter(order => {
-              if (statusFilter === "すべて") return true;
-              return order.status === statusFilter;
+              if (search.trim() === "キャンセル") return order.status === "e";
+              return order.status !== "e";
             });
 
             return (
@@ -522,7 +525,7 @@ export default function ListOrder() {
                       .filter((order) => {
                         const matchesStatus = statusFilter === "すべて" || order.status === statusFilter;
                         const matchesCake = cakeFilter === "すべて" || order.cakes.some(cake => cake.name === cakeFilter);
-                        const matchesDate = dateFilter === "すべて" || order.date === dateFilter;
+                        const matchesDate = dateFilter === "すべて" || formatDateJP(order.date) === formatDateJP(dateFilter);
                         const matchesHour = hourFilter === "すべて" || order.pickupHour === hourFilter;
                         
                         return matchesStatus && matchesCake && matchesDate && matchesHour;
@@ -557,7 +560,7 @@ export default function ListOrder() {
                           <td>
                             {order.first_name} {order.last_name}
                           </td>
-                          <td>{formatDate(order.date)} {order.pickupHour}</td>
+                          <td>{formatDateJP(order.date)} {order.pickupHour}</td>
                           <td>
                             <ul>
                               {order.cakes.map((cake, index) => (
@@ -657,7 +660,7 @@ export default function ListOrder() {
                   <span>受付番号: {String(order.id_order).padStart(4, "0")}</span>
                 </div>
                 <p>お名前: {order.first_name} {order.last_name}</p>
-                <p>受取日: {order.date} {order.pickupHour}</p>
+                <p>受取日: {formatDateJP(order.date)} {order.pickupHour}</p>
                 <details>
                   <summary>ご注文内容</summary>
                   <ul>

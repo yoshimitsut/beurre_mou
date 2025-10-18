@@ -87,7 +87,9 @@
   cursor: default;
 }
 
-
+.btn-back {
+  cursor: pointer;
+}
 
 .table-生デコレーション {
   background: #f0dddd;
