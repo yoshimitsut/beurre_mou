@@ -7,15 +7,8 @@
 //   });
 // }
 
-
-export function formatDateJP(dateString: string): string {
-  // Converte a string da API para o fuso horário de Tóquio
-  const date = new Date(dateString);
-  const tokyoDate = new Date(date.toLocaleString("en-US", { timeZone: "Asia/Tokyo" }));
-
-  return tokyoDate.toLocaleDateString("ja-JP", {
-    year: "numeric",
-    month: "2-digit",
-    day: "2-digit",
-  });
+export function formatDateJP(dateString: string | null) {
+  if (!dateString) return "";
+  const [year, month, day] = dateString.split("-");
+  return `${year}年${month}月${day}日`;
 }
