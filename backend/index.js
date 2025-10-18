@@ -344,7 +344,7 @@ app.get('/api/list', async (req, res) => {
           last_name: row.last_name,
           email: row.email,
           tel: row.tel,
-          date: row.date,
+          date: row.date ? row.date.toISOString().split('T')[0] : null,
           date_order: row.date_order,
           pickupHour: row.pickupHour,
           message: row.message,
