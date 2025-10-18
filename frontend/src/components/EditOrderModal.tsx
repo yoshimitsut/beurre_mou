@@ -17,8 +17,10 @@ const API_URL = import.meta.env.VITE_API_URL;
 export default function EditOrderModal({ editingOrder, setEditingOrder, handleSaveEdit }: Props) {
   const [cakesData, setCakesData] = useState<Cake[]>([]);
   const [cakes, setCakes] = useState<OrderCake[]>(editingOrder.cakes ? [...editingOrder.cakes] : []);
-  const [selectedDate, setSelectedDate] = useState<Date | null>(editingOrder.date ? new Date(editingOrder.date) : null);
-  const [selectedTime, setSelectedTime] = useState(editingOrder.pickupHour || "時間を選択");
+  const [selectedDate, setSelectedDate] = useState<Date | null>(
+  editingOrder.date ? new Date(editingOrder.date) : null
+);
+  const [selectedTime, setSelectedTime] = useState(editingOrder.pickupHour || "");
   const [timeSlotsData, setTimeSlotsData] = useState<TimeslotSQL[]>([]);
   
   const allowedDates = [
@@ -48,7 +50,6 @@ export default function EditOrderModal({ editingOrder, setEditingOrder, handleSa
     setCakes(prev => prev.map((c, i) => (i === index ? { ...c, [field]: value } : c)));
   };
 
-  // Função para adicionar novo bolo
   const addCake = () => {
     if (cakesData.length > 0) {
       const firstCake = cakesData[0];
@@ -67,7 +68,6 @@ export default function EditOrderModal({ editingOrder, setEditingOrder, handleSa
     }
   };
 
-  // Função para remover bolo
   const removeCake = (index: number) => {
     if (cakes.length > 1) {
       setCakes(prev => prev.filter((_, i) => i !== index));
@@ -76,7 +76,6 @@ export default function EditOrderModal({ editingOrder, setEditingOrder, handleSa
     }
   };
 
-  // Função para obter os dados completos do bolo baseado no cake_id
   const getCakeDataById = (cakeId: number): Cake | undefined => {
     return cakesData.find(cake => cake.id === cakeId);
   };
@@ -86,11 +85,8 @@ export default function EditOrderModal({ editingOrder, setEditingOrder, handleSa
     if (!cakeData) return [];
 
     return cakeData.sizes.map(s => {
-      // Soma quantos já foram selecionados nas instâncias anteriores do mesmo bolo e tamanho
       const used = cakes.reduce((acc, c, i) => {
-        if (i !== index && c.cake_id === cakeId && c.size === s.size) {
-          return acc + c.amount;
-        }
+        if (i !== index && c.cake_id === cakeId && c.size === s.size) return acc + c.amount;
         return acc;
       }, 0);
 
@@ -112,9 +108,7 @@ export default function EditOrderModal({ editingOrder, setEditingOrder, handleSa
     const updatedOrder: Order = {
       ...editingOrder,
       cakes: cakes,
-      date: selectedDate
-        ? selectedDate.toISOString().split("T")[0]
-        : editingOrder.date,
+      date: selectedDate ? selectedDate.toISOString().split("T")[0] : editingOrder.date,
       pickupHour: selectedTime || editingOrder.pickupHour,
     };
     
@@ -122,37 +116,22 @@ export default function EditOrderModal({ editingOrder, setEditingOrder, handleSa
     handleSaveEdit(updatedOrder);
   };
 
-  type OptionType = {
-  value: string;
-  label: string;
-};
+  type OptionType = { value: string; label: string };
 
- const customStyles: StylesConfig<OptionType, false, GroupBase<OptionType>> = {
-  control: (base: CSSObjectWithLabel): CSSObjectWithLabel => ({
-    ...base,
-    minWidth: "200px",
-    width: "100%",
-    borderRadius: "6px",
-    borderColor: "#ccc",
-    boxShadow: "none",
-    "&:hover": {
-      borderColor: "#007bff",
-    },
-  }),
-  menu: (base: CSSObjectWithLabel): CSSObjectWithLabel => ({
-    ...base,
-    zIndex: 9999,
-  }),
-  valueContainer: (base: CSSObjectWithLabel): CSSObjectWithLabel => ({
-    ...base,
-    padding: "4px 8px",
-  }),
-  placeholder: (base: CSSObjectWithLabel): CSSObjectWithLabel => ({
-    ...base,
-    color: "#aaa",
-  }),
-};
-
+  const customStyles: StylesConfig<OptionType, false, GroupBase<OptionType>> = {
+    control: (base: CSSObjectWithLabel) => ({
+      ...base,
+      minWidth: "200px",
+      width: "100%",
+      borderRadius: "6px",
+      borderColor: "#ccc",
+      boxShadow: "none",
+      "&:hover": { borderColor: "#007bff" },
+    }),
+    menu: (base: CSSObjectWithLabel) => ({ ...base, zIndex: 9999 }),
+    valueContainer: (base: CSSObjectWithLabel) => ({ ...base, padding: "4px 8px" }),
+    placeholder: (base: CSSObjectWithLabel) => ({ ...base, color: "#aaa" }),
+  };
 
   return (
     <div className="modal-overlay">
@@ -169,16 +148,17 @@ export default function EditOrderModal({ editingOrder, setEditingOrder, handleSa
                 borderRadius: "4px",
                 cursor: "pointer"
               }}
-            >
-              閉じる
-            </button>
+          >
+            閉じる
+          </button>
         </div>
+
         {/* Dados do cliente */}
         <div style={{ display: "flex", gap: "2rem" }}>
           <div>
             <label>姓(カタカナ)：</label>
             <input 
-            className="input-text-modal"
+              className="input-text-modal"
               type="text" 
               value={editingOrder.first_name || ""} 
               onChange={(e) => setEditingOrder({ ...editingOrder, first_name: e.target.value })} 
@@ -187,8 +167,8 @@ export default function EditOrderModal({ editingOrder, setEditingOrder, handleSa
           <div>
             <label>名(カタカナ)：</label>
             <input 
-              type="text" 
               className="input-text-modal"
+              type="text" 
               value={editingOrder.last_name || ""} 
               onChange={(e) => setEditingOrder({ ...editingOrder, last_name: e.target.value })} 
             />
@@ -199,8 +179,8 @@ export default function EditOrderModal({ editingOrder, setEditingOrder, handleSa
           <div>
             <label>メールアドレス：</label>
             <input 
-              type="text" 
               className="input-text-modal"
+              type="text" 
               value={editingOrder.email || ""} 
               onChange={(e) => setEditingOrder({ ...editingOrder, email: e.target.value })} 
             />
@@ -208,8 +188,8 @@ export default function EditOrderModal({ editingOrder, setEditingOrder, handleSa
           <div>
             <label>お電話番号：</label>
             <input 
-              type="text" 
               className="input-text-modal"
+              type="text" 
               value={editingOrder.tel || ""} 
               onChange={(e) => setEditingOrder({ ...editingOrder, tel: e.target.value })} 
             />
@@ -237,7 +217,6 @@ export default function EditOrderModal({ editingOrder, setEditingOrder, handleSa
           
           {cakes.map((cake, index) => (
             <div key={index} style={{ border: "1px solid #ccc", padding: "1rem", marginBottom: "1rem", position: "relative" }}>
-              {/* Botão de remover */}
               {cakes.length > 1 && (
                 <button 
                   onClick={() => removeCake(index)}
@@ -267,18 +246,15 @@ export default function EditOrderModal({ editingOrder, setEditingOrder, handleSa
                 <div style={{ flex: 1 }}>
                   <label>ケーキ名:</label>
                   <Select<OptionType, false, GroupBase<OptionType>>
-  styles={customStyles}
+                    styles={customStyles}
                     options={cakeOptions}
                     value={cakeOptions.find(opt => String(opt.value) === String(cake.cake_id))}
                     onChange={(val: SingleValue<OptionType>) => {
                       if (val) {
                         const newCakeId = Number(val.value);
                         const selectedCake = getCakeDataById(newCakeId);
-                        
                         if (selectedCake) {
-                          // Atualiza o cake_id e o nome, e reseta o size/price para o primeiro disponível
                           const firstAvailableSize = selectedCake.sizes.find(s => s.stock > 0) || selectedCake.sizes[0];
-                          
                           setCakes(prev => prev.map((c, i) => 
                             i === index ? { 
                               ...c, 
@@ -297,42 +273,41 @@ export default function EditOrderModal({ editingOrder, setEditingOrder, handleSa
                 <div style={{ flex: 1 }}>
                   <label>サイズを選択:</label>
                   <Select<SizeOption, false, GroupBase<SizeOption>>
-  options={getSizeOptionsWithStock(cake.cake_id, index)}
-  value={getSizeOptionsWithStock(cake.cake_id, index).find(s => s.size === cake.size) || null}
-  onChange={(selected) => {
-    if (selected) {
-      setCakes(prev =>
-        prev.map((c, i) =>
-          i === index ? { ...c, size: selected.size, price: selected.price } : c
-        )
-      );
-    }
-  }}
-  placeholder='サイズを選択'
-  isSearchable={false}
-  classNamePrefix='react-select-edit'
-  required
-  isOptionDisabled={(option) => !!option.isDisabled}
-  formatOptionLabel={(option) =>
-    !option.isDisabled
-      ? `${option.size} ￥${option.price.toLocaleString()} （${(option.price + option.price * 0.08).toLocaleString("ja-JP")}税込）`
-      : (
-        <span>
-          {option.size} ￥{option.price.toLocaleString()}
-          <span style={{ color: 'red', fontSize: '0.8rem' }}>
-            （定員に達した為、選択できません。）
-          </span>
-        </span>
-      )
-  }
-/>
-
+                    options={getSizeOptionsWithStock(cake.cake_id, index)}
+                    value={getSizeOptionsWithStock(cake.cake_id, index).find(s => s.size === cake.size) || null}
+                    onChange={(selected) => {
+                      if (selected) {
+                        setCakes(prev =>
+                          prev.map((c, i) =>
+                            i === index ? { ...c, size: selected.size, price: selected.price } : c
+                          )
+                        );
+                      }
+                    }}
+                    placeholder='サイズを選択'
+                    isSearchable={false}
+                    classNamePrefix='react-select-edit'
+                    required
+                    isOptionDisabled={(option) => !!option.isDisabled}
+                    formatOptionLabel={(option) =>
+                      !option.isDisabled
+                        ? `${option.size} ￥${option.price.toLocaleString()} （${(option.price + option.price * 0.08).toLocaleString("ja-JP")}税込）`
+                        : (
+                          <span>
+                            {option.size} ￥{option.price.toLocaleString()}
+                            <span style={{ color: 'red', fontSize: '0.8rem' }}>
+                              （定員に達した為、選択できません。）
+                            </span>
+                          </span>
+                        )
+                    }
+                  />
                 </div>
                 
                 <div>
                   <label>数量:</label>
                   <input 
-                  className="input-text-modal"
+                    className="input-text-modal"
                     type="number"
                     min="1"
                     value={cake.amount} 
@@ -356,11 +331,10 @@ export default function EditOrderModal({ editingOrder, setEditingOrder, handleSa
             </div>
           ))}
         </div>
-<div >
-        <div style={{ display: "flex", gap: "2rem", marginTop: "1rem" }}>
 
+        <div style={{ display: "flex", gap: "2rem", marginTop: "1rem" }}>
           <DateTimePicker
-            selectedDate={selectedDate}
+            selectedDate={selectedDate} // string
             setSelectedDate={setSelectedDate}
             selectedTime={selectedTime}
             setSelectedTime={setSelectedTime}
@@ -368,7 +342,7 @@ export default function EditOrderModal({ editingOrder, setEditingOrder, handleSa
             allowedDates={allowedDates}
           />
         </div>
-</div>
+
         <div style={{ marginTop: "1rem" }}>
           <label>メッセージ：</label>
           <textarea 
@@ -379,9 +353,7 @@ export default function EditOrderModal({ editingOrder, setEditingOrder, handleSa
           />
         </div>
 
-
         <div className="modal-buttons" style={{ marginTop: "1rem", display: "flex", gap: "1rem", flexDirection: "row-reverse" }}>
-          
           <button 
             onClick={handleSave}
             style={{

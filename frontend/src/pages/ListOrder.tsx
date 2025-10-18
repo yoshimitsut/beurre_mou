@@ -50,7 +50,15 @@ export default function ListOrder() {
 
   const navigate = useNavigate();
   const handleSearch = useRef<number | null>(null);
-
+useEffect(() => {
+  if (orders.length > 0) {
+    console.log('Debug - Datas:', {
+      dataOriginal: orders[0].date,
+      formatada: formatDateJP(orders[0].date),
+      timezoneNavegador: Intl.DateTimeFormat().resolvedOptions().timeZone
+    });
+  }
+}, [orders]);
   // Efeito para lidar com navegação e recarga
   useEffect(() => {
     if (location.state?.newOrderCreated) {
