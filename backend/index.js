@@ -135,7 +135,7 @@ app.post('/api/reservar', async (req, res) => {
   }
 });
 
-// editarpedido
+// editarpedido - verificar código e fazer testes!!!!
 app.put('/api/orders/:id_order', async (req, res) => {
   const {
     first_name,
@@ -150,14 +150,14 @@ app.put('/api/orders/:id_order', async (req, res) => {
   } = req.body;
   
   const transporter = nodemailer.createTransport({
-    host: "smtp.gmail.com", // Ex: smtp.gmail.com
+    host: "smtp.gmail.com",
     port: 587,
-    secure: false, // Use true para 465, false para outras portas
+    secure: false,
     auth: {
         user: "shimitsutanaka@gmail.com",
-        pass: "vmiepzoxltefekcr" // Use uma senha de app para serviços como Gmail
+        pass: "vmiepzoxltefekcr"
     }
-});
+  });
 
   const id_order = parseInt(req.params.id_order, 10);
   const conn = await pool.getConnection();
@@ -165,7 +165,7 @@ app.put('/api/orders/:id_order', async (req, res) => {
   try {
     await conn.beginTransaction();
 
-    // 1. Verificar se o pedido existe
+    // 1. Verificar se o pedido existe e pegar os cakes antigos
     const [existingOrder] = await conn.query('SELECT * FROM orders WHERE id_order = ?', [id_order]);
     if (existingOrder.length === 0) {
       throw new Error('Pedido não encontrado');
@@ -173,7 +173,10 @@ app.put('/api/orders/:id_order', async (req, res) => {
 
     const previousStatus = existingOrder[0].status;
 
-    // 2. Atualizar dados principais do pedido
+    // 2. Pegar os cakes antigos do pedido
+    const [oldCakes] = await conn.query('SELECT * FROM order_cakes WHERE order_id = ?', [id_order]);
+
+    // 3. Atualizar dados principais do pedido
     await conn.query(
       `UPDATE orders 
        SET first_name = ?, last_name = ?, email = ?, tel = ?, 
@@ -182,10 +185,16 @@ app.put('/api/orders/:id_order', async (req, res) => {
       [first_name, last_name, email, tel, date, pickupHour, message, status, id_order]
     );
 
-    // 3. Remover cakes antigos e adicionar novos
+    // 4. LÓGICA DE ESTOQUE - Comparar cakes antigos e novos
+    if (previousStatus !== 'e' && status !== 'e') {
+      // Apenas ajustar estoque se não for cancelamento
+      await adjustStock(conn, oldCakes, cakes);
+    }
+
+    // 5. Remover cakes antigos e adicionar novos
     await conn.query('DELETE FROM order_cakes WHERE order_id = ?', [id_order]);
 
-    // 4. Inserir novos cakes
+    // 6. Inserir novos cakes
     for (const cake of cakes) {
       await conn.query(
         `INSERT INTO order_cakes (order_id, cake_id, amount, size, message_cake)
@@ -194,7 +203,7 @@ app.put('/api/orders/:id_order', async (req, res) => {
       );
     }
 
-    // 5. Lógica de estoque (se necessário)
+    // 7. Lógica de estoque para cancelamento/reativação
     if (status === 'e' && previousStatus !== 'e') {
       // Cancelamento - devolver estoque
       for (const cake of cakes) {
@@ -210,6 +219,75 @@ app.put('/api/orders/:id_order', async (req, res) => {
           'UPDATE cake_sizes SET stock = stock - ? WHERE cake_id = ? AND size = ?',
           [cake.amount, cake.cake_id, cake.size]
         );
+      }
+    }
+
+    // Função para ajustar estoque baseado nas diferenças
+    async function adjustStock(conn, oldCakes, newCakes) {
+      // Criar mapas para facilitar a comparação
+      const oldCakeMap = new Map();
+      const newCakeMap = new Map();
+
+      // Preencher mapa de cakes antigos
+      oldCakes.forEach(cake => {
+        const key = `${cake.cake_id}-${cake.size}`;
+        oldCakeMap.set(key, cake.amount);
+      });
+
+      // Preencher mapa de cakes novos
+      newCakes.forEach(cake => {
+        const key = `${cake.cake_id}-${cake.size}`;
+        newCakeMap.set(key, cake.amount);
+      });
+
+      // Processar diferenças
+      const allKeys = new Set([...oldCakeMap.keys(), ...newCakeMap.keys()]);
+
+      for (const key of allKeys) {
+        const [cakeId, size] = key.split('-');
+        const oldAmount = oldCakeMap.get(key) || 0;
+        const newAmount = newCakeMap.get(key) || 0;
+        const difference = newAmount - oldAmount;
+
+        if (difference !== 0) {
+          if (difference > 0) {
+            // Aumentou a quantidade - diminuir estoque
+            await conn.query(
+              'UPDATE cake_sizes SET stock = stock - ? WHERE cake_id = ? AND size = ?',
+              [difference, cakeId, size]
+            );
+          } else {
+            // Diminuiu a quantidade - aumentar estoque
+            await conn.query(
+              'UPDATE cake_sizes SET stock = stock + ? WHERE cake_id = ? AND size = ?',
+              [Math.abs(difference), cakeId, size]
+            );
+          }
+        }
+      }
+
+      // Processar cakes que foram completamente removidos
+      for (const [key, oldAmount] of oldCakeMap) {
+        if (!newCakeMap.has(key)) {
+          const [cakeId, size] = key.split('-');
+          // Devolver todo o estoque do cake removido
+          await conn.query(
+            'UPDATE cake_sizes SET stock = stock + ? WHERE cake_id = ? AND size = ?',
+            [oldAmount, cakeId, size]
+          );
+        }
+      }
+
+      // Processar cakes que foram completamente adicionados
+      for (const [key, newAmount] of newCakeMap) {
+        if (!oldCakeMap.has(key)) {
+          const [cakeId, size] = key.split('-');
+          // Remover estoque do novo cake adicionado
+          await conn.query(
+            'UPDATE cake_sizes SET stock = stock - ? WHERE cake_id = ? AND size = ?',
+            [newAmount, cakeId, size]
+          );
+        }
       }
     }
 
@@ -253,10 +331,7 @@ app.put('/api/orders/:id_order', async (req, res) => {
         const info = await transporter.sendMail(mailOptions);
         console.log("更新メールを送信しました:", info.messageId);
     } catch (emailError) {
-        // É crucial registrar o erro do e-mail, mas você pode optar por 
-        // NÃO reverter o COMMIT aqui, pois o BD já foi atualizado com sucesso.
         console.error("更新メールの送信中にエラーが発生しました:", emailError);
-        // Continue sem reverter o commit
     }
 
     await conn.commit();

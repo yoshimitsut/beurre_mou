@@ -45,7 +45,8 @@ export default function ListOrder() {
 
   const filterOptions: FilterOption[] = [
     { value: "すべて", label: "すべて" },
-    ...statusOptions.filter(opt => opt.value !== "e"),
+    ...statusOptions
+    // ...statusOptions.filter(opt => opt.value !== "e"),
   ];
 
   const navigate = useNavigate();
