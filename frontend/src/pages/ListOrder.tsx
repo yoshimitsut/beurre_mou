@@ -430,10 +430,11 @@ useEffect(() => {
         <>
           {/* Tabelas (desktop) */}
           {displayOrders.map(([groupTitles, ordersForGroup]: [string, Order[]]) => {
-            const activeOrdersForGroup = ordersForGroup.filter(order => {
-              if (search.trim() === "キャンセル") return order.status === "e";
-              return order.status !== "e";
-            });
+            const activeOrdersForGroup = ordersForGroup;
+            // .filter(order => {
+              // if (search.trim() === "キャンセル") return order.status === "e";
+            //   return order.status !== "e";
+            // });
 
             return (
               <div key={groupTitles} className="table-wrapper scroll-cell table-order-container">
