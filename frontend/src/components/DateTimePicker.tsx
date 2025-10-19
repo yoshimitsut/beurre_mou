@@ -6,6 +6,7 @@ import { ja } from "date-fns/locale";
 import { isSameDay } from "date-fns";
 import "react-datepicker/dist/react-datepicker.css";
 import type { TimeslotSQL, OptionType } from "../types/types";
+// import { formatDateForBackend } from "../utils/dateUtils";
 
 export type TimeOptionType = OptionType & {
   isDisabled?: boolean;
@@ -27,6 +28,13 @@ type MyContainerProps = {
   children: ReactNode;
 };
 
+// Função para converter Date para YYYY-MM-DD sem problemas de timezone
+// const formatDateWithoutTimezone = (date: Date): string => {
+//   const year = date.getFullYear();
+//   const month = String(date.getMonth() + 1).padStart(2, '0');
+//   const day = String(date.getDate()).padStart(2, '0');
+//   return `${year}-${month}-${day}`;
+// };
 
 export default function DateTimePicker({
   selectedDate,
@@ -53,28 +61,33 @@ export default function DateTimePicker({
     </div>
   );
 
-  // Atualiza opções de horário quando a data muda
-  useEffect(() => {
-    if (!selectedDate) return;
+  // Atualiza opções de horário quando a data muda - CORRIGIDO
+  // DateTimePicker.tsx - useEffect corrigido
+useEffect(() => {
+  if (!selectedDate) return;
 
-    const formattedDate = selectedDate.toISOString().split("T")[0];
+  // Converter selectedDate para o mesmo formato que vem do backend (YYYY-MM-DD)
+  const selectedDateFormatted = selectedDate.toISOString().split('T')[0];
+  
+  console.log('Procurando slots para:', selectedDateFormatted);
 
-    const daySlots = timeSlotsData.filter(
-      (slot) => slot.date.split("T")[0] === formattedDate
-    );
+  const daySlots = timeSlotsData.filter((slot) => {
+    // Slot.date já deve estar no formato '2025-12-25'
+    // Se vier com timezone, remover a parte do tempo
+    const slotDateFormatted = slot.date.split('T')[0];
+    return selectedDateFormatted === slotDateFormatted;
+  });
 
-    const uniqueSlots = Array.from(
-      new Map(daySlots.map((slot) => [slot.time, slot])).values()
-    );
+  console.log('Slots encontrados:', daySlots);
 
-    const options: TimeOptionType[] = uniqueSlots.map((slot) => ({
-      value: slot.time,
-      label: slot.time,
-      isDisabled: slot.limit_slots <= 0,
-    }));
+  const options: TimeOptionType[] = daySlots.map((slot) => ({
+    value: slot.time,
+    label: slot.time,
+    isDisabled: slot.limit_slots <= 0,
+  }));
 
-    setHoursOptions(options);
-  }, [selectedDate, timeSlotsData]);
+  setHoursOptions(options);
+}, [selectedDate, timeSlotsData]);
 
   const isDateAllowed = (date: Date) =>
     allowedDates.some((d) => isSameDay(d, date));

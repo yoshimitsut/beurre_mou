@@ -234,8 +234,8 @@ useEffect(() => {
   const handleSaveEdit = async (updatedOrder: Order) => {
     if (!updatedOrder) return;
 
-    const confirmed = window.confirm("変更を保存しますか？");
-    if (!confirmed) return;
+    // const confirmed = window.confirm("変更を保存しますか？");
+    // if (!confirmed) return;
 
     try {
       console.log("📤 Enviando para API:", updatedOrder);

@@ -5,6 +5,7 @@ import type { CSSObjectWithLabel, GroupBase } from "react-select";
 import DateTimePicker from "./DateTimePicker";
 import type { Order, Cake, OrderCake, TimeslotSQL, SizeOption } from "../types/types";
 import './EditOrderModal.css';
+import { formatDateForBackend } from "../utils/dateUtils";
 
 type Props = {
   editingOrder: Order;
@@ -17,16 +18,31 @@ const API_URL = import.meta.env.VITE_API_URL;
 export default function EditOrderModal({ editingOrder, setEditingOrder, handleSaveEdit }: Props) {
   const [cakesData, setCakesData] = useState<Cake[]>([]);
   const [cakes, setCakes] = useState<OrderCake[]>(editingOrder.cakes ? [...editingOrder.cakes] : []);
-  const [selectedDate, setSelectedDate] = useState<Date | null>(
-  editingOrder.date ? new Date(editingOrder.date) : null
-);
+  const [isSaving, setIsSaving] = useState(false);
   const [selectedTime, setSelectedTime] = useState(editingOrder.pickupHour || "");
   const [timeSlotsData, setTimeSlotsData] = useState<TimeslotSQL[]>([]);
   
+  const [selectedDate, setSelectedDate] = useState<Date | null>(
+  editingOrder.date ? 
+    // Converter string YYYY-MM-DD para Date local
+    (() => {
+      const [year, month, day] = editingOrder.date.split('-').map(Number);
+      return new Date(year, month - 1, day);
+    })()
+    : null
+  );
   const allowedDates = [
-    new Date(2025, 11, 24),
-    new Date(2025, 11, 25),
+    new Date(2025, 11, 24), // 24 de Dezembro de 2025 (local)
+    new Date(2025, 11, 25), // 25 de Dezembro de 2025 (local)
   ];
+
+
+  console.log('Debug - Datas:', {
+  dataOriginal: editingOrder.date,
+  selectedDate: selectedDate?.toString(),
+  selectedDateLocal: selectedDate ? formatDateForBackend(selectedDate) : null,
+  timezone: Intl.DateTimeFormat().resolvedOptions().timeZone
+});
 
   // Fetch bolos
   useEffect(() => {
@@ -104,17 +120,36 @@ export default function EditOrderModal({ editingOrder, setEditingOrder, handleSa
 
   const cakeOptions = cakesData.map(c => ({ value: String(c.id), label: c.name }));
 
-  const handleSave = () => {
-    const updatedOrder: Order = {
-      ...editingOrder,
-      cakes: cakes,
-      date: selectedDate ? selectedDate.toISOString().split("T")[0] : editingOrder.date,
-      pickupHour: selectedTime || editingOrder.pickupHour,
-    };
-    
-    console.log("Dados a serem salvos:", updatedOrder);
-    handleSaveEdit(updatedOrder);
+  const handleSave = async () => {
+    setIsSaving(true); // desativa o botão imediatamente
+
+    try {
+      const updatedOrder: Order = {
+        ...editingOrder,
+        cakes: cakes,
+        date: selectedDate
+          ? formatDateForBackend(selectedDate)
+          : editingOrder.date,
+        pickupHour: selectedTime || editingOrder.pickupHour,
+      };
+
+      console.log("Dados a serem salvos:", updatedOrder);
+
+      await handleSaveEdit(updatedOrder);
+    } catch (err) {
+      console.error("Erro ao salvar:", err);
+      alert("エラーが発生しました。もう一度お試しください。");
+    } finally {
+      setIsSaving(false); // reativa o botão após o salvamento (ou erro)
+    }
   };
+  // const updatedOrder: Order = {
+  //   ...editingOrder,
+  //   cakes: cakes,
+  //   date: formatDateForBackend(selectedDate), // Usar a função corrigida
+  //   pickupHour: selectedTime || editingOrder.pickupHour,
+  // };
+  
 
   type OptionType = { value: string; label: string };
 
@@ -356,17 +391,20 @@ export default function EditOrderModal({ editingOrder, setEditingOrder, handleSa
         <div className="modal-buttons" style={{ marginTop: "1rem", display: "flex", gap: "1rem", flexDirection: "row-reverse" }}>
           <button 
             onClick={handleSave}
+            disabled={isSaving}
             style={{
               padding: "0.75rem 1.5rem",
-              backgroundColor: "#007bff",
+              backgroundColor: isSaving ? "#6c757d" : "#007bff",
               color: "white",
               border: "none",
               borderRadius: "4px",
-              cursor: "pointer"
+              cursor: isSaving ? "not-allowed" : "pointer",
+              opacity: isSaving ? 0.7 : 1,
             }}
           >
-            保存
+            {isSaving ? "保存中..." : "保存"}
           </button>
+
         </div>
       </div>
     </div>

@@ -76,21 +76,38 @@ export default function OrderCake() {
 
       
   useEffect(() => {
-    if (!selectedDate) return;
+  if (!selectedDate) return;
 
-    const formattedDate = selectedDate.toISOString().split("T")[0];
+  // Usar a mesma função de formatação
+  const formatDateForBackend = (date: Date): string => {
+    const year = date.getFullYear();
+    const month = String(date.getMonth() + 1).padStart(2, '0');
+    const day = String(date.getDate()).padStart(2, '0');
+    return `${year}-${month}-${day}`;
+  };
 
-    const daySlots = timeSlotsData.filter(slot => slot.date.split("T")[0] === formattedDate);
+  const formattedDate = formatDateForBackend(selectedDate);
 
-    const options = daySlots.map(slot => ({
-      value: slot.time,
-      label: slot.time,
-      stock: slot.limit_slots,
-      isDisabled: slot.limit_slots <= 0
-    }));
+  console.log('Buscando horários para:', formattedDate);
 
-    setHoursOptions(options);
-  }, [selectedDate, timeSlotsData]);
+  const daySlots = timeSlotsData.filter(slot => {
+    // Slot.date pode vir como "2025-12-25" ou "2025-12-25T00:00:00.000Z"
+    const slotDateStr = slot.date.split("T")[0];
+    return slotDateStr === formattedDate;
+  });
+
+  const options = daySlots.map(slot => ({
+    value: slot.time,
+    label: slot.time,
+    stock: slot.limit_slots,
+    isDisabled: slot.limit_slots <= 0
+  }));
+
+  console.log('Horários encontrados:', options);
+  setHoursOptions(options);
+}, [selectedDate, timeSlotsData]);
+
+
 
   const [searchParams] = useSearchParams();
   const selectedCakeName = searchParams.get("cake");
