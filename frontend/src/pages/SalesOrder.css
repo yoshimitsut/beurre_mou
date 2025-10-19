@@ -92,6 +92,34 @@
 .btn-back {
   cursor: pointer;
 }
+
+.title-未 {
+  background-color: #C40000;
+  color: aliceblue;
+}
+
+.title-オンライン予約 {
+  background-color: #000DBD !important;
+  color: aliceblue;
+}
+
+.title-店頭支払い済 {
+  background-color: #287300;
+  color: aliceblue;
+}
+
+
+.title-お渡し済 {
+  background-color: #6B6B6B !important;
+  color: aliceblue;
+}
+
+
+.title-キャンセル {
+  background-color: #000;
+  color: aliceblue;
+}
+
 /* 
 .table-生デコレーション {
   background: #f0dddd;

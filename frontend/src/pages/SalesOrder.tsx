@@ -246,7 +246,7 @@ export default function SalesOrder() {
             {statusOptions.map(({ value, label }) => {
               let totalStatus = 0;
               return (
-                <tr key={value}>
+                <tr key={value} className={`title-${label}`}>
                   <td>{label}</td>
                   {dates.map((date) => {
                     const count = statusDayCounts[date]?.[value] || 0;
