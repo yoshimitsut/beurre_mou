@@ -377,8 +377,15 @@ export default function OrderCake() {
     e.preventDefault();
     setIsSubmitting(true);
 
-    const date_order = new Date();
-    const formattedDate = format(date_order, "yyyy-MM-dd");
+     const getLocalDateString = (date: Date | null): string => {
+      if (!date) return "";
+      
+      const year = date.getFullYear();
+      const month = String(date.getMonth() + 1).padStart(2, '0');
+      const day = String(date.getDate()).padStart(2, '0');
+      
+      return `${year}-${month}-${day}`;
+    };
 
     const data = {
       id_client: Math.random().toString(36).substring(2, 8),
@@ -386,8 +393,8 @@ export default function OrderCake() {
       last_name: (document.getElementById("last-name") as HTMLInputElement).value,
       email: (document.getElementById("email") as HTMLInputElement).value,
       tel: (document.getElementById("tel") as HTMLInputElement).value,
-      date: selectedDate?.toISOString().split('T')[0] || "",
-      date_order: formattedDate,
+      date: getLocalDateString(selectedDate), 
+      date_order: format(new Date(), "yyyy-MM-dd"),
       pickupHour,
       status: 'b',
       message: (document.getElementById("message") as HTMLTextAreaElement).value,
