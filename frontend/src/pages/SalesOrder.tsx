@@ -204,7 +204,7 @@ export default function SalesOrder() {
                       <tr key={`${cakeName}-${size}`}>
                         {/* 🔹 AQUI: Tamanho + Estoque */}
                         <td>
-                          {size} <span className="stock-info">(在庫: {sizeData.stock})</span>
+                          {size} <span className="stock-info">(在庫: {sizeData.stock} / {sizeData.stock+total})</span>
                         </td>
                         {dates.map((date) => (
                           <td key={date}>{sizeData.days[date] || 0}</td>
