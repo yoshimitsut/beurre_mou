@@ -94,35 +94,75 @@ app.post('/api/reservar', async (req, res) => {
     
     // 3️⃣ Gerar QR Code
     const qrCodeBuffer = await QRCode.toBuffer(String(orderId), { type:'png', width:400 });
-    
     const qrCodeContentId = 'qrcode_order_id';
+    
+    if (newOrder.message === ''){
+      newOrder.message = 'なし'
+    }
+  
     const htmlContent = `
     <h2>🎂 注文ありがとうございます！</h2>
-    <p>受付番号: <strong>${String(orderId).padStart(4,"0")}</strong></p>
     <p>お名前: ${newOrder.first_name} ${newOrder.last_name}</p>
+    <p>受付番号: <strong>${String(orderId).padStart(4,"0")}</strong></p>
     <p>電話番号: ${newOrder.tel}</p>
-    <p>受け取り日時: ${newOrder.date} - ${newOrder.pickupHour}</p>
-    <p>その他: ${newOrder.message}</p>
-      <p>ご注文内容:</p>
-      <ul>
-      ${newOrder.cakes.map(c => `<li>${c.name} - ${c.size} - ${c.amount}個 - ${c.message_cake}</li>`).join('')}
-      </ul>
-      <p>受付用QRコード:</p>
-      <img src="cid:${qrCodeContentId}" width="400" />
-      `;
-      // 4️⃣ Enviar email
-      await resend.emails.send({
-        from: "パティスリーブール・ムー <order@yoyaku.beurre-mou.com>",
-        to: [newOrder.email, "shimitsutanaka@gmail.com"],
-        subject: `🎂 ご注文確認 - 受付番号 ${String(orderId).padStart(4,"0")}`,
-        html: htmlContent,
-        attachments: [{
-          filename: 'qrcode.png',
-          content: qrCodeBuffer,
-          contentDisposition: 'inline',
-          contentId: qrCodeContentId
-        }]
-      });
+    <p>受け取り日時: ${newOrder.date} / ${newOrder.pickupHour}</p>
+    <p>メッセージ: ${newOrder.message}</p>
+
+    <p>ご注文商品:</p>
+    
+    ${newOrder.cakes.map(cake => `
+      <table style="width: 400px; margin-bottom: 20px; border-collapse: collapse; background: #f9f9f9; border-radius: 8px; overflow: hidden;">
+        <tr>
+          <td style="width: 120px; padding: 15px; vertical-align: top;">
+            <img src="https://yoyaku.beurre-mou.com/image/${cake.name.toLowerCase().replace(/\s+/g, '-')}.jpg" 
+              alt="${cake.name}" 
+              width="100" 
+              style="border-radius: 6px; border: 1px solid #ddd;"
+              onerror="this.style.display='none'">
+          </td>
+          
+          <td style="padding: 15px; vertical-align: top;">
+            <h3 style="margin: 0 0 10px 0;">${cake.name}</h3>
+            ${cake.size ? `<p style="margin: 5px 0;"><strong>サイズ:</strong> ${cake.size}</p>` : ''}
+            <p style="margin: 5px 0;"><strong>個数:</strong> ${cake.amount}個</p>
+            <p style="margin: 5px 0;"><strong>価格:</strong> ¥${(cake.price*1.08).toLocaleString("ja-JP")}</p>
+            ${cake.message_cake ? `<p style="margin: 5px 0;"><strong>メッセージプレート:</strong> ${cake.message_cake || 'なし'}</p>` : ''}
+            <hr/>
+            <strong>小計 ${((cake.price*1.08)*cake.amount).toLocaleString("ja-JP")}</strong>
+            </td>
+        </tr>
+      </table>
+    `).join('')}
+
+    <div style="background: #ddd; width: 400px; text-align: center;">
+      <p style="font-size: 16px; padding: 10px 0;">  <strong>合計金額
+        ¥${Math.trunc(newOrder.cakes.reduce((total, cake) => total + ((cake.price * 1.08) * cake.amount), 0)).toLocaleString("ja-JP")}
+        </strong><span style="font-size: 14px; font-weight: small;">(税込)</span>
+      </p>
+    </div>
+
+    <p>受付用QRコード:</p>
+    <p style='color: red'>※受取当日にスタッフに提示していただくとスムーズです。</p>
+    <img src="cid:${qrCodeContentId}" width="400" />
+    <p>上記の内容に相違がございましたら、お手数をお掛けしますが、</p>
+    <p>ご連絡をお願いいたします。</p>
+    <p>パティスリーブール・ムー（open 11:00 - 19:00）</p>
+    <p>TEL: 080-9854-2849</a></p>
+    <p>宜しくお願いいたいます。</p>
+    `;
+    
+    await resend.emails.send({
+      from: "パティスリーブール・ムー <order@yoyaku.beurre-mou.com>",
+      to: [newOrder.email, "shimitsutanaka@gmail.com"],
+      subject: `🎂 ご注文確認 - 受付番号 ${String(orderId).padStart(4,"0")}`,
+      html: htmlContent,
+      attachments: [{
+        filename: 'qrcode.png',
+        content: qrCodeBuffer,
+        contentDisposition: 'inline',
+        contentId: qrCodeContentId
+      }]
+    });
 
     await conn.commit();
     res.json({ success: true, id: orderId });
@@ -291,40 +331,84 @@ app.put('/api/orders/:id_order', async (req, res) => {
       }
     }
 
-    const cakeListHtml = cakes.map(c => 
-        `<li>${c.name || 'ケーキ'} (サイズ: ${c.size}, 数量: ${c.amount}, メッセージ: ${c.message_cake || 'なし'})</li>`
-    ).join('');
+    // 8. Gerar QR Code e enviar email
+    const qrCodeBuffer = await QRCode.toBuffer(String(id_order).padStart(4, "0"), { type: 'png', width: 400 });
+    const qrCodeContentId = 'qrcode_order_id';
 
-    const statusMap = {
-        'a': '未',
-        'b': 'オンライン予約',
-        'c': '店頭支払い済',
-        'd': 'お渡し済',
-        'e': 'キャンセル'
-    };
+    const cakeListHtml = cakes.map(cake => `
+      <table style="width: 400px; margin-bottom: 20px; border-collapse: collapse; background: #f9f9f9; border-radius: 8px; overflow: hidden;">
+        <tr>
+          <td style="width: 120px; padding: 15px; vertical-align: top;">
+            <img src="https://yoyaku.beurre-mou.com/image/${cake.name.toLowerCase().replace(/\s+/g, '-')}.jpg" 
+              alt="${cake.name}" 
+              width="100" 
+              style="border-radius: 6px; border: 1px solid #ddd;"
+              onerror="this.style.display='none'">
+          </td>
+          
+          <td style="padding: 15px; vertical-align: top;">
+            <h3 style="margin: 0 0 10px 0;">${cake.name}</h3>
+            <p style="margin: 5px 0;"><strong>サイズ:</strong> ${cake.size}</p>
+            <p style="margin: 5px 0;"><strong>個数:</strong> ${cake.amount}個</p>
+            <p style="margin: 5px 0;"><strong>価格:</strong> ¥${cake.price.toLocaleString()}</p>
+            ${cake.message_cake ? `<p style="margin: 5px 0;"><strong>メッセージプレート:</strong> ${cake.message_cake}</p>` : ''}
+            <hr/>
+            <strong>小計: ¥${((cake.price * cake.amount)).toLocaleString("ja-JP")}</strong>
+          </td>
+        </tr>
+      </table>
+    `).join('');
 
-    const currentStatusJa = statusMap[status] || status; 
+    // Calcular total geral
+    const totalGeral = cakes.reduce((total, cake) => total + (cake.price * cake.amount), 0);
+    const totalComTaxa = totalGeral * 1.08;
 
     const mailOptions = {
         from: '"パティスリーブール・ムー" <shimitsutanaka@gmail.com>', 
         to: email, 
-        subject: `🚨 ご注文 ${String(id_order).padStart(4,"0")} の変更が確認されました`,
+        subject: `🎂 ご注文内容変更のお知らせ - 受付番号 ${String(id_order).padStart(4, "0")}`,
         html: `
-          <h2>ご注文内容が変更されました！</h2>
-            <p>拝啓 ${first_name} ${last_name}様</p>
+          <div style="border: 1px solid #ddd; padding: 20px; max-width: 500px; margin: 0 auto; font-family: Arial, sans-serif;">
+            <h2 style="text-align: center; color: #333;">以下の内容に変更いたしました</h2>
+            <p><strong>お名前：</strong> ${first_name} ${last_name}様</p>
+            <p><strong>受付番号：</strong> ${String(id_order).padStart(4, "0")}</p>
+            <p><strong>受取日時：</strong> ${date} / ${pickupHour}</p>
+            <p><strong>メッセージ：</strong> ${message || 'なし'}</p>
             
-            <p>お客様のご注文 **番号 ${String(id_order).padStart(4,"0")}** がシステムで更新されました。 </p>
-            
-            <p><strong>現在のステータス:</strong> ${currentStatusJa}</p>
-            <p><strong>新しい受取日時:</strong> ${date} - ${pickupHour}</p>
-            <p><strong>追加メッセージ:</strong> ${message || 'なし'}</p>
+            <h3 style="border-bottom: 2px solid #333; padding-bottom: 5px;">ご注文商品</h3>
+            ${cakeListHtml}
 
-            <h3>更新されたケーキの詳細:</h3>
-            <ul>${cakeListHtml}</ul>
+            <!-- Total geral -->
+            <div style="max-width: 500px; background: #ddd; padding: 15px; border-radius: 8px; margin: 20px 0; text-align: center;">
+              <h3 style="margin: 0; color: white;">合計金額</h3>
+              <p style="font-size: 24px; font-weight: bold; margin: 10px 0 0 0;">
+                ¥${totalComTaxa.toLocaleString("ja-JP")}
+                <span style="font-size: 14px; font-weight: normal;">(税込)</span>
+              </p>
+            </div>
+
+            <div style="text-align: center; margin: 20px 0;">
+              <p><strong>受付用QRコード</strong></p>
+              <img src="cid:${qrCodeContentId}" width="300" style="display: block; margin: 0 auto;" />
+            </div>
+
+            <div style="background: #f8f9fa; padding: 15px; border-radius: 6px; margin-top: 20px;">
+              <p style="margin: 0; font-size: 14px;">上記の内容に相違がございましたら、お手数をお掛けしますが、</p>
+              <p style="margin: 5px 0 0 0; font-size: 14px;">ご連絡をお願いいたします。</p>
+              <p style="margin: 10px 0 0 0;"><strong>パティスリーブール・ムー</strong></p>
+              <p style="margin: 5px 0;">open 11:00 - 19:00</p>
+              <p style="margin: 5px 0;">TEL: <a href="tel:080-9854-2849" style="color: #007bff; text-decoration: none;">080-9854-2849</a></p>
+            </div>
             
-            <p>上記詳細をご確認ください。</p>
-            <p>よろしくお願いいたします。</p>
-        `
+            <p style="text-align: center; margin-top: 20px; font-style: italic;">宜しくお願いいたします。</p>
+          </div>
+        `,
+        attachments: [{
+          filename: 'qrcode.png',
+          content: qrCodeBuffer,
+          contentDisposition: 'inline',
+          contentId: qrCodeContentId
+        }]
     };
 
     try {
