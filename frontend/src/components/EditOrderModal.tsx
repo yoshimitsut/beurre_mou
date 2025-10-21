@@ -37,12 +37,12 @@ export default function EditOrderModal({ editingOrder, setEditingOrder, handleSa
   ];
 
 
-  console.log('Debug - Datas:', {
-  dataOriginal: editingOrder.date,
-  selectedDate: selectedDate?.toString(),
-  selectedDateLocal: selectedDate ? formatDateForBackend(selectedDate) : null,
-  timezone: Intl.DateTimeFormat().resolvedOptions().timeZone
-});
+//   console.log('Debug - Datas:', {
+//   dataOriginal: editingOrder.date,
+//   selectedDate: selectedDate?.toString(),
+//   selectedDateLocal: selectedDate ? formatDateForBackend(selectedDate) : null,
+//   timezone: Intl.DateTimeFormat().resolvedOptions().timeZone
+// });
 
   // Fetch bolos
   useEffect(() => {
@@ -133,7 +133,7 @@ export default function EditOrderModal({ editingOrder, setEditingOrder, handleSa
         pickupHour: selectedTime || editingOrder.pickupHour,
       };
 
-      console.log("Dados a serem salvos:", updatedOrder);
+      // console.log("Dados a serem salvos:", updatedOrder);
 
       await handleSaveEdit(updatedOrder);
     } catch (err) {

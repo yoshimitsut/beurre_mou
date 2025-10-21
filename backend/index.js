@@ -247,6 +247,7 @@ app.put('/api/orders/:id_order', async (req, res) => {
     if (status === 'e' && previousStatus !== 'e') {
       // Cancelamento - devolver estoque
       for (const cake of cakes) {
+        console.log("7 - CANCELAMENTO - Devolvendo estoque: ", cake.amount, " - ", cake.cake_id, " - ", cake.size);
         await conn.query(
           'UPDATE cake_sizes SET stock = stock + ? WHERE cake_id = ? AND size = ?',
           [cake.amount, cake.cake_id, cake.size]
@@ -255,6 +256,7 @@ app.put('/api/orders/:id_order', async (req, res) => {
     } else if (previousStatus === 'e' && status !== 'e') {
       // Reativação - remover estoque novamente
       for (const cake of cakes) {
+        console.log("7 - REATIVAÇÃO - Removendo estoque: ", cake.amount, " - ", cake.cake_id, " - ", cake.size);
         await conn.query(
           'UPDATE cake_sizes SET stock = stock - ? WHERE cake_id = ? AND size = ?',
           [cake.amount, cake.cake_id, cake.size]
@@ -264,6 +266,8 @@ app.put('/api/orders/:id_order', async (req, res) => {
 
     // Função para ajustar estoque baseado nas diferenças
     async function adjustStock(conn, oldCakes, newCakes) {
+      // console.log("=== INICIANDO AJUSTE DE ESTOQUE ===");
+      
       // Criar mapas para facilitar a comparação
       const oldCakeMap = new Map();
       const newCakeMap = new Map();
@@ -271,45 +275,25 @@ app.put('/api/orders/:id_order', async (req, res) => {
       // Preencher mapa de cakes antigos
       oldCakes.forEach(cake => {
         const key = `${cake.cake_id}-${cake.size}`;
+        // console.log(`PEDIDO ANTIGO: ${key} - Quantidade: ${cake.amount}`);
         oldCakeMap.set(key, cake.amount);
       });
 
       // Preencher mapa de cakes novos
       newCakes.forEach(cake => {
         const key = `${cake.cake_id}-${cake.size}`;
+        // console.log(`PEDIDO NOVO: ${key} - Quantidade: ${cake.amount}`);
         newCakeMap.set(key, cake.amount);
       });
 
-      // Processar diferenças
-      const allKeys = new Set([...oldCakeMap.keys(), ...newCakeMap.keys()]);
+      // console.log("=== PROCESSANDO DIFERENÇAS ===");
 
-      for (const key of allKeys) {
-        const [cakeId, size] = key.split('-');
-        const oldAmount = oldCakeMap.get(key) || 0;
-        const newAmount = newCakeMap.get(key) || 0;
-        const difference = newAmount - oldAmount;
-
-        if (difference !== 0) {
-          if (difference > 0) {
-            // Aumentou a quantidade - diminuir estoque
-            await conn.query(
-              'UPDATE cake_sizes SET stock = stock - ? WHERE cake_id = ? AND size = ?',
-              [difference, cakeId, size]
-            );
-          } else {
-            // Diminuiu a quantidade - aumentar estoque
-            await conn.query(
-              'UPDATE cake_sizes SET stock = stock + ? WHERE cake_id = ? AND size = ?',
-              [Math.abs(difference), cakeId, size]
-            );
-          }
-        }
-      }
-
-      // Processar cakes que foram completamente removidos
+      // 1. PRIMEIRO: Processar cakes que foram COMPLETAMENTE REMOVIDOS
       for (const [key, oldAmount] of oldCakeMap) {
         if (!newCakeMap.has(key)) {
           const [cakeId, size] = key.split('-');
+          // console.log(`🔵 BOLO REMOVIDO: ${key} - Devolvendo estoque: ${oldAmount}`);
+          
           // Devolver todo o estoque do cake removido
           await conn.query(
             'UPDATE cake_sizes SET stock = stock + ? WHERE cake_id = ? AND size = ?',
@@ -318,10 +302,12 @@ app.put('/api/orders/:id_order', async (req, res) => {
         }
       }
 
-      // Processar cakes que foram completamente adicionados
+      // 2. SEGUNDO: Processar cakes que foram COMPLETAMENTE ADICIONADOS
       for (const [key, newAmount] of newCakeMap) {
         if (!oldCakeMap.has(key)) {
           const [cakeId, size] = key.split('-');
+          // console.log(`🟢 NOVO BOLO ADICIONADO: ${key} - Removendo estoque: ${newAmount}`);
+          
           // Remover estoque do novo cake adicionado
           await conn.query(
             'UPDATE cake_sizes SET stock = stock - ? WHERE cake_id = ? AND size = ?',
@@ -329,6 +315,42 @@ app.put('/api/orders/:id_order', async (req, res) => {
           );
         }
       }
+
+      // 3. TERCEIRO: Processar cakes que foram MODIFICADOS (existem em ambos)
+      const allKeys = new Set([...oldCakeMap.keys(), ...newCakeMap.keys()]);
+
+      for (const key of allKeys) {
+        const [cakeId, size] = key.split('-');
+        const oldAmount = oldCakeMap.get(key) || 0;
+        const newAmount = newCakeMap.get(key) || 0;
+        
+        // Só processa se existir em AMBOS os mapas
+        if (oldCakeMap.has(key) && newCakeMap.has(key)) {
+          const difference = newAmount - oldAmount;
+
+          if (difference !== 0) {
+            if (difference > 0) {
+              // Aumentou a quantidade - diminuir estoque
+              // console.log(`📈 QUANTIDADE AUMENTOU: ${key} - Diferença: +${difference} (Antigo: ${oldAmount} → Novo: ${newAmount})`);
+              await conn.query(
+                'UPDATE cake_sizes SET stock = stock - ? WHERE cake_id = ? AND size = ?',
+                [difference, cakeId, size]
+              );
+            } else {
+              // Diminuiu a quantidade - aumentar estoque
+              // console.log(`📉 QUANTIDADE DIMINUIU: ${key} - Diferença: ${difference} (Antigo: ${oldAmount} → Novo: ${newAmount})`);
+              await conn.query(
+                'UPDATE cake_sizes SET stock = stock + ? WHERE cake_id = ? AND size = ?',
+                [Math.abs(difference), cakeId, size]
+              );
+            }
+          } else {
+            // console.log(`⚖️ QUANTIDADE IGUAL: ${key} - Quantidade: ${oldAmount}`);
+          }
+        }
+      }
+
+      // console.log("=== AJUSTE DE ESTOQUE CONCLUÍDO ===");
     }
 
     // 8. Gerar QR Code e enviar email
@@ -382,7 +404,7 @@ app.put('/api/orders/:id_order', async (req, res) => {
             <div style="max-width: 400px; background: #ddd; padding: 15px; border-radius: 8px; margin: 20px 0; text-align: center;">
               <h3 style="margin: 0; color: #000;">合計金額</h3>
               <p style="font-size: 24px; font-weight: bold; margin: 10px 0 0 0;">
-                ¥${totalComTaxa.toLocaleString("ja-JP")}
+                ¥${Math.trunc(totalComTaxa).toLocaleString("ja-JP")}
                 <span style="font-size: 14px; font-weight: normal;">(税込)</span>
               </p>
             </div>
@@ -454,7 +476,7 @@ app.put('/api/reservar/:id_order', async (req, res) => {
         await conn.query('UPDATE cake_sizes SET stock = stock + ? WHERE cake_id=? AND size=?', [oc.amount, oc.cake_id, oc.size]);
       }
     }
-
+    
     // se for voltar o pedido, tirar qtdade do estoque
     if(status!=='e' && previousStatus==='e'){
       const [orderCakes] = await conn.query('SELECT * FROM order_cakes WHERE order_id=?', [id_order]);

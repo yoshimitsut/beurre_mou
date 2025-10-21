@@ -51,15 +51,17 @@ export default function ListOrder() {
 
   const navigate = useNavigate();
   const handleSearch = useRef<number | null>(null);
-useEffect(() => {
-  if (orders.length > 0) {
-    console.log('Debug - Datas:', {
-      dataOriginal: orders[0].date,
-      formatada: formatDateJP(orders[0].date),
-      timezoneNavegador: Intl.DateTimeFormat().resolvedOptions().timeZone
-    });
-  }
-}, [orders]);
+
+  // useEffect(() => {
+//   if (orders.length > 0) {
+//     console.log('Debug - Datas:', {
+//       dataOriginal: orders[0].date,
+//       formatada: formatDateJP(orders[0].date),
+//       timezoneNavegador: Intl.DateTimeFormat().resolvedOptions().timeZone
+//     });
+//   }
+// }, [orders]);
+
   // Efeito para lidar com navegação e recarga
   useEffect(() => {
     if (location.state?.newOrderCreated) {
@@ -237,7 +239,7 @@ useEffect(() => {
     // if (!confirmed) return;
 
     try {
-      console.log("📤 Enviando para API:", updatedOrder);
+      // console.log("📤 Enviando para API:", updatedOrder);
 
       // Use o novo endpoint para edição completa
       const res = await fetch(`${import.meta.env.VITE_API_URL}/api/orders/${updatedOrder.id_order}`, {
@@ -247,7 +249,7 @@ useEffect(() => {
       });
 
       const data = await res.json();
-      console.log("📥 Resposta da API:", data);
+      // console.log("📥 Resposta da API:", data);
 
       if (!res.ok || !data.success) {
         throw new Error(data.error || "更新に失敗しました。");
