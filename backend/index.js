@@ -134,8 +134,8 @@ app.post('/api/reservar', async (req, res) => {
       </table>
     `).join('')}
 
-    <div style="background: #ddd; width: 400px; text-align: center;">
-      <p style="font-size: 16px; padding: 10px 0;">  <strong>合計金額
+    <div style="background: #000; width: 400px; text-align: center;">
+      <p style="font-size: 16px;">  <strong>合計金額
         ¥${Math.trunc(newOrder.cakes.reduce((total, cake) => total + ((cake.price * 1.08) * cake.amount), 0)).toLocaleString("ja-JP")}
         </strong><span style="font-size: 14px; font-weight: small;">(税込)</span>
       </p>
@@ -368,7 +368,7 @@ app.put('/api/orders/:id_order', async (req, res) => {
         to: email, 
         subject: `🎂 ご注文内容変更のお知らせ - 受付番号 ${String(id_order).padStart(4, "0")}`,
         html: `
-          <div style="border: 1px solid #ddd; padding: 20px; max-width: 500px; margin: 0 auto; font-family: Arial, sans-serif;">
+          <div style="border: 1px solid #ddd; padding: 20px; max-width: 400px; margin: 0 auto; font-family: Arial, sans-serif;">
             <h2 style="text-align: center; color: #333;">以下の内容に変更いたしました</h2>
             <p><strong>お名前：</strong> ${first_name} ${last_name}様</p>
             <p><strong>受付番号：</strong> ${String(id_order).padStart(4, "0")}</p>
@@ -379,8 +379,8 @@ app.put('/api/orders/:id_order', async (req, res) => {
             ${cakeListHtml}
 
             <!-- Total geral -->
-            <div style="max-width: 500px; background: #ddd; padding: 15px; border-radius: 8px; margin: 20px 0; text-align: center;">
-              <h3 style="margin: 0; color: white;">合計金額</h3>
+            <div style="max-width: 400px; background: #ddd; padding: 15px; border-radius: 8px; margin: 20px 0; text-align: center;">
+              <h3 style="margin: 0; color: #000;">合計金額</h3>
               <p style="font-size: 24px; font-weight: bold; margin: 10px 0 0 0;">
                 ¥${totalComTaxa.toLocaleString("ja-JP")}
                 <span style="font-size: 14px; font-weight: normal;">(税込)</span>
@@ -452,6 +452,14 @@ app.put('/api/reservar/:id_order', async (req, res) => {
       const [orderCakes] = await conn.query('SELECT * FROM order_cakes WHERE order_id=?', [id_order]);
       for(const oc of orderCakes){
         await conn.query('UPDATE cake_sizes SET stock = stock + ? WHERE cake_id=? AND size=?', [oc.amount, oc.cake_id, oc.size]);
+      }
+    }
+
+    // se for voltar o pedido, tirar qtdade do estoque
+    if(status!=='e' && previousStatus==='e'){
+      const [orderCakes] = await conn.query('SELECT * FROM order_cakes WHERE order_id=?', [id_order]);
+      for(const oc of orderCakes){
+        await conn.query('UPDATE cake_sizes SET stock = stock - ? WHERE cake_id=? AND size=?', [oc.amount, oc.cake_id, oc.size]);
       }
     }
 

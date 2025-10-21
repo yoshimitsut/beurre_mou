@@ -214,8 +214,6 @@ useEffect(() => {
         old.map((o) => (o.id_order === id ? { ...o, status: newStatus } : o))
       );
 
-      console.log("Status atualizado no servidor:", data);
-
     } catch (err) {
       console.error("Erro ao atualizar status:", err);
       alert("Erro ao salvar status no servidor. A lista será recarregada.");
