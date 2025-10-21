@@ -6,7 +6,7 @@ import type { ReactNode } from "react";
 export type SizeOption = {
   id?: number;            // opcional: vem da tabela cake_sizes
   cake_id:number;
-  size: string;
+  size?: string;
   price: number;
   stock: number;
   isDisabled?: boolean;
@@ -31,7 +31,7 @@ export type OrderCake = {
   id?: number;
   order_id?: number;
   cake_id: number;
-  size: string;
+  size?: string;
   amount: number;
   message_cake?: string;
   price: number;           // opcional

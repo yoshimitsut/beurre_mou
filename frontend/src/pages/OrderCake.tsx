@@ -88,7 +88,7 @@ export default function OrderCake() {
 
   const formattedDate = formatDateForBackend(selectedDate);
 
-  console.log('Buscando horários para:', formattedDate);
+  // console.log('Buscando horários para:', formattedDate);
 
   const daySlots = timeSlotsData.filter(slot => {
     // Slot.date pode vir como "2025-12-25" ou "2025-12-25T00:00:00.000Z"
@@ -103,7 +103,7 @@ export default function OrderCake() {
     isDisabled: slot.limit_slots <= 0
   }));
 
-  console.log('Horários encontrados:', options);
+  // console.log('Horários encontrados:', options);
   setHoursOptions(options);
 }, [selectedDate, timeSlotsData]);
 
@@ -417,11 +417,8 @@ export default function OrderCake() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(data),
       });
-
       const result = await res.json();
       if (result.success) {
-        // navigate("check");
-
         navigate("/order/check", { state: { newOrderCreated: true } });
         if (cakesData && cakesData.length > 0) {
           const initialCake = cakesData[0];
@@ -508,9 +505,29 @@ export default function OrderCake() {
                     <Select<CustomOptionType>
                       options={cakeOptions}
                       value={cakeOptions.find(c => Number(c.value) === item.cake_id) }
-                      onChange={selected =>
-                        updateCake(index, "cake_id", selected ? Number(selected.value) : 0)
-                      }
+                       onChange={selected => {
+                        if (selected) {
+                          const newCakeId = Number(selected.value);
+                          const selectedCake = cakesData?.find(c => c.id === newCakeId);
+                          
+                          updateCake(index, "cake_id", newCakeId);
+                          updateCake(index, "size", "");
+                          updateCake(index, "price", 0);
+                          
+                          // Se o bolo tem apenas 1 tamanho, seleciona automaticamente
+                          if (selectedCake?.sizes && selectedCake.sizes.length === 1) {
+                            const singleSize = selectedCake.sizes[0];
+                            if (singleSize.stock > 0) {
+                              updateCake(index, "size", singleSize.size);
+                              updateCake(index, "price", singleSize.price);
+                            }
+                          }
+                        } else {
+                          updateCake(index, "cake_id", 0);
+                          updateCake(index, "size", "");
+                          updateCake(index, "price", 0);
+                        }
+                      }}
                       noOptionsMessage={() => "読み込み中..."}
                       classNamePrefix="react-select"
                       placeholder="ケーキを選択"

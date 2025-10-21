@@ -101,6 +101,8 @@ app.post('/api/reservar', async (req, res) => {
     }
   
     const htmlContent = `
+    <div style="border: 1px solid #ddd; padding: 20px; max-width: 400px; margin: 0 auto; font-family: Arial, sans-serif;">
+      
     <h2>🎂 注文ありがとうございます！</h2>
     <p>お名前: ${newOrder.first_name} ${newOrder.last_name}</p>
     <p>受付番号: <strong>${String(orderId).padStart(4,"0")}</strong></p>
@@ -111,30 +113,31 @@ app.post('/api/reservar', async (req, res) => {
     <p>ご注文商品:</p>
     
     ${newOrder.cakes.map(cake => `
-      <table style="width: 400px; margin-bottom: 20px; border-collapse: collapse; background: #f9f9f9; border-radius: 8px; overflow: hidden;">
-        <tr>
-          <td style="width: 120px; padding: 15px; vertical-align: top;">
-            <img src="https://yoyaku.beurre-mou.com/image/${cake.name.toLowerCase().replace(/\s+/g, '-')}.jpg" 
-              alt="${cake.name}" 
-              width="100" 
-              style="border-radius: 6px; border: 1px solid #ddd;"
-              onerror="this.style.display='none'">
-          </td>
-          
-          <td style="padding: 15px; vertical-align: top;">
-            <h3 style="margin: 0 0 10px 0;">${cake.name}</h3>
-            ${cake.size ? `<p style="margin: 5px 0;"><strong>サイズ:</strong> ${cake.size}</p>` : ''}
-            <p style="margin: 5px 0;"><strong>個数:</strong> ${cake.amount}個</p>
-            <p style="margin: 5px 0;"><strong>価格:</strong> ¥${(cake.price*1.08).toLocaleString("ja-JP")}</p>
-            ${cake.message_cake ? `<p style="margin: 5px 0;"><strong>メッセージプレート:</strong> ${cake.message_cake || 'なし'}</p>` : ''}
-            <hr/>
-            <strong>小計 ${((cake.price*1.08)*cake.amount).toLocaleString("ja-JP")}</strong>
+        <table style="width: 400px; margin-bottom: 20px; border-collapse: collapse; background: #f9f9f9; border-radius: 8px; overflow: hidden;">
+          <tr>
+            <td style="width: 120px; padding: 15px; vertical-align: top;">
+              <img src="https://yoyaku.beurre-mou.com/image/${cake.name.toLowerCase().replace(/\s+/g, '-')}.jpg" 
+                alt="${cake.name}" 
+                width="100" 
+                style="border-radius: 6px; border: 1px solid #ddd;"
+                onerror="this.style.display='none'">
             </td>
-        </tr>
-      </table>
+            
+            <td style="padding: 15px; vertical-align: top;">
+              <h3 style="margin: 0 0 10px 0;">${cake.name}</h3>
+              ${cake.size ? `<p style="margin: 5px 0;"><strong>サイズ:</strong> ${cake.size}</p>` : ''}
+              <p style="margin: 5px 0;"><strong>個数:</strong> ${cake.amount}個</p>
+              <p style="margin: 5px 0;"><strong>価格:</strong> ¥${Math.trunc(cake.price*1.08).toLocaleString("ja-JP")}</p>
+              ${cake.message_cake ? `<p style="margin: 5px 0;"><strong>メッセージプレート:</strong> ${cake.message_cake || 'なし'}</p>` : ''}
+              <hr/>
+              <strong>小計 ${Math.trunc((cake.price*1.08)*cake.amount).toLocaleString("ja-JP")}</strong>
+              </td>
+          </tr>
+        </table>
+      
     `).join('')}
 
-    <div style="background: #000; width: 400px; text-align: center;">
+    <div style="background: #ccc; width: 400px; text-align: center;">
       <p style="font-size: 16px;">  <strong>合計金額
         ¥${Math.trunc(newOrder.cakes.reduce((total, cake) => total + ((cake.price * 1.08) * cake.amount), 0)).toLocaleString("ja-JP")}
         </strong><span style="font-size: 14px; font-weight: small;">(税込)</span>
@@ -149,6 +152,7 @@ app.post('/api/reservar', async (req, res) => {
     <p>パティスリーブール・ムー（open 11:00 - 19:00）</p>
     <p>TEL: 080-9854-2849</a></p>
     <p>宜しくお願いいたいます。</p>
+    </div>
     `;
     
     await resend.emails.send({
@@ -372,10 +376,10 @@ app.put('/api/orders/:id_order', async (req, res) => {
             <h3 style="margin: 0 0 10px 0;">${cake.name}</h3>
             <p style="margin: 5px 0;"><strong>サイズ:</strong> ${cake.size}</p>
             <p style="margin: 5px 0;"><strong>個数:</strong> ${cake.amount}個</p>
-            <p style="margin: 5px 0;"><strong>価格:</strong> ¥${cake.price.toLocaleString()}</p>
+            <p style="margin: 5px 0;"><strong>価格:</strong> ¥${Math.trunc(cake.price).toLocaleString()}</p>
             ${cake.message_cake ? `<p style="margin: 5px 0;"><strong>メッセージプレート:</strong> ${cake.message_cake}</p>` : ''}
             <hr/>
-            <strong>小計: ¥${((cake.price * cake.amount)).toLocaleString("ja-JP")}</strong>
+            <strong>小計: ¥${Math.trunc((cake.price * cake.amount)).toLocaleString("ja-JP")}</strong>
           </td>
         </tr>
       </table>

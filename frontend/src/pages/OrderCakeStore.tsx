@@ -76,21 +76,38 @@ export default function OrderCake() {
 
       
   useEffect(() => {
-    if (!selectedDate) return;
+  if (!selectedDate) return;
 
-    const formattedDate = selectedDate.toISOString().split("T")[0];
+  // Usar a mesma função de formatação
+  const formatDateForBackend = (date: Date): string => {
+    const year = date.getFullYear();
+    const month = String(date.getMonth() + 1).padStart(2, '0');
+    const day = String(date.getDate()).padStart(2, '0');
+    return `${year}-${month}-${day}`;
+  };
 
-    const daySlots = timeSlotsData.filter(slot => slot.date.split("T")[0] === formattedDate);
+  const formattedDate = formatDateForBackend(selectedDate);
 
-    const options = daySlots.map(slot => ({
-      value: slot.time,
-      label: slot.time,
-      stock: slot.limit_slots,
-      isDisabled: slot.limit_slots <= 0
-    }));
+  // console.log('Buscando horários para:', formattedDate);
 
-    setHoursOptions(options);
-  }, [selectedDate, timeSlotsData]);
+  const daySlots = timeSlotsData.filter(slot => {
+    // Slot.date pode vir como "2025-12-25" ou "2025-12-25T00:00:00.000Z"
+    const slotDateStr = slot.date.split("T")[0];
+    return slotDateStr === formattedDate;
+  });
+
+  const options = daySlots.map(slot => ({
+    value: slot.time,
+    label: slot.time,
+    stock: slot.limit_slots,
+    isDisabled: slot.limit_slots <= 0
+  }));
+
+  // console.log('Horários encontrados:', options);
+  setHoursOptions(options);
+}, [selectedDate, timeSlotsData]);
+
+
 
   const [searchParams] = useSearchParams();
   const selectedCakeName = searchParams.get("cake");
@@ -360,8 +377,15 @@ export default function OrderCake() {
     e.preventDefault();
     setIsSubmitting(true);
 
-    const date_order = new Date();
-    const formattedDate = format(date_order, "yyyy-MM-dd");
+     const getLocalDateString = (date: Date | null): string => {
+      if (!date) return "";
+      
+      const year = date.getFullYear();
+      const month = String(date.getMonth() + 1).padStart(2, '0');
+      const day = String(date.getDate()).padStart(2, '0');
+      
+      return `${year}-${month}-${day}`;
+    };
 
     const data = {
       id_client: Math.random().toString(36).substring(2, 8),
@@ -369,8 +393,8 @@ export default function OrderCake() {
       last_name: (document.getElementById("last-name") as HTMLInputElement).value,
       email: (document.getElementById("email") as HTMLInputElement).value,
       tel: (document.getElementById("tel") as HTMLInputElement).value,
-      date: selectedDate?.toISOString().split('T')[0] || "",
-      date_order: formattedDate,
+      date: getLocalDateString(selectedDate), 
+      date_order: format(new Date(), "yyyy-MM-dd"),
       pickupHour,
       status: 'c',
       message: (document.getElementById("message") as HTMLTextAreaElement).value,
@@ -393,11 +417,8 @@ export default function OrderCake() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(data),
       });
-
       const result = await res.json();
       if (result.success) {
-        // navigate("check");
-
         navigate("/order/check", { state: { newOrderCreated: true } });
         if (cakesData && cakesData.length > 0) {
           const initialCake = cakesData[0];
@@ -484,9 +505,29 @@ export default function OrderCake() {
                     <Select<CustomOptionType>
                       options={cakeOptions}
                       value={cakeOptions.find(c => Number(c.value) === item.cake_id) }
-                      onChange={selected =>
-                        updateCake(index, "cake_id", selected ? Number(selected.value) : 0)
-                      }
+                       onChange={selected => {
+                        if (selected) {
+                          const newCakeId = Number(selected.value);
+                          const selectedCake = cakesData?.find(c => c.id === newCakeId);
+                          
+                          updateCake(index, "cake_id", newCakeId);
+                          updateCake(index, "size", "");
+                          updateCake(index, "price", 0);
+                          
+                          // Se o bolo tem apenas 1 tamanho, seleciona automaticamente
+                          if (selectedCake?.sizes && selectedCake.sizes.length === 1) {
+                            const singleSize = selectedCake.sizes[0];
+                            if (singleSize.stock > 0) {
+                              updateCake(index, "size", singleSize.size);
+                              updateCake(index, "price", singleSize.price);
+                            }
+                          }
+                        } else {
+                          updateCake(index, "cake_id", 0);
+                          updateCake(index, "size", "");
+                          updateCake(index, "price", 0);
+                        }
+                      }}
                       noOptionsMessage={() => "読み込み中..."}
                       classNamePrefix="react-select"
                       placeholder="ケーキを選択"
