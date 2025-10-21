@@ -407,7 +407,9 @@ app.put('/api/orders/:id_order', async (req, res) => {
           filename: 'qrcode.png',
           content: qrCodeBuffer,
           contentDisposition: 'inline',
-          contentId: qrCodeContentId
+          contentId: qrCodeContentId,
+          contentType: 'image/png', 
+          cid: qrCodeContentId
         }]
     };
 
