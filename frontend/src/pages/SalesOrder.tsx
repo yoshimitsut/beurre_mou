@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useMemo } from "react";
 import "./SalesOrder.css";
 import type { Order } from "../types/types";
 import { STATUS_OPTIONS } from "../types/types";
@@ -28,7 +28,8 @@ export default function SalesOrder() {
   const [dates, setDates] = useState<string[]>([]);
   const [, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [statusDayCounts, setStatusDayCounts] = useState<StatusDayCountsType>({}); 
+  const [statusDayCounts, setStatusDayCounts] = useState<StatusDayCountsType>({});
+  const [orders, setOrders] = useState<Order[]>([]); // Adicione este estado
 
   const navigate = useNavigate();
 
@@ -40,25 +41,25 @@ export default function SalesOrder() {
       .then((data) => {
         console.log("Resposta completa da API:", data);
         
-        let orders: Order[] = [];
+        let ordersData: Order[] = [];
         
         if (Array.isArray(data)) {
-          orders = data;
+          ordersData = data;
         } else if (data.orders && Array.isArray(data.orders)) {
-          orders = data.orders;
+          ordersData = data.orders;
         } else if (data.data && Array.isArray(data.data)) {
-          orders = data.data;
+          ordersData = data.data;
         } else {
           throw new Error("Formato de resposta inesperado da API");
         }
 
-        console.log("Pedidos processados:", orders);
+        console.log("Pedidos processados:", ordersData);
 
         const grouped: SummaryType = {};
         const allDates = new Set<string>();
         const statusCounterByDate: StatusDayCountsType = {};
 
-        orders.forEach((order) => {
+        ordersData.forEach((order) => {
           const status = order.status?.toLowerCase() || '';
           const date = order.date;
           
@@ -103,6 +104,7 @@ export default function SalesOrder() {
         setSummary(grouped);
         setDates([...allDates].sort());
         setStatusDayCounts(statusCounterByDate);
+        setOrders(ordersData); // Salva os pedidos no estado
         setLoading(false);
         setError(null);
       })
@@ -112,6 +114,27 @@ export default function SalesOrder() {
         setLoading(false);
       });
   }, []);
+
+  // Cálculo dos valores por status usando useMemo
+  const statusValues = useMemo(() => {
+    const values: { [status: string]: { [date: string]: number } } = {};
+    
+    statusOptions.forEach(({ value }) => {
+      values[value] = {};
+      dates.forEach(date => {
+        values[value][date] = orders
+          .filter(order => order.date === date && order.status === value)
+          .reduce((sum: number, order: Order) => {
+            const orderTotal = order.cakes.reduce((cakeSum: number, cake) => 
+              cakeSum + (cake.price * cake.amount), 0
+            );
+            return sum + orderTotal;
+          }, 0);
+      });
+    });
+    
+    return values;
+  }, [orders, dates, statusOptions]);
 
   // 🔹 Cálculo do total geral de todos os bolos por dia
   const totalGeralPorDia: Record<string, number> = dates.reduce((acc: Record<string, number>, date) => {
@@ -238,21 +261,28 @@ export default function SalesOrder() {
               {dates.map((date) => (
                 <th key={date}>{formatDateJP(date)}</th>
               ))}
-              <th>合計</th>
+              <th>合計(件数)</th>
+              <th>合計(金額)</th>
             </tr>
           </thead>
           <tbody>
             {statusOptions.map(({ value, label }) => {
               let totalStatus = 0;
+              let totalValue = 0;
+              
               return (
                 <tr key={value}>
-                  <td  className={`title-${label}`}>{label}</td>
+                  <td className={`title-${label}`}>{label}</td>
                   {dates.map((date) => {
                     const count = statusDayCounts[date]?.[value] || 0;
+                    const valueForDate = statusValues[value]?.[date] || 0;
                     totalStatus += count;
+                    totalValue += valueForDate;
+                    
                     return <td key={`${value}-${date}`}>{count}</td>;
                   })}
                   <td><strong>{totalStatus}</strong></td>
+                  <td><strong>¥{totalValue.toLocaleString("ja-JP")}</strong></td>
                 </tr>
               );
             })}
@@ -271,6 +301,15 @@ export default function SalesOrder() {
                       return subSum + (statusDayCounts[date]?.[value] || 0);
                     }, 0);
                   }, 0)}
+                </strong>
+              </td>
+              <td>
+                <strong>
+                  ¥{dates.reduce((sum, date) => {
+                    return sum + statusOptions.reduce((dateSum, {value}) => {
+                      return dateSum + (statusValues[value]?.[date] || 0);
+                    }, 0);
+                  }, 0).toLocaleString("ja-JP")}
                 </strong>
               </td>
             </tr>
