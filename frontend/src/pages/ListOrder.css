@@ -165,8 +165,7 @@ ul {
 
 .list-order-table th.situation-cell,
 .list-order-table td.situation-cell {
-  min-width: 150px; 
-  width: 140px;
+  min-width: 161px; 
 }
 
 .id-cell {
