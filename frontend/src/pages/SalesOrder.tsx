@@ -73,7 +73,7 @@ export default function SalesOrder() {
           if (status !== "e") {
             order.cakes.forEach((cake) => {
               const name = cake.name.trim();
-              const size = cake.size.trim();
+              const size = cake.size?.trim() || '';
               const amount = Number(cake.amount) || 0;
               const stock = Number(cake.stock) || 0;
 
