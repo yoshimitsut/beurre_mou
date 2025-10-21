@@ -30,7 +30,7 @@ export default function ListOrder() {
   const [dateFilter, setDateFilter] = useState("すべて");
   const [hourFilter, setHourFilter] = useState("すべて");
 
-  const [expandedOrderId, setExpandedOrderId] = useState<number | null>(null);
+  // const [expandedOrderId, setExpandedOrderId] = useState<number | null>(null);
   const [editingOrder, setEditingOrder] = useState<Order | null>(null);
 
   const location = useLocation();
@@ -376,10 +376,10 @@ useEffect(() => {
         <div className='btn-actions'>
           <ExcelExportButton data={orders} filename='注文ケーキ.xlsx' sheetName='注文' />
           <button onClick={() => setShowScanner(true)} className='list-btn qrcode-btn'>
-            <img src="/icons/qrCodeImg.avif" alt="qrcode icon" />
+            <img src="/icons/qr-code.ico" alt="qrcode icon" />
           </button>
           <button onClick={() => navigate("/ordertable")} className='list-btn'>
-            <img src="/icons/table.avif" alt="graphic icon" />
+            <img src="/icons/graph.ico" alt="graphic icon" />
           </button>
         </div>
       </div>
@@ -524,7 +524,7 @@ useEffect(() => {
                       </th>
                       <th>個数</th>
                       <th className='message-cell'>メッセージ</th>
-                      <th>その他</th>
+                      <th className='message-cell'>その他</th>
                       <th>電話番号</th>
                       <th>メールアドレス</th>
                       <th>編集</th>
@@ -594,27 +594,30 @@ useEffect(() => {
                             <ul>
                               {order.cakes.map((cake, index) => (
                                 <li key={`${order.id_order}-${cake.cake_id}-${index}`} >
-                                  <div
-                                    className={`ellipsis-text ${expandedOrderId === order.id_order ? 'expanded' : ''}`}
+                                  {/* <div
+                                    className={`ellipsis-text`}
                                     onClick={() => setExpandedOrderId(expandedOrderId === order.id_order ? null : order.id_order)}
                                     title={expandedOrderId ? "" : "クリックして全メッセージを表示"}
                                     style={{ cursor: "pointer" }}
-                                  >
+                                  > */}
                                     {cake.message_cake}
-                                  </div>
+                                  {/* </div> */}
                                 </li>
                               ))}
                             </ul>
                           </td>
                           <td className='message-cell'>
-                            <div
+                            {/* <div
                               className={`ellipsis-text ${expandedOrderId === order.id_order ? 'expanded' : ''}`}
                               onClick={() => setExpandedOrderId(expandedOrderId === order.id_order ? null : order.id_order)}
                               title={expandedOrderId ? "" : "クリックして全メッセージを表示"}
                               style={{ cursor: "pointer" }}
-                            >
+                            > */}
+                            <li>
                               {order.message || " "}
-                            </div>
+
+                            </li>
+                            {/* </div> */}
                           </td>
                           <td>{order.tel}</td>
                           <td>{order.email}</td>

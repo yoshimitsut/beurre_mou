@@ -65,10 +65,10 @@
 
 .input-text-modal {
   width: 100%;
-  margin-top: 4px;
   padding: 8px;
   border: 1px solid #ddd;
   border-radius: 6px;
+  height: 2.3rem;
 }
 
 .modal-buttons {
@@ -99,7 +99,41 @@
   gap: 2em;
 }
 
+.cake-item {
+  display: flex;
+  align-items: stretch; /* faz o número ocupar a altura total do texto */
+  gap: 0.8em;
+  margin-bottom: 0.8em;
+}
+
+.cake-number {
+  font-weight: bold;
+  border-radius: 8px;
+  width: 1em;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.cake-info {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: 0.2em;
+}
+
 /* .modal-content input {
   height: 2.5em;
 } */
 
+
+@media (max-width: 450px) { 
+  .cake-info-1{
+    align-items: flex-start;
+    flex-direction: column;
+
+    div {
+      width: 100%;
+    }
+  }
+}

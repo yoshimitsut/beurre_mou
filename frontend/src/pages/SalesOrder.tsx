@@ -136,9 +136,9 @@ export default function SalesOrder() {
 
   return (
     <div className="summary-table-container">
-      <div className="list-order-actions">
+      <div className="table-order-actions" onClick={() => navigate("/list")}>
         <div className='btn-actions'>
-          <div onClick={() => navigate("/list")} className='btn-back'>
+          <div className='btn-back'>
             <img src="/icons/btn-back.png" alt="list icon" />
           </div>
         </div>

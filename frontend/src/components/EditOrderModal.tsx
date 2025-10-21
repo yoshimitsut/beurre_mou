@@ -190,7 +190,7 @@ export default function EditOrderModal({ editingOrder, setEditingOrder, handleSa
 
         {/* Dados do cliente */}
         <div style={{ display: "flex", gap: "2rem" }}>
-          <div>
+          <div style={{ width: "50%" }}>
             <label>姓(カタカナ)：</label>
             <input 
               className="input-text-modal"
@@ -199,7 +199,7 @@ export default function EditOrderModal({ editingOrder, setEditingOrder, handleSa
               onChange={(e) => setEditingOrder({ ...editingOrder, first_name: e.target.value })} 
             />
           </div>
-          <div>
+          <div style={{ width: "50%" }}>
             <label>名(カタカナ)：</label>
             <input 
               className="input-text-modal"
@@ -211,7 +211,7 @@ export default function EditOrderModal({ editingOrder, setEditingOrder, handleSa
         </div>
 
         <div style={{ display: "flex", gap: "2rem", marginTop: "1rem" }}>
-          <div>
+          <div style={{ width: "50%" }}>
             <label>メールアドレス：</label>
             <input 
               className="input-text-modal"
@@ -220,7 +220,7 @@ export default function EditOrderModal({ editingOrder, setEditingOrder, handleSa
               onChange={(e) => setEditingOrder({ ...editingOrder, email: e.target.value })} 
             />
           </div>
-          <div>
+          <div style={{ width: "50%" }}>
             <label>お電話番号：</label>
             <input 
               className="input-text-modal"
@@ -278,90 +278,99 @@ export default function EditOrderModal({ editingOrder, setEditingOrder, handleSa
               )}
               
               <div style={{ marginBottom: 8, display: "flex", gap: "1rem", alignItems: "center" }}>
-                <div style={{ flex: 1 }}>
-                  <label>ケーキ名:</label>
-                  <Select<OptionType, false, GroupBase<OptionType>>
-                    styles={customStyles}
-                    options={cakeOptions}
-                    value={cakeOptions.find(opt => String(opt.value) === String(cake.cake_id))}
-                    onChange={(val: SingleValue<OptionType>) => {
-                      if (val) {
-                        const newCakeId = Number(val.value);
-                        const selectedCake = getCakeDataById(newCakeId);
-                        if (selectedCake) {
-                          const firstAvailableSize = selectedCake.sizes.find(s => s.stock > 0) || selectedCake.sizes[0];
-                          setCakes(prev => prev.map((c, i) => 
-                            i === index ? { 
-                              ...c, 
-                              cake_id: newCakeId,
-                              name: val.label,
-                              size: firstAvailableSize?.size || "",
-                              price: firstAvailableSize?.price || 0
-                            } : c
-                          ));
+                <div className="cake-number">
+                  {index + 1}
+                </div>
+
+                <div style={{ width: "100%" }}>
+                  <div style={{ marginBottom: 8, display: "flex", gap: "1rem", alignItems: "center"}}>
+
+                    <div style={{ flex: 1 }} className="cake-info-1">
+                      <label>ケーキ名:</label>
+                      <Select<OptionType, false, GroupBase<OptionType>>
+                        styles={customStyles}
+                        options={cakeOptions}
+                        value={cakeOptions.find(opt => String(opt.value) === String(cake.cake_id))}
+                        onChange={(val: SingleValue<OptionType>) => {
+                          if (val) {
+                            const newCakeId = Number(val.value);
+                            const selectedCake = getCakeDataById(newCakeId);
+                            if (selectedCake) {
+                              const firstAvailableSize = selectedCake.sizes.find(s => s.stock > 0) || selectedCake.sizes[0];
+                              setCakes(prev => prev.map((c, i) => 
+                                i === index ? { 
+                                  ...c, 
+                                  cake_id: newCakeId,
+                                  name: val.label,
+                                  size: firstAvailableSize?.size || "",
+                                  price: firstAvailableSize?.price || 0
+                                } : c
+                              ));
+                            }
+                          }
+                        }}
+                      />
+                    </div>
+
+                    <div style={{ flex: 1 }}>
+                      <label>サイズを選択:</label>
+                      <Select<SizeOption, false, GroupBase<SizeOption>>
+                        options={getSizeOptionsWithStock(cake.cake_id, index)}
+                        value={getSizeOptionsWithStock(cake.cake_id, index).find(s => s.size === cake.size) || null}
+                        onChange={(selected) => {
+                          if (selected) {
+                            setCakes(prev =>
+                              prev.map((c, i) =>
+                                i === index ? { ...c, size: selected.size, price: selected.price } : c
+                              )
+                            );
+                          }
+                        }}
+                        placeholder='サイズを選択'
+                        isSearchable={false}
+                        classNamePrefix='react-select-edit'
+                        required
+                        isOptionDisabled={(option) => !!option.isDisabled}
+                        formatOptionLabel={(option) =>
+                          !option.isDisabled
+                            ? `${option.size} ￥${option.price.toLocaleString()} （${(option.price + option.price * 0.08).toLocaleString("ja-JP")}税込）`
+                            : (
+                              <span>
+                                {option.size} ￥{option.price.toLocaleString()}
+                                <span style={{ color: 'red', fontSize: '0.8rem' }}>
+                                  （定員に達した為、選択できません。）
+                                </span>
+                              </span>
+                            )
                         }
-                      }
-                    }}
-                  />
-                </div>
+                      />
+                    </div>
+                    
+                    <div>
+                      <label>数量:</label>
+                      <input 
+                        className="input-text-modal"
+                        type="number"
+                        min="1"
+                        value={cake.amount} 
+                        onChange={(e) => updateCake(index, "amount", Number(e.target.value))} 
+                        style={{ width: "80px" }}
+                      />
+                    </div>
+                  </div>
 
-                <div style={{ flex: 1 }}>
-                  <label>サイズを選択:</label>
-                  <Select<SizeOption, false, GroupBase<SizeOption>>
-                    options={getSizeOptionsWithStock(cake.cake_id, index)}
-                    value={getSizeOptionsWithStock(cake.cake_id, index).find(s => s.size === cake.size) || null}
-                    onChange={(selected) => {
-                      if (selected) {
-                        setCakes(prev =>
-                          prev.map((c, i) =>
-                            i === index ? { ...c, size: selected.size, price: selected.price } : c
-                          )
-                        );
-                      }
-                    }}
-                    placeholder='サイズを選択'
-                    isSearchable={false}
-                    classNamePrefix='react-select-edit'
-                    required
-                    isOptionDisabled={(option) => !!option.isDisabled}
-                    formatOptionLabel={(option) =>
-                      !option.isDisabled
-                        ? `${option.size} ￥${option.price.toLocaleString()} （${(option.price + option.price * 0.08).toLocaleString("ja-JP")}税込）`
-                        : (
-                          <span>
-                            {option.size} ￥{option.price.toLocaleString()}
-                            <span style={{ color: 'red', fontSize: '0.8rem' }}>
-                              （定員に達した為、選択できません。）
-                            </span>
-                          </span>
-                        )
-                    }
-                  />
+                  <div>
+                    <label>メッセージプレート:</label>
+                    <input 
+                      type="text" 
+                      className="input-text-modal"
+                      value={cake.message_cake || ""} 
+                      onChange={(e) => updateCake(index, "message_cake", e.target.value)} 
+                      style={{ width: "100%" }}
+                      placeholder="メッセージを入力（任意）"
+                    />
+                  </div>
                 </div>
-                
-                <div>
-                  <label>数量:</label>
-                  <input 
-                    className="input-text-modal"
-                    type="number"
-                    min="1"
-                    value={cake.amount} 
-                    onChange={(e) => updateCake(index, "amount", Number(e.target.value))} 
-                    style={{ width: "80px" }}
-                  />
-                </div>
-              </div>
-
-              <div>
-                <label>メッセージプレート:</label>
-                <input 
-                  type="text" 
-                  className="input-text-modal"
-                  value={cake.message_cake || ""} 
-                  onChange={(e) => updateCake(index, "message_cake", e.target.value)} 
-                  style={{ width: "97%" }}
-                  placeholder="メッセージを入力（任意）"
-                />
               </div>
             </div>
           ))}
@@ -369,7 +378,7 @@ export default function EditOrderModal({ editingOrder, setEditingOrder, handleSa
 
         <div style={{ display: "flex", gap: "2rem", marginTop: "1rem" }}>
           <DateTimePicker
-            selectedDate={selectedDate} // string
+            selectedDate={selectedDate} 
             setSelectedDate={setSelectedDate}
             selectedTime={selectedTime}
             setSelectedTime={setSelectedTime}

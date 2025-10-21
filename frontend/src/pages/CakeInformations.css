@@ -63,6 +63,10 @@
     .cake-description {
       font-size: 1.2rem;
     }
+
+    table {
+      text-align: left;
+    }
   }
 }
 

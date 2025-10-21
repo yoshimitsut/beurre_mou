@@ -64,7 +64,6 @@ export default function CakeInformations() {
               style={{
                 margin: "20px auto",
                 borderCollapse: "collapse",
-                minWidth: "300px",
               }}
             >
               <tbody>

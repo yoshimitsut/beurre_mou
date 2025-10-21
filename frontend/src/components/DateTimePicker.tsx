@@ -69,16 +69,12 @@ useEffect(() => {
   // Converter selectedDate para o mesmo formato que vem do backend (YYYY-MM-DD)
   const selectedDateFormatted = selectedDate.toISOString().split('T')[0];
   
-  console.log('Procurando slots para:', selectedDateFormatted);
-
   const daySlots = timeSlotsData.filter((slot) => {
     // Slot.date já deve estar no formato '2025-12-25'
     // Se vier com timezone, remover a parte do tempo
     const slotDateFormatted = slot.date.split('T')[0];
     return selectedDateFormatted === slotDateFormatted;
   });
-
-  console.log('Slots encontrados:', daySlots);
 
   const options: TimeOptionType[] = daySlots.map((slot) => ({
     value: slot.time,
@@ -94,8 +90,8 @@ useEffect(() => {
 
   return (
     <div className="datetime-picker">
-      <div className="input-group">
-        <label>受け取り希望日</label>
+      <div className="input-group-edit">
+        <label style={{'paddingLeft': '2px'}}>受け取り希望日</label>
         <DatePicker
           selected={selectedDate}
           onChange={setSelectedDate}
@@ -113,7 +109,7 @@ useEffect(() => {
         />
       </div>
 
-      <div className="input-group-edit" style={{'paddingTop': '3px'}}>
+      <div className="input-group-edit" >
         <label>受け取り希望時間</label>
         <Select<TimeOptionType>
           options={hoursOptions}

@@ -67,7 +67,7 @@ ul {
   font-weight: bold;
 }
 
-.list-order-table td.message-cell,
+/* .list-order-table td.message-cell,
 .list-order-table td.message-cell {
   max-width: 300px;
   width: 300px;
@@ -76,15 +76,22 @@ ul {
   overflow-y: auto;
   text-overflow: ellipsis;
   overflow: hidden;
-}
+} */
 
 .list-order-table td.message-cell {
   max-width: 300px;
-  max-height: 50px; /* altura fixa */
-  overflow: auto;
+  /* max-height: 50px; */
+  /* overflow: auto; */
+  white-space: normal;
+  flex-wrap: wrap;
   scrollbar-width: thin; /* Firefox */
   scrollbar-color: #888 #f0f0f0;
   word-break: break-word;
+
+  li {
+    width: 280px;
+    list-style: none;
+  }
 }
 
 /* Webkit (Chrome, Safari) */
@@ -140,20 +147,26 @@ ul {
 }
 
 .list-btn {
-  border: 3px solid #000;
+  /* border: 3px solid #000; */
   padding: 3px 2px 0px;
-  border-radius: 20%;
+  /* border-radius: 20%; */
   cursor: pointer;
+  background-color: #b4b4b4;
 
+  
   img {
-    width: 1.5rem;
+    width: 2.5rem;
   }
+}
+
+.list-btn:hover {
+  background-color: #888;
 }
 
 .list-order-table th.situation-cell,
 .list-order-table td.situation-cell {
-  min-width: 131px; /* aumenta espaço para o react-select */
-  width: 131px;
+  min-width: 150px; 
+  width: 140px;
 }
 
 .id-cell {
@@ -293,5 +306,10 @@ ul {
   }
   .excel-btn {
     display: none;
+  }
+  .list-btn {
+    img {
+      width: 1.5rem;
+    }
   }
 }

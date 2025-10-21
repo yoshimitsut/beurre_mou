@@ -10,7 +10,7 @@ type ExcelExportButtonProps = {
 }
 const statusOptions: Record<number, string> = {
   1: "未",
-  2: "ネット決済済",
+  2: "オンライン予約",
   3: "店頭支払い済",
   4: "お渡し済",
 };
@@ -46,7 +46,7 @@ const handleExport = (data: Order[], filename: string, sheetName: string) => {
 const ExcelExportButton: React.FC<ExcelExportButtonProps> = ({ data, filename, sheetName}) => {
   return (
     <button onClick={() => handleExport(data, filename, sheetName)} className='list-btn excel-btn'>
-      <img src='/icons/file-download.svg' alt='excel icon' />
+      <img src='/icons/file-download.ico' alt='excel icon' />
     </button>
   )
 }
