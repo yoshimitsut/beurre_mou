@@ -542,11 +542,11 @@ app.put('/api/reservar/:id_order', async (req, res) => {
         const mailOptions = {
           from: '"パティスリーブール・ムー" <shimitsutanaka@gmail.com>',
           to: order.email,
-          subject: `❌ ご注文のキャンセル完了 - 受付番号 ${String(id_order).padStart(4, "0")}`,
+          subject: `ご注文のキャンセル完了 - 受付番号 ${String(id_order).padStart(4, "0")}`,
           html: `
             <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; border: 1px solid #e0e0e0;">
               <div style="text-align: center; margin-bottom: 20px;">
-                <h2 style="color: #d32f2f; margin-bottom: 10px;">❌ 注文がキャンセルされました</h2>
+                <h2 style="color: #d32f2f; margin-bottom: 10px;">注文がキャンセルされました</h2>
                 <p style="color: #666;">以下の注文がキャンセル処理されました</p>
               </div>
 

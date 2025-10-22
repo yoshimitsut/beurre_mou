@@ -209,7 +209,7 @@ export default function OrderCake() {
         isDisabled: remainingStock <= 0,
         label: remainingStock > 0
           ? `${s.size} ￥${s.price.toLocaleString()} `
-          : `${s.size} ￥${s.price.toLocaleString()} （定員に達した為、選択できません。）`
+          : `${s.size} ￥${s.price.toLocaleString()} （完売）`
       };
     });
   };
@@ -475,7 +475,7 @@ export default function OrderCake() {
                     value: s.size,
                     label: s.stock > 0
                       ? `${s.size} ￥${s.price.toLocaleString()} `
-                      : `${s.size} ￥${s.price.toLocaleString()} （定員に達した為、選択できません。）`,
+                      : `${s.size} ￥${s.price.toLocaleString()} （完売）`,
                     isDisabled: s.stock <= 0
                   })) || [];
 
@@ -567,7 +567,7 @@ export default function OrderCake() {
                         formatOptionLabel={(option) => {
                           return option.stock > 0
                             ? <p>{option.size} ￥{option.price.toLocaleString("ja-JP")}<span style={{ fontSize: '1rem' }}>（税込）</span></p>
-                            : <p>{option.size} ￥{option.price.toLocaleString("ja-JP")}<span style={{ color: 'red', fontSize: '0.8rem' }}>（定員に達した為、選択できません。）</span></p>;
+                            : <p>{option.size} ￥{option.price.toLocaleString("ja-JP")}<span style={{ color: 'red', fontSize: '0.8rem' }}>（完売）</span></p>;
                         }}
                       />
                       <label className='select-group'>*ケーキのサイズ</label>
@@ -685,7 +685,7 @@ export default function OrderCake() {
                 required
                 formatOptionLabel={(option, { context }) => {
                   if (context === 'menu' && option.isDisabled) {
-                    return <p>{option.label} <span style={{ color: 'red', fontSize: '0.8rem' }}>（定員に達した為、選択できません。）</span></p>;
+                    return <p>{option.label} <span style={{ color: 'red', fontSize: '0.8rem' }}>（完売）</span></p>;
                   }
                   return option.label;
                 }}
