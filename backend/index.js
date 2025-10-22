@@ -101,8 +101,7 @@ app.post('/api/reservar', async (req, res) => {
     }
   
     const htmlContent = `
-    <div style="border: 1px solid #ddd; padding: 20px; max-width: 400px; margin: 0 auto; font-family: Arial, sans-serif;">
-      
+    <div style="border: 1px solid #ddd; padding: 20px; max-width: 400px; margin: 0 auto; font-family: Arial, sans-serif;">  
     <h2>🎂 注文ありがとうございます！</h2>
     <p>お名前: ${newOrder.first_name} ${newOrder.last_name}</p>
     <p>受付番号: <strong>${String(orderId).padStart(4,"0")}</strong></p>
@@ -110,8 +109,8 @@ app.post('/api/reservar', async (req, res) => {
     <p>受け取り日時: ${newOrder.date} / ${newOrder.pickupHour}</p>
     <p>メッセージ: ${newOrder.message}</p>
 
-    <p>ご注文商品:</p>
-    
+    <h3 style="border-bottom: 2px solid #333; padding-bottom: 5px;">ご注文商品</h3>
+            
     ${newOrder.cakes.map(cake => `
         <table style="width: 400px; margin-bottom: 20px; border-collapse: collapse; background: #f9f9f9; border-radius: 8px; overflow: hidden;">
           <tr>
@@ -137,21 +136,26 @@ app.post('/api/reservar', async (req, res) => {
       
     `).join('')}
 
-    <div style="background: #ccc; width: 400px; text-align: center;">
-      <p style="font-size: 16px;">  <strong>合計金額
-        ¥${Math.trunc(newOrder.cakes.reduce((total, cake) => total + ((cake.price * 1.08) * cake.amount), 0)).toLocaleString("ja-JP")}
-        </strong><span style="font-size: 14px; font-weight: small;">(税込)</span>
-      </p>
-    </div>
-
-    <p>受付用QRコード:</p>
-    <p style='color: red'>※受取当日にスタッフに提示していただくとスムーズです。</p>
-    <img src="cid:${qrCodeContentId}" width="400" />
-    <p>上記の内容に相違がございましたら、お手数をお掛けしますが、</p>
-    <p>ご連絡をお願いいたします。</p>
-    <p>パティスリーブール・ムー（open 11:00 - 19:00）</p>
-    <p>TEL: 080-9854-2849</a></p>
-    <p>宜しくお願いいたいます。</p>
+      <div style="max-width: 400px; background: #ddd; padding: 15px; border-radius: 8px; margin: 20px 0; text-align: center;">
+        <h3 style="margin: 0; color: #000;">合計金額</h3>
+        <p style="font-size: 24px; font-weight: bold; margin: 10px 0 0 0;">
+          ¥${Math.trunc(newOrder.cakes.reduce((total, cake) => total + ((cake.price * 1.08) * cake.amount), 0)).toLocaleString("ja-JP")}
+          <span style="font-size: 14px; font-weight: normal;">(税込)</span>
+        </p>
+      </div>
+    
+      <div style="text-align: center; margin: 20px 0;">
+        <p><strong>受付用QRコード</strong></p>
+        <img src="cid:${qrCodeContentId}" width="300" style="display: block; margin: 0 auto;" />
+      </div>
+      <div style="background: #f8f9fa; padding: 15px; border-radius: 6px; margin-top: 20px;">
+        <p style="margin: 0; font-size: 14px;">上記の内容に相違がございましたら、お手数をお掛けしますが、</p>
+        <p style="margin: 5px 0 0 0; font-size: 14px;">ご連絡をお願いいたします。</p>
+        <p style="margin: 10px 0 0 0;"><strong>パティスリーブール・ムー</strong></p>
+        <p style="margin: 5px 0;">open 11:00 - 19:00</p>
+        <p style="margin: 5px 0;">TEL: <a href="tel:080-9854-2849" style="color: #007bff; text-decoration: none;">080-9854-2849</a></p>
+      </div>
+      <p style="text-align: center; margin-top: 20px; font-style: italic;">宜しくお願いいたします。</p>
     </div>
     `;
     
