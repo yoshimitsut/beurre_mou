@@ -462,13 +462,47 @@ app.put('/api/reservar/:id_order', async (req, res) => {
   const id_order = parseInt(req.params.id_order,10);
   const conn = await pool.getConnection();
 
+  // Configurar o transporter do nodemailer
+  const transporter = nodemailer.createTransport({
+    host: "smtp.gmail.com",
+    port: 587,
+    secure: false,
+    auth: {
+      user: "shimitsutanaka@gmail.com",
+      pass: "vmiepzoxltefekcr"
+    }
+  });
+
+  // Função para formatar a data no formato japonês
+  const formatDateJP = (dateString) => {
+    if (!dateString) return '';
+    
+    // Se já for uma string no formato YYYY-MM-DD
+    if (typeof dateString === 'string' && dateString.match(/^\d{4}-\d{2}-\d{2}$/)) {
+      const [year, month, day] = dateString.split('-');
+      return `${year}年${month}月${day}日`;
+    }
+    
+    // Se for um objeto Date ou string com timestamp
+    const date = new Date(dateString);
+    if (isNaN(date.getTime())) return '';
+    
+    const year = date.getFullYear();
+    const month = String(date.getMonth() + 1).padStart(2, '0');
+    const day = String(date.getDate()).padStart(2, '0');
+    
+    return `${year}年${month}月${day}日`;
+  };
+
   try {
     await conn.beginTransaction();
 
     // pega pedido atual
     const [rows] = await conn.query('SELECT * FROM orders WHERE id_order=?', [id_order]);
     if (rows.length === 0) throw new Error('Pedido não encontrado');
-    const previousStatus = rows[0].status;
+    
+    const order = rows[0];
+    const previousStatus = order.status;
 
     // atualizar status
     await conn.query('UPDATE orders SET status=? WHERE id_order=?', [status, id_order]);
@@ -479,6 +513,91 @@ app.put('/api/reservar/:id_order', async (req, res) => {
       for(const oc of orderCakes){
         await conn.query('UPDATE cake_sizes SET stock = stock + ? WHERE cake_id=? AND size=?', [oc.amount, oc.cake_id, oc.size]);
       }
+
+      // 📧 ENVIAR EMAIL DE CANCELAMENTO
+      try {
+        // Buscar detalhes dos bolos do pedido
+        const [cakesDetails] = await conn.query(`
+          SELECT oc.*, c.name 
+          FROM order_cakes oc 
+          JOIN cakes c ON oc.cake_id = c.id 
+          WHERE oc.order_id = ?
+        `, [id_order]);
+
+        const cakeListHtml = cakesDetails.map(cake => `
+          <tr>
+            <td style="padding: 8px; border-bottom: 1px solid #eee;">${cake.name}</td>
+            <td style="padding: 8px; border-bottom: 1px solid #eee;">${cake.size}</td>
+            <td style="padding: 8px; border-bottom: 1px solid #eee; text-align: center;">${cake.amount}個</td>
+          </tr>
+        `).join('');
+
+        // Formatar a data corretamente
+        const formattedDate = formatDateJP(order.date);
+
+        const mailOptions = {
+          from: '"パティスリーブール・ムー" <shimitsutanaka@gmail.com>',
+          to: order.email,
+          subject: `❌ ご注文のキャンセル完了 - 受付番号 ${String(id_order).padStart(4, "0")}`,
+          html: `
+            <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; border: 1px solid #e0e0e0;">
+              <div style="text-align: center; margin-bottom: 20px;">
+                <h2 style="color: #d32f2f; margin-bottom: 10px;">❌ 注文がキャンセルされました</h2>
+                <p style="color: #666;">以下の注文がキャンセル処理されました</p>
+              </div>
+
+              <div style="background: #f9f9f9; padding: 15px; border-radius: 8px; margin-bottom: 20px;">
+                <h3 style="margin: 0 0 10px 0; color: #333;">注文詳細</h3>
+                <p><strong>受付番号：</strong> ${String(id_order).padStart(4, "0")}</p>
+                <p><strong>お名前：</strong> ${order.first_name} ${order.last_name}様</p>
+                <p><strong>受取予定日：</strong> ${formattedDate}</p>
+                <p><strong>受取時間：</strong> ${order.pickupHour}</p>
+              </div>
+
+              <div style="margin-bottom: 20px;">
+                <h3 style="color: #333; margin-bottom: 10px;">キャンセルされた商品</h3>
+                <table style="width: 100%; border-collapse: collapse;">
+                  <thead>
+                    <tr style="background: #f5f5f5;">
+                      <th style="padding: 10px; text-align: left; border-bottom: 2px solid #ddd;">商品名</th>
+                      <th style="padding: 10px; text-align: left; border-bottom: 2px solid #ddd;">サイズ</th>
+                      <th style="padding: 10px; text-align: center; border-bottom: 2px solid #ddd;">数量</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    ${cakeListHtml}
+                  </tbody>
+                </table>
+              </div>
+
+              <div style="background: #fff3cd; padding: 15px; border-radius: 8px; border: 1px solid #ffeaa7; margin-bottom: 20px;">
+                <h4 style="color: #856404; margin: 0 0 10px 0;">📝 キャンセルについて</h4>
+                <p style="color: #856404; margin: 0; font-size: 14px;">
+                  ご注文のキャンセルが完了しました。<br>
+                  ご不明な点がございましたら、下記までご連絡ください。
+                </p>
+              </div>
+
+              <div style="background: #f8f9fa; padding: 15px; border-radius: 8px; text-align: center;">
+                <p style="margin: 0 0 10px 0; font-size: 14px; color: #666;">
+                  パティスリーブール・ムー<br>
+                  OPEN 11:00 - 19:00<br>
+                  TEL: <a href="tel:080-9854-2849" style="color: #007bff;">080-9854-2849</a>
+                </p>
+                <p style="margin: 0; font-size: 12px; color: #999;">
+                  このメールは自動送信されています
+                </p>
+              </div>
+            </div>
+          `
+        };
+
+        const info = await transporter.sendMail(mailOptions);
+        console.log("📧 Email de cancelamento enviado:", info.messageId);
+        
+      } catch (emailError) {
+        console.error("❌ Erro ao enviar email de cancelamento:", emailError);
+      }
     }
     
     // se for voltar o pedido, tirar qtdade do estoque
@@ -487,6 +606,32 @@ app.put('/api/reservar/:id_order', async (req, res) => {
       for(const oc of orderCakes){
         await conn.query('UPDATE cake_sizes SET stock = stock - ? WHERE cake_id=? AND size=?', [oc.amount, oc.cake_id, oc.size]);
       }
+
+      // 📧 OPÇÃO: Também pode enviar email de reativação se quiser
+      // try {
+      //   const formattedDate = formatDateJP(order.date);
+        
+      //   const mailOptions = {
+      //     from: '"パティスリーブール・ムー" <shimitsutanaka@gmail.com>',
+      //     to: order.email,
+      //     subject: `✅ ご注文の再開 - 受付番号 ${String(id_order).padStart(4, "0")}`,
+      //     html: `
+      //       <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;">
+      //         <h2 style="color: #28a745; text-align: center;">✅ 注文が再開されました</h2>
+      //         <p>${order.first_name} ${order.last_name}様</p>
+      //         <p>受付番号 <strong>${String(id_order).padStart(4, "0")}</strong> の注文が再開されました。</p>
+      //         <p><strong>受取予定日：</strong> ${formattedDate}</p>
+      //         <p><strong>受取時間：</strong> ${order.pickupHour}</p>
+      //         <p>引き続きよろしくお願いいたします。</p>
+      //       </div>
+      //     `
+      //   };
+        
+      //   const info = await transporter.sendMail(mailOptions);
+      //   console.log("📧 Email de reativação enviado:", info.messageId);
+      // } catch (emailError) {
+      //   console.error("❌ Erro ao enviar email de reativação:", emailError);
+      // }
     }
 
     await conn.commit();
