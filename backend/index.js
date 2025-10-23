@@ -202,9 +202,9 @@ app.put('/api/orders/:id_order', async (req, res) => {
     port: 587,
     secure: false,
     auth: {
-        user: "beurre.mou.christmascake@gmail.com",
+        user: "beurre.mou.yoyaku@gmail.com",
         // user: "shimitsutanaka@gmail.com",
-        pass: "gvelryhahkljfpke"
+        pass: "fsyflipjqvfafpph"
         // pass: "vmiepzoxltefekcr"
     }
   });
@@ -396,7 +396,7 @@ app.put('/api/orders/:id_order', async (req, res) => {
     const totalComTaxa = totalGeral * 1.08;
 
     const mailOptions = {
-        from: '"パティスリーブール・ムー" <beurre.mou.christmascake@gmail.com>', 
+        from: '"パティスリーブール・ムー" <beurre.mou.yoyaku@gmail.com>', 
         to: email, 
         subject: `🎂 ご注文内容変更のお知らせ - 受付番号 ${String(id_order).padStart(4, "0")}`,
         html: `
@@ -474,8 +474,8 @@ app.put('/api/reservar/:id_order', async (req, res) => {
     port: 587,
     secure: false,
     auth: {
-      user: "beurre.mou.christmascake@gmail.com",
-      pass: "gvelryhahkljfpke"
+      user: "beurre.mou.yoyaku@gmail.com",
+      pass: "fsyflipjqvfafpph"
     }
   });
 
@@ -542,7 +542,7 @@ app.put('/api/reservar/:id_order', async (req, res) => {
         const formattedDate = formatDateJP(order.date);
 
         const mailOptions = {
-          from: '"パティスリーブール・ムー" <beurre.mou.christmascake@gmail.com>',
+          from: '"パティスリーブール・ムー" <beurre.mou.yoyaku@gmail.com>',
           to: order.email,
           subject: `ご注文のキャンセル完了 - 受付番号 ${String(id_order).padStart(4, "0")}`,
           html: `

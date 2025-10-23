@@ -16,6 +16,5 @@ module.exports = pool;
 
 
 //CREATE SCHEMA `beurre_mou` DEFAULT CHARACTER SET utf8 ;
-beurre_mou
-bmchristmascake
+
 
