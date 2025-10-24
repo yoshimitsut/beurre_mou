@@ -1,6 +1,6 @@
 import { useEffect, useState, useMemo, useRef } from 'react';
 import { useNavigate, useLocation } from "react-router-dom";
-import { Html5QrcodeScanner } from 'html5-qrcode';
+import { Html5Qrcode } from 'html5-qrcode';
 import Select from "react-select";
 
 import ExcelExportButton from '../components/ExcelExportButton';
@@ -120,30 +120,32 @@ export default function ListOrder() {
   }, [orders]);
 
   // Efeito para o scanner QR Code
-  useEffect(() => {
-    if (!showScanner) return;
+useEffect(() => {
+  if (!showScanner) return;
 
-    const scanner = new Html5QrcodeScanner('reader', { fps: 10, qrbox: 250 }, false);
+  const html5QrCode = new Html5Qrcode("reader");
 
-    scanner.render(
-      async (decodedText: string) => {
+  html5QrCode
+    .start(
+      { facingMode: "environment" }, // 👈 força câmera traseira
+      { fps: 10, qrbox: 250 },
+      (decodedText) => {
         setShowScanner(false);
-        await scanner.clear();
+        html5QrCode.stop();
 
         const found = orders.find((o) => o.id_order === Number(decodedText));
-        if (found) {
-          setScannedOrderId(found.id_order);
-        } else {
-          alert('注文が見つかりません。');
-        }
+        if (found) setScannedOrderId(found.id_order);
+        else alert("注文が見つかりません。");
       },
-      (err) => console.warn('QR コードの読み取りエラー:', err)
-    );
+      (err) => console.warn("QRコード読み取りエラー:", err)
+    )
+    .catch((err) => console.error("Erro ao iniciar câmera:", err));
 
-    return () => {
-      scanner.clear().catch(() => {});
-    };
-  }, [showScanner, orders]);
+  return () => {
+    html5QrCode.stop().then(() => html5QrCode.clear());
+  };
+}, [showScanner, orders]);
+
 
   // Ordenar pedidos agrupados
   const sortedGroupedOrders = useMemo(() => {
