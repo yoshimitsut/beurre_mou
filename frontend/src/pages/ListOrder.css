@@ -297,6 +297,9 @@ ul {
 
 /* Mobile */
 @media (max-width: 768px) {
+  .list-order-input {
+    max-width: 98vw !important;
+  }
   .list-order-actions {
     flex-direction: column;
     gap: 1rem;
