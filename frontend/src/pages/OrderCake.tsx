@@ -6,7 +6,7 @@ import { ja } from 'date-fns/locale';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { addDays, isAfter, isSameDay, format, endOfMonth, getDay } from 'date-fns';
 
-import type { Cake, OrderCake, OptionType, MyContainerProps, TimeslotSQL, SizeOption } from "../types/types.ts";
+import type { Cake, OrderCake, OptionType, MyContainerProps, SizeOption, TimeOptionType } from "../types/types.ts";
 import "./OrderCake.css";
 
 const API_URL = import.meta.env.VITE_API_URL;
@@ -15,9 +15,10 @@ type CustomOptionType = OptionType & {
   isDisabled?: boolean;
 };
 
-type TimeOptionType = OptionType & {
-  isDisabled?: boolean;
-};
+// type TimeOptionType = OptionType & {
+//   id: number;
+//   isDisabled?: boolean;
+// };
 
 export default function OrderCake() {
   const navigate = useNavigate();
@@ -30,8 +31,7 @@ export default function OrderCake() {
 
   const [selectedDate, setSelectedDate] = useState<Date | null>(null);
   const [selectedDate2, setSelectedDate2] = useState<Date | null>(null);
-  const [hoursOptions, setHoursOptions] = useState<TimeOptionType[]>([]);
-  const [timeSlotsData, setTimeSlotsData] = useState<TimeslotSQL[]>([]);
+  // const [timeSlotsData, setTimeSlotsData] = useState<TimeslotSQL[]>([]);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [pickupHour, setPickupHour] = useState("時間を選択");
   const [, setText] = useState("");
@@ -79,6 +79,17 @@ export default function OrderCake() {
 
   const isDateAllowed = (date: Date) => !excludedDates.some((d) => isSameDay(d, date));
 
+  const timeSlots: TimeOptionType[] = [
+    { id: 1, value: "11:00〜12:00", label: "11:00〜12:00" },
+    { id: 2, value: "12:00〜13:00", label: "12:00〜13:00" },
+    { id: 3, value: "13:00〜14:00", label: "13:00〜14:00" },
+    { id: 4, value: "14:00〜15:00", label: "14:00〜15:00" },
+    { id: 5, value: "15:00〜16:00", label: "15:00〜16:00" },
+    { id: 6, value: "16:00〜17:00", label: "16:00〜17:00" },
+    { id: 7, value: "17:00〜18:00", label: "17:00〜18:00" },
+    { id: 8, value: "18:00〜19:00", label: "18:00〜19:00" }
+  ];
+
   // Efeitos
   useEffect(() => {
     fetch(`${API_URL}/api/cake`)
@@ -93,45 +104,19 @@ export default function OrderCake() {
       .catch(err => console.error("Erro ao carregar bolos:", err));
   }, []);
 
-  useEffect(() => {
-    fetch(`${API_URL}/api/timeslots`)
-      .then(res => res.json())
-      .then((data) => {
-        if (Array.isArray(data.timeslots)) {
-          setTimeSlotsData(data.timeslots);
-        } else {
-          console.error("Formato inesperado de timeslots:", data);
-          setTimeSlotsData([]);
-        }
-      })
-      .catch(err => console.error("Erro ao carregar datas:", err));
-  }, []);
-
-  useEffect(() => {
-    if (!selectedDate) return;
-
-    const formatDateForBackend = (date: Date): string => {
-      const year = date.getFullYear();
-      const month = String(date.getMonth() + 1).padStart(2, '0');
-      const day = String(date.getDate()).padStart(2, '0');
-      return `${year}-${month}-${day}`;
-    };
-
-    const formattedDate = formatDateForBackend(selectedDate);
-    const daySlots = timeSlotsData.filter(slot => {
-      const slotDateStr = slot.date.split("T")[0];
-      return slotDateStr === formattedDate;
-    });
-
-    const options = daySlots.map(slot => ({
-      value: slot.time,
-      label: slot.time,
-      stock: slot.limit_slots,
-      isDisabled: slot.limit_slots <= 0
-    }));
-
-    setHoursOptions(options);
-  }, [selectedDate, timeSlotsData]);
+  // useEffect(() => {
+  //   fetch(`${API_URL}/api/timeslots`)
+  //     .then(res => res.json())
+  //     .then((data) => {
+  //       if (Array.isArray(data.timeslots)) {
+  //         setTimeSlotsData(data.timeslots);
+  //       } else {
+  //         console.error("Formato inesperado de timeslots:", data);
+  //         setTimeSlotsData([]);
+  //       }
+  //     })
+  //     .catch(err => console.error("Erro ao carregar datas:", err));
+  // }, []);
 
   const selectedCakeName = searchParams.get("cake");
   useEffect(() => {
@@ -213,6 +198,31 @@ export default function OrderCake() {
       </div>
     );
   };
+  
+const customStylesHour: StylesConfig<TimeOptionType, false> = {
+  option: (provided, state) => ({
+      ...provided,
+      backgroundColor: state.isSelected ? '#fdd111' : state.isFocused ? '#fdeca2' : 'white',
+      color: state.isDisabled ? '#999' : '#333',
+      cursor: state.isDisabled ? 'not-allowed' : 'pointer',
+    }),
+    control: (provided, state) => ({
+      ...provided,
+      borderColor: state.isFocused ? '#fdeca2' : '#ddd',
+      boxShadow: state.isFocused ? '0 0 0 1px #fdeca2' : 'none',
+      '&:hover': { borderColor: '#fdeca2' },
+    }),
+    singleValue: (provided) => ({
+      ...provided,
+      color: '#333',
+      borderRadius: '4px',
+      padding: '2px 6px',
+    }),
+    menu: (provided) => ({
+      ...provided,
+      zIndex: 9999,
+    }),
+};
 
   const customStyles: StylesConfig<OptionType, false, GroupBase<OptionType>> = {
     option: (provided, state) => ({
@@ -428,6 +438,7 @@ export default function OrderCake() {
                     <Select<OptionType>
                       options={Array.from({ length: 10 }, (_, i) => ({ value: String(i + 1), label: String(i + 1) }))}
                       value={Array.from({ length: 10 }, (_, i) => ({ value: String(i + 1), label: String(i + 1) })).find(opt => opt.value === String(item.amount)) || null}
+                      isSearchable={false}
                       onChange={selected => updateCake(index, "amount", selected ? Number(selected.value) : 0)}
                       classNamePrefix="react-select"
                       placeholder="数量"
@@ -436,6 +447,7 @@ export default function OrderCake() {
                     />
                     <label className='select-group'>*個数:</label>
                   </div>
+                  
                   <div className='input-group'>
                     <label htmlFor="message_cake">メッセージプレート</label>
                     <textarea name="message_cake" id="message_cake" placeholder="ご要望がある場合のみご記入ください。"
@@ -505,15 +517,15 @@ export default function OrderCake() {
             </div>
             <div className='input-group'>
               <Select<TimeOptionType>
-                options={hoursOptions}
-                value={hoursOptions.find(h => h.value === pickupHour)}
-                onChange={(selected) => setPickupHour(selected?.value || "時間を選択")}
-                classNamePrefix="react-select"
-                styles={customStyles}
-                placeholder="時間を選択"
-                isSearchable={false}
-                required
-              />
+  options={timeSlots}
+  value={timeSlots.find(h => h.value === pickupHour)}
+  onChange={(selected) => setPickupHour(selected?.value || "時間を選択")}
+  classNamePrefix="react-select"
+  styles={customStylesHour}
+  placeholder="時間を選択"
+  isSearchable={false}
+  required
+/>
               <label htmlFor="pickupHour" className='select-group'>受け取り希望時間</label>
             </div>
             <div className='input-group'>
