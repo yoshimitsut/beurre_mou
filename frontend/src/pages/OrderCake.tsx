@@ -193,9 +193,9 @@ export default function OrderCake() {
     );
   };
 
-  const handleDateChange = (date: Date | null) => {
-    setSelectedDate(date);
-  };
+  // const handleDateChange = (date: Date | null) => {
+  //   setSelectedDate(date);
+  // };
 
   const renderDayContents = (day: number, date: Date) => {
     const isBlocked = excludedDates.some(d => isSameDay(d, date));
