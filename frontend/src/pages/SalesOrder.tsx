@@ -41,6 +41,28 @@ export default function SalesOrder() {
   const navigate = useNavigate();
   const statusOptions = STATUS_OPTIONS;
 
+  // 🔹 Função para verificar se é o dia atual
+  const isToday = (dateString: string): boolean => {
+    const today = new Date();
+    const targetDate = new Date(dateString);
+    
+    return today.toDateString() === targetDate.toDateString();
+  };
+
+  // 🔹 Função para formatar apenas o dia com 日
+  const formatDayOnly = (dateString: string): string => {
+    const date = new Date(dateString);
+    const day = date.getDate().toString();
+    return `${day}日`;
+  };
+
+  // 🔹 Função para verificar se é o mês atual
+  const isCurrentMonth = (month: string): boolean => {
+    const currentDate = new Date();
+    const currentMonth = `${currentDate.getFullYear()}-${(currentDate.getMonth() + 1).toString().padStart(2, '0')}`;
+    return month === currentMonth;
+  };
+
   useEffect(() => {
     fetch(`${import.meta.env.VITE_API_URL}/api/list`)
       .then((res) => res.json())
@@ -98,7 +120,7 @@ export default function SalesOrder() {
           // Processar bolos (excluir status "e")
           if (status !== "e") {
             order.cakes.forEach((cake) => {
-              // 🔹 CORREÇÃO: Verificar se name e size não são null antes de usar trim()
+              // Verificar se name e size não são null antes de usar trim()
               const name = cake.name ? cake.name.trim() : "Nome não definido";
               const size = cake.size ? cake.size.trim() : "Tamanho não definido";
               const amount = Number(cake.amount) || 0;
@@ -130,12 +152,22 @@ export default function SalesOrder() {
         const processedMonthlyData = Array.from(monthlyDataMap.values()).map(monthData => ({
           ...monthData,
           dates: monthData.dates.sort()
-        })).sort((a, b) => a.month.localeCompare(b.month)); // Ordenar meses cronologicamente
+        })).sort((a, b) => a.month.localeCompare(b.month));
 
         console.log("Dados mensais processados:", processedMonthlyData);
         
+        // 🔹 ENCONTRAR O MÊS ATUAL AUTOMATICAMENTE
+        const currentDate = new Date();
+        const currentMonth = `${currentDate.getFullYear()}-${(currentDate.getMonth() + 1).toString().padStart(2, '0')}`;
+        
+        // Tentar encontrar o mês atual nos dados
+        const foundCurrentMonth = processedMonthlyData.find(month => month.month === currentMonth);
+        
+        // Se não encontrar, usar o último mês disponível
+        const initialMonth = foundCurrentMonth ? currentMonth : (processedMonthlyData[processedMonthlyData.length - 1]?.month || "");
+
         setMonthlyData(processedMonthlyData);
-        setActiveMonth(processedMonthlyData[0]?.month || "");
+        setActiveMonth(initialMonth);
         setOrders(ordersData);
         setLoading(false);
         setError(null);
@@ -146,13 +178,6 @@ export default function SalesOrder() {
         setLoading(false);
       });
   }, []);
-
-  // Função auxiliar para pegar apenas o dia
-  function formatDayOnly(dateString: string): string {
-    const date = new Date(dateString);
-    const day = date.getDate().toString();
-    return `${day}日`; // 🔹 1日, 2日, 3日, ..., 31日
-  }
 
   // Encontrar dados do mês ativo
   const activeMonthData = useMemo(() => 
@@ -231,7 +256,7 @@ export default function SalesOrder() {
           {monthlyData.map(({ month, label }) => (
             <button
               key={month}
-              className={`tab-button ${activeMonth === month ? 'active' : ''}`}
+              className={`tab-button ${activeMonth === month ? 'active' : ''} ${isCurrentMonth(month) ? 'current-month-tab' : ''}`}
               onClick={() => setActiveMonth(month)}
             >
               {label}
@@ -251,7 +276,12 @@ export default function SalesOrder() {
                   <tr>
                     <th>日付毎の合計</th>
                     {activeMonthData.dates.map((date) => (
-                      <th key={date}>{formatDayOnly(date)}</th>
+                      <th 
+                        key={date} 
+                        className={isToday(date) ? 'current-day' : ''}
+                      >
+                        {formatDayOnly(date)}
+                      </th>
                     ))}
                     <th>月合計</th>
                   </tr>
@@ -260,7 +290,12 @@ export default function SalesOrder() {
                   <tr className="total-row">
                     <td></td>
                     {activeMonthData.dates.map((date) => (
-                      <td key={date}><strong>{totalGeralPorDia[date] || 0}</strong></td>
+                      <td 
+                        key={date} 
+                        className={isToday(date) ? 'data-current-day' : ''}
+                      >
+                        <strong>{totalGeralPorDia[date] || 0}</strong>
+                      </td>
                     ))}
                     <td><strong>{totalGlobal}</strong></td>
                   </tr>
@@ -289,7 +324,12 @@ export default function SalesOrder() {
                     <tr>
                       <th>{cakeName}</th>
                       {activeMonthData.dates.map((date) => (
-                        <th key={date}>{formatDayOnly(date)}</th>
+                        <th 
+                          key={date} 
+                          className={isToday(date) ? 'current-day' : ''}
+                        >
+                          {formatDayOnly(date)}
+                        </th>
                       ))}
                       <th>月合計</th>
                     </tr>
@@ -302,12 +342,15 @@ export default function SalesOrder() {
                       return (
                         <tr key={`${cakeName}-${size}`}>
                           <td>
-                            {size} <span className="stock-info">
-                              {/* (在庫: {sizeData.stock} / {sizeData.stock+total}) */}
-                            </span>
+                            {size}
                           </td>
                           {activeMonthData.dates.map((date) => (
-                            <td key={date}>{sizeData.days[date] || 0}</td>
+                            <td 
+                              key={date}
+                              className={isToday(date) ? 'data-current-day' : ''}
+                            >
+                              {sizeData.days[date] || 0}
+                            </td>
                           ))}
                           <td className="total-cell">{total}</td>
                         </tr>
@@ -317,7 +360,12 @@ export default function SalesOrder() {
                     <tr className="total-row">
                       <td><strong>合計 →</strong></td>
                       {activeMonthData.dates.map((date) => (
-                        <td key={date}><strong>{totalPorDia[date] || 0}</strong></td>
+                        <td 
+                          key={date}
+                          className={isToday(date) ? 'data-current-day' : ''}
+                        >
+                          <strong>{totalPorDia[date] || 0}</strong>
+                        </td>
                       ))}
                       <td><strong>{totalGeral}</strong></td>
                     </tr>
@@ -334,7 +382,12 @@ export default function SalesOrder() {
                 <tr>
                   <th>支払い状況</th>
                   {activeMonthData.dates.map((date) => (
-                    <th key={date}>{formatDayOnly(date)}</th>
+                    <th 
+                      key={date} 
+                      className={isToday(date) ? 'current-day' : ''}
+                    >
+                      {formatDayOnly(date)}
+                    </th>
                   ))}
                   <th>合計(件数)</th>
                   <th>合計(金額)</th>
@@ -356,7 +409,14 @@ export default function SalesOrder() {
                           totalStatus += count;
                           totalValue += valueForDate;
                           
-                          return <td key={`${value}-${date}`}>{count}</td>;
+                          return (
+                            <td 
+                              key={`${value}-${date}`}
+                              className={isToday(date) ? 'data-current-day' : ''}
+                            >
+                              {count}
+                            </td>
+                          );
                         })}
                         <td><strong>{totalStatus}</strong></td>
                         <td><strong>¥{totalValue.toLocaleString("ja-JP")}</strong></td>
@@ -370,7 +430,14 @@ export default function SalesOrder() {
                     const totalDay = statusOptions
                       .filter(({ label }) => label !== "キャンセル")
                       .reduce((sum, { value }) => sum + (activeMonthData.statusDayCounts[date]?.[value] || 0), 0);
-                    return <td key={`total-${date}`}><strong>{totalDay}</strong></td>;
+                    return (
+                      <td 
+                        key={`total-${date}`}
+                        className={isToday(date) ? 'data-current-day' : ''}
+                      >
+                        <strong>{totalDay}</strong>
+                      </td>
+                    );
                   })}
                   <td>
                     <strong>
@@ -409,7 +476,14 @@ export default function SalesOrder() {
                           totalStatus += count;
                           totalValue += valueForDate;
 
-                          return <td key={`${value}-${date}`}>{count}</td>;
+                          return (
+                            <td 
+                              key={`${value}-${date}`}
+                              className={isToday(date) ? 'data-current-day' : ''}
+                            >
+                              {count}
+                            </td>
+                          );
                         })}
                         <td><strong>{totalStatus}</strong></td>
                         <td><strong>¥{totalValue.toLocaleString("ja-JP")}</strong></td>

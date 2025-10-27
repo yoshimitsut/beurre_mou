@@ -97,12 +97,13 @@
   padding-top: 0.5rem;
   margin-bottom: 1rem;
   /* cursor: pointer; */
-  background-color: #c5c1c1a8;
+  /* background-color: #f8f9fa; */
   padding-bottom: 0.1rem;
 
   .btn-back {
     cursor: pointer;
     width: 100%;
+    background-color: transparent !important;
     img {
       height: 2rem;
       align-items: center;
@@ -111,7 +112,7 @@
 }
 
 .table-order-actions:hover {
-  background-color: #999;
+  background-color: #e6e5e5;
   cursor: pointer;
 }
 
@@ -142,34 +143,338 @@
   color: aliceblue;
 }
 
-/* 
-.table-生デコレーション {
-  background: #f0dddd;
-  padding: 10px;
+
+/* Destacar o dia atual */
+.current-day {
+  background-color: #0076e3 !important;
+  color: white !important;
+  font-weight: bold;
+  position: relative;
 }
 
-.table-チョコレートケーキ {
-  background: #e2f0dd;
-  padding: 10px;
+.current-day::after {
+  content: "今日";
+  position: absolute;
+  top: 2px;
+  right: 2px;
+  font-size: 8px;
+  background: #dc3545;
+  color: white;
+  padding: 1px 3px;
+  border-radius: 2px;
+  line-height: 1;
 }
 
-.table-イチゴタルト {
-  background: #dde2f0;
-  padding: 10px;
+/* Versão alternativa sem o "今日" */
+.current-day-simple {
+  background-color: #e3f2fd !important;
+  color: #007bff !important;
+  font-weight: bold;
+  border: 2px solid #007bff !important;
 }
 
-.table-クリーミーチーズ {
-  background: #eff0dd;
-  padding: 10px;
+/* Para células de dados no dia atual */
+.data-current-day {
+  background-color: #f0f8ff !important;
+  font-weight: 600;
 }
 
-.table-プチガトー4個入り {
-  background: #f0dddd;
-  padding: 10px;
+
+
+
+
+/* Container das abas */
+.month-tabs-container {
+  margin-bottom: 10px;
+  border-bottom: 2px solid #e0e0e0;
 }
 
-.table-プチガトー5個入り {
-  background: #e3ddf0;
-  padding: 10px;
+.month-tabs {
+  display: flex;
+  gap: 4px;
+  flex-wrap: wrap;
 }
- */
+
+/* Botões das abas */
+.tab-button {
+  padding: 12px 20px;
+  border: none;
+  background: #f8f9fa;
+  color: #495057;
+  cursor: pointer;
+  border-radius: 8px 8px 0 0;
+  font-weight: 500;
+  transition: all 0.3s ease;
+  border: 1px solid transparent;
+  border-bottom: none;
+  margin-bottom: -2px;
+  position: relative;
+}
+
+.tab-button:hover {
+  background: #e9ecef;
+  color: #007bff;
+}
+
+.tab-button.active {
+  background: white;
+  color: #007bff;
+  border-color: #e0e0e0;
+  border-bottom-color: white;
+  font-weight: 600;
+  box-shadow: 0 -2px 4px rgba(0,0,0,0.1);
+}
+
+/* 🔹 Aba do mês atual */
+.current-month-tab {
+  position: relative;
+  background: linear-gradient(135deg, #007bff 0%, #0056b3 100%) !important;
+  color: white !important;
+}
+
+.current-month-tab::after {
+  content: "当月";
+  position: absolute;
+  top: 4px;
+  right: 6px;
+  font-size: 9px;
+  background: #28a745;
+  color: white;
+  padding: 2px 5px;
+  border-radius: 4px;
+  line-height: 1;
+  font-weight: bold;
+}
+
+/* Conteúdo das abas */
+.tab-content {
+  animation: fadeIn 0.3s ease;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(10px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+/* Estilos das tabelas */
+/* .cake-table-wrapper {
+  margin-bottom: 24px;
+  background: white;
+  border-radius: 8px;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+  overflow: hidden;
+} */
+
+/* .summary-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 14px;
+} */
+
+/* .summary-table th,
+.summary-table td {
+  padding: 8px 12px;
+  text-align: left;
+  border: 1px solid #e0e0e0;
+} */
+
+/* .summary-table th {
+  background: #f8f9fa;
+  font-weight: 600;
+  color: #495057;
+} */
+
+/* 🔹 Cabeçalhos compactos apenas com dias */
+.summary-table th:not(:first-child):not(:last-child) {
+  min-width: 50px;
+  max-width: 60px;
+  padding: 8px 4px;
+  /* font-size: 12px; */
+  text-align: center;
+  position: relative;
+}
+
+/* Manter largura normal para a primeira e última coluna */
+.summary-table th:first-child,
+.summary-table th:last-child {
+  min-width: 100px;
+  padding: 10px 12px;
+  font-size: 13px;
+}
+
+/* Células de dados também compactas */
+.summary-table td:not(:first-child):not(:last-child) {
+  min-width: 50px;
+  max-width: 60px;
+  padding: 8px 4px;
+  text-align: center;
+  font-size: 13px;
+}
+
+/* .summary-table td:first-child,
+.summary-table td:last-child {
+  min-width: 100px;
+  padding: 8px 12px;
+}  */
+
+/* 🔹 DESTAQUE PARA O DIA ATUAL - COM "今日" */
+.current-day {
+  background-color: #1a72cf !important;
+  color: white !important;
+  font-weight: bold;
+  position: relative;
+}
+
+.current-day::after {
+  content: "今日";
+  position: absolute;
+  top: 1px;
+  right: 2px;
+  font-size: 8px;
+  background: #dc3545;
+  color: white;
+  padding: 1px 3px;
+  border-radius: 2px;
+  line-height: 1;
+  font-weight: bold;
+}
+
+/* Células de dados no dia atual */
+.data-current-day {
+  background-color: #e3f2fd !important;
+  font-weight: 600;
+  border: 2px solid #1163bbb1 !important;
+}
+
+/* Linhas de total */
+.total-row {
+  background: #e3f2fd !important;
+  font-weight: 600;
+}
+
+.total-row td {
+  border-top: 2px solid #007bff;
+}
+
+.total-cell {
+  font-weight: 600;
+  background: #f8f9fa;
+}
+
+/* Cores para status */
+.title-入金済み { 
+  background: #d4edda !important; 
+  color: #155724 !important; 
+}
+
+.title-未入金 { 
+  background: #fff3cd !important; 
+  color: #856404 !important; 
+}
+
+.title-キャンセル { 
+  background: #f8d7da !important; 
+  color: #721c24 !important; 
+}
+
+.cancel-row {
+  background: #ffebee !important;
+}
+
+/* Botão de voltar */
+.table-order-actions {
+  margin-bottom: 20px;
+  cursor: pointer;
+}
+
+.btn-actions {
+  display: inline-block;
+}
+
+.btn-back {
+  padding: 10px;
+  background: #f8f9fa;
+  border-radius: 6px;
+  transition: background 0.3s ease;
+}
+
+.btn-back:hover {
+  background: #e9ecef;
+}
+
+.btn-back img {
+  width: 24px;
+  height: 24px;
+}
+
+/* Mensagens de erro e loading */
+.error-container, .loading-container {
+  text-align: center;
+  padding: 40px;
+  font-size: 16px;
+}
+
+.error-container button {
+  margin-top: 15px;
+  padding: 10px 20px;
+  background: #007bff;
+  color: white;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+}
+
+.error-container button:hover {
+  background: #0056b3;
+}
+
+/* Responsividade */
+@media (max-width: 768px) {
+  .month-tabs {
+    flex-direction: column;
+  }
+  
+  .tab-button {
+    border-radius: 6px;
+    margin-bottom: 4px;
+    border: 1px solid #e0e0e0;
+    text-align: center;
+  }
+  
+  .tab-button.active {
+    border-bottom-color: #e0e0e0;
+  }
+  
+  .summary-table {
+    font-size: 12px;
+  }
+  
+  .summary-table th:not(:first-child):not(:last-child) {
+    min-width: 40px;
+    max-width: 45px;
+    font-size: 10px;
+    padding: 6px 2px;
+  }
+  
+  .summary-table td:not(:first-child):not(:last-child) {
+    min-width: 40px;
+    max-width: 45px;
+    padding: 6px 2px;
+    font-size: 11px;
+  }
+  
+  .current-day::after {
+    font-size: 7px;
+    top: -4px;
+    right: 1px;
+  }
+}
+
+/* Scroll horizontal para tabelas muito largas */
+.cake-table-wrapper {
+  overflow-x: auto;
+}
+
+.data-percentage {
+  overflow-x: auto;
+}
