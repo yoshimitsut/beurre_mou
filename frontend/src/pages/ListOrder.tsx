@@ -641,7 +641,7 @@ export default function ListOrder() {
         const timeB = b.pickupHour || "";
         return timeA.localeCompare(timeB, "ja");
       });
-    }, [pastOrders]);
+    }, []);
 
     return (
       <>
