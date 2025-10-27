@@ -30,7 +30,6 @@ export default function OrderCake() {
   ]);
 
   const [selectedDate, setSelectedDate] = useState<Date | null>(null);
-  const [selectedDate2, setSelectedDate2] = useState<Date | null>(null);
   // const [timeSlotsData, setTimeSlotsData] = useState<TimeslotSQL[]>([]);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [pickupHour, setPickupHour] = useState("時間を選択");
@@ -494,8 +493,8 @@ const customStylesHour: StylesConfig<TimeOptionType, false> = {
             <div className='input-group'>
               <label htmlFor="datepicker" className='datepicker'>*受け取り希望日</label>
               <DatePicker
-                selected={selectedDate2}
-                onChange={(date) => setSelectedDate2(date)}
+                selected={selectedDate}
+                onChange={(date) => setSelectedDate(date)}
                 minDate={today}
                 maxDate={maxDate}
                 excludeDates={excludedDates}

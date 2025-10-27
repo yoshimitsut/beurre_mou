@@ -226,7 +226,9 @@ export default function SalesOrder() {
                     return (
                       <tr key={`${cakeName}-${size}`}>
                         <td>
-                          {size} <span className="stock-info">(在庫: {sizeData.stock} / {sizeData.stock+total})</span>
+                          {size} <span className="stock-info">
+                            {/* (在庫: {sizeData.stock} / {sizeData.stock+total}) */}
+                            </span>
                         </td>
                         {dates.map((date) => (
                           <td key={date}>{sizeData.days[date] || 0}</td>
@@ -266,56 +268,91 @@ export default function SalesOrder() {
             </tr>
           </thead>
           <tbody>
-            {statusOptions.map(({ value, label }) => {
-              let totalStatus = 0;
-              let totalValue = 0;
-              
-              return (
-                <tr key={value}>
-                  <td className={`title-${label}`}>{label}</td>
-                  {dates.map((date) => {
-                    const count = statusDayCounts[date]?.[value] || 0;
-                    const valueForDate = statusValues[value]?.[date] || 0;
-                    totalStatus += count;
-                    totalValue += valueForDate;
-                    
-                    return <td key={`${value}-${date}`}>{count}</td>;
-                  })}
-                  <td><strong>{totalStatus}</strong></td>
-                  <td><strong>¥{totalValue.toLocaleString("ja-JP")}</strong></td>
-                </tr>
-              );
-            })}
+            {/* 🔹 Filtra todos os status, exceto "キャンセル" */}
+            {statusOptions
+              .filter(({ label }) => label !== "キャンセル")
+              .map(({ value, label }) => {
+                let totalStatus = 0;
+                let totalValue = 0;
+                
+                return (
+                  <tr key={value}>
+                    <td className={`title-${label}`}>{label}</td>
+                    {dates.map((date) => {
+                      const count = statusDayCounts[date]?.[value] || 0;
+                      const valueForDate = statusValues[value]?.[date] || 0;
+                      totalStatus += count;
+                      totalValue += valueForDate;
+                      
+                      return <td key={`${value}-${date}`}>{count}</td>;
+                    })}
+                    <td><strong>{totalStatus}</strong></td>
+                    <td><strong>¥{totalValue.toLocaleString("ja-JP")}</strong></td>
+                  </tr>
+                );
+              })}
+
+            {/* 🔹 Linha de total geral (sem cancelar) */}
             <tr className="total-row">
               <td><strong>合計</strong></td>
               {dates.map((date) => {
-                const totalDay = statusOptions.reduce((sum, {value}) => {
-                  return sum + (statusDayCounts[date]?.[value] || 0);
-                }, 0);
-                return <td key={`total-${date}`}><strong>{totalDay}</strong></td>
+                const totalDay = statusOptions
+                  .filter(({ label }) => label !== "キャンセル")
+                  .reduce((sum, { value }) => sum + (statusDayCounts[date]?.[value] || 0), 0);
+                return <td key={`total-${date}`}><strong>{totalDay}</strong></td>;
               })}
               <td>
                 <strong>
                   {dates.reduce((sum, date) => {
-                    return sum + statusOptions.reduce((subSum, {value}) => {
-                      return subSum + (statusDayCounts[date]?.[value] || 0);
-                    }, 0);
+                    return sum + statusOptions
+                      .filter(({ label }) => label !== "キャンセル")
+                      .reduce((subSum, { value }) => subSum + (statusDayCounts[date]?.[value] || 0), 0);
                   }, 0)}
                 </strong>
               </td>
               <td>
                 <strong>
                   ¥{dates.reduce((sum, date) => {
-                    return sum + statusOptions.reduce((dateSum, {value}) => {
-                      return dateSum + (statusValues[value]?.[date] || 0);
-                    }, 0);
+                    return sum + statusOptions
+                      .filter(({ label }) => label !== "キャンセル")
+                      .reduce((dateSum, { value }) => dateSum + (statusValues[value]?.[date] || 0), 0);
                   }, 0).toLocaleString("ja-JP")}
                 </strong>
               </td>
             </tr>
+
+            <br/><br/>
+            
+            {/* 🔹 Seção separada paraキャンセル */}
+            {statusOptions
+              .filter(({ label }) => label === "キャンセル")
+              .map(({ value, label }) => {
+                let totalStatus = 0;
+                let totalValue = 0;
+
+                return (
+                  <tr key={value} className="cancel-row">
+                    <td className={`title-${label}`} >
+                      {label}
+                    </td>
+                    {dates.map((date) => {
+                      const count = statusDayCounts[date]?.[value] || 0;
+                      const valueForDate = statusValues[value]?.[date] || 0;
+                      totalStatus += count;
+                      totalValue += valueForDate;
+
+                      return <td key={`${value}-${date}`}>{count}</td>;
+                    })}
+                    <td><strong>{totalStatus}</strong></td>
+                    <td><strong>¥{totalValue.toLocaleString("ja-JP")}</strong></td>
+                  </tr>
+                );
+              })}
           </tbody>
         </table>
       </div>
+
+      
     </div>
   );
 }
