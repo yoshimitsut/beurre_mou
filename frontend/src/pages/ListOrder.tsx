@@ -20,7 +20,8 @@ export default function ListOrder() {
   const [showScanner, setShowScanner] = useState(false);
   const [scannedOrderId, setScannedOrderId] = useState<number | null>(null);
   const [search, setSearch] = useState('');
-  const [viewMode,] = useState<"date" | "order">("order");
+  const [viewMode] = useState<"date" | "order">("order");
+  const [activeTab, setActiveTab] = useState<"active" | "past">("active");
 
   const [isUpdating, setIsUpdating] = useState(false);
   const [updatingOrderId, setUpdatingOrderId] = useState<number | null>(null);
@@ -30,7 +31,6 @@ export default function ListOrder() {
   const [dateFilter, setDateFilter] = useState("すべて");
   const [hourFilter, setHourFilter] = useState("すべて");
 
-  // const [expandedOrderId, setExpandedOrderId] = useState<number | null>(null);
   const [editingOrder, setEditingOrder] = useState<Order | null>(null);
 
   const location = useLocation();
@@ -46,21 +46,10 @@ export default function ListOrder() {
   const filterOptions: FilterOption[] = [
     { value: "すべて", label: "すべて" },
     ...statusOptions
-    // ...statusOptions.filter(opt => opt.value !== "e"),
   ];
 
   const navigate = useNavigate();
   const handleSearch = useRef<number | null>(null);
-
-  // useEffect(() => {
-//   if (orders.length > 0) {
-//     console.log('Debug - Datas:', {
-//       dataOriginal: orders[0].date,
-//       formatada: formatDateJP(orders[0].date),
-//       timezoneNavegador: Intl.DateTimeFormat().resolvedOptions().timeZone
-//     });
-//   }
-// }, [orders]);
 
   // Efeito para lidar com navegação e recarga
   useEffect(() => {
@@ -120,32 +109,31 @@ export default function ListOrder() {
   }, [orders]);
 
   // Efeito para o scanner QR Code
-useEffect(() => {
-  if (!showScanner) return;
+  useEffect(() => {
+    if (!showScanner) return;
 
-  const html5QrCode = new Html5Qrcode("reader");
+    const html5QrCode = new Html5Qrcode("reader");
 
-  html5QrCode
-    .start(
-      { facingMode: "environment" }, // 👈 força câmera traseira
-      { fps: 10, qrbox: 250 },
-      (decodedText) => {
-        setShowScanner(false);
-        html5QrCode.stop();
+    html5QrCode
+      .start(
+        { facingMode: "environment" },
+        { fps: 10, qrbox: 250 },
+        (decodedText) => {
+          setShowScanner(false);
+          html5QrCode.stop();
 
-        const found = orders.find((o) => o.id_order === Number(decodedText));
-        if (found) setScannedOrderId(found.id_order);
-        else alert("注文が見つかりません。");
-      },
-      (err) => console.warn("QRコード読み取りエラー:", err)
-    )
-    .catch((err) => console.error("Erro ao iniciar câmera:", err));
+          const found = orders.find((o) => o.id_order === Number(decodedText));
+          if (found) setScannedOrderId(found.id_order);
+          else alert("注文が見つかりません。");
+        },
+        (err) => console.warn("QRコード読み取りエラー:", err)
+      )
+      .catch((err) => console.error("Erro ao iniciar câmera:", err));
 
-  return () => {
-    html5QrCode.stop().then(() => html5QrCode.clear());
-  };
-}, [showScanner, orders]);
-
+    return () => {
+      html5QrCode.stop().then(() => html5QrCode.clear());
+    };
+  }, [showScanner, orders]);
 
   // Ordenar pedidos agrupados
   const sortedGroupedOrders = useMemo(() => {
@@ -160,6 +148,25 @@ useEffect(() => {
       return [["注文順", [...orders].sort((a, b) => a.id_order - b.id_order)]];
     }
   }, [viewMode, sortedGroupedOrders, orders]);
+
+  // Separar pedidos ativos e cancelados/passados
+  const today = new Date().setHours(0, 0, 0, 0);
+
+  const activeOrders = useMemo(() => {
+    return orders.filter(o => {
+      const date = new Date(o.date).setHours(0, 0, 0, 0);
+      const notCanceled = o.status !== "e";
+      const isFutureOrToday = date >= today;
+      return notCanceled && isFutureOrToday;
+    });
+  }, [orders, today]);
+
+  const pastOrders = useMemo(() => {
+    return orders.filter(o => {
+      const date = new Date(o.date).setHours(0, 0, 0, 0);
+      return o.status === "e" || date < today;
+    });
+  }, [orders, today]);
 
   const formatDate = (isoString: string) => {
     const date = new Date(isoString);
@@ -237,13 +244,7 @@ useEffect(() => {
   const handleSaveEdit = async (updatedOrder: Order) => {
     if (!updatedOrder) return;
 
-    // const confirmed = window.confirm("変更を保存しますか？");
-    // if (!confirmed) return;
-
     try {
-      // console.log("📤 Enviando para API:", updatedOrder);
-
-      // Use o novo endpoint para edição completa
       const res = await fetch(`${import.meta.env.VITE_API_URL}/api/orders/${updatedOrder.id_order}`, {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
@@ -251,20 +252,17 @@ useEffect(() => {
       });
 
       const data = await res.json();
-      // console.log("📥 Resposta da API:", data);
 
       if (!res.ok || !data.success) {
         throw new Error(data.error || "更新に失敗しました。");
       }
 
-      // Atualiza localmente
       setOrders((old) =>
         old.map((o) =>
           o.id_order === updatedOrder.id_order ? updatedOrder : o
         )
       );
 
-      // Força refresh dos dados do servidor
       setRefreshKey(prev => prev + 1);
       
       setEditingOrder(null);
@@ -364,6 +362,350 @@ useEffect(() => {
     }),
   };
 
+  // Componente para renderizar a tabela de pedidos ativos
+  const ActiveOrdersTable = () => (
+    <>
+      {activeOrders.length === 0 ? (
+        <p>現在の注文はありません。</p>
+      ) : (
+        <>
+          {/* Tabelas (desktop) */}
+          {displayOrders
+            .filter(([, list]) => list.some(o => activeOrders.includes(o)))
+            .map(([groupTitles, ordersForGroup]: [string, Order[]]) => {
+              const activeOrdersForGroup = ordersForGroup.filter(order => 
+                activeOrders.includes(order)
+              );
+
+              return (
+                <div key={groupTitles} className="table-wrapper scroll-cell table-order-container">
+                  <table className="list-order-table table-order">
+                    <thead>
+                      <tr>
+                        <th className='id-cell'>受付番号</th>
+                        <th className='situation-cell'>
+                          <div className='filter-column'>
+                            お会計
+                            <select
+                              value={statusFilter}
+                              onChange={(e) => setStatusFilter(e.target.value)}
+                            >
+                              {filterOptions.map((opt) => (
+                                <option key={opt.value} value={opt.value}>
+                                  {opt.label}
+                                </option>
+                              ))}
+                            </select>
+                          </div>
+                        </th>
+                        <th>お名前</th>
+                        <th>
+                          <div className='filter-column'>
+                            受取希望日時
+                            <div className='filter-column-date'>
+                              <select
+                                value={dateFilter}
+                                onChange={(e) => {
+                                  setDateFilter(e.target.value);
+                                  setHourFilter("すべて");
+                                }}
+                              >
+                                <option value="すべて">すべて</option>
+                                {Array.from(new Set(orders.map((o) => o.date)))
+                                  .sort((a, b) => new Date(a).getTime() - new Date(b).getTime())
+                                  .map((date) => (
+                                    <option key={date} value={date}>
+                                      {formatDate(date)}
+                                    </option>
+                                  ))}
+                              </select>
+
+                              <select
+                                value={hourFilter}
+                                onChange={(e) => setHourFilter(e.target.value)}
+                                style={{ marginLeft: "6px" }}
+                              >
+                                <option value="すべて">すべて</option>
+                                {Array.from(
+                                  new Set(
+                                    orders
+                                      .filter((o) => dateFilter === "すべて" || o.date === dateFilter)
+                                      .map((o) => o.pickupHour)
+                                  )
+                                )
+                                  .sort((a, b) => {
+                                    const numA = parseInt(a);
+                                    const numB = parseInt(b);
+                                    return numA - numB;
+                                  })
+                                  .map((hour) => (
+                                    <option key={hour} value={hour}>
+                                      {hour}
+                                    </option>
+                                  ))}
+                              </select>
+                            </div>
+                          </div>
+                        </th>
+                        <th>
+                          <div className='filter-column'>
+                            ご注文のケーキ
+                            <select value={cakeFilter} onChange={(e) => setCakeFilter(e.target.value)}>
+                              <option value="すべて">すべて</option>
+                              {Array.from(
+                                new Set(
+                                  orders.flatMap((o) => (o.cakes ?? []).map((c) => c.name))
+                                )
+                              ).map((cake) => (
+                                <option key={cake} value={cake}>{cake}</option>
+                              ))}
+                            </select>
+                          </div>
+                        </th>
+                        <th>個数</th>
+                        <th className='message-cell'>メッセージ</th>
+                        <th className='message-cell'>その他</th>
+                        <th>電話番号</th>
+                        <th>メールアドレス</th>
+                        <th>編集</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {activeOrdersForGroup
+                        .filter((order) => {
+                          const matchesStatus = statusFilter === "すべて" || order.status === statusFilter;
+                          const matchesCake = cakeFilter === "すべて" || order.cakes.some(cake => cake.name === cakeFilter);
+                          const matchesDate = dateFilter === "すべて" || formatDateJP(order.date) === formatDateJP(dateFilter);
+                          const matchesHour = hourFilter === "すべて" || order.pickupHour === hourFilter;
+                          
+                          return matchesStatus && matchesCake && matchesDate && matchesHour;
+                        })
+                        .sort((a, b) => {
+                          if (dateFilter !== "すべて") {
+                            const hourA = a.pickupHour || "";
+                            const hourB = b.pickupHour || "";
+                            return hourA.localeCompare(hourB, "ja");
+                          } else {
+                            const idA = Number(a.id_order) || 0;
+                            const idB = Number(b.id_order) || 0;
+                            return idA - idB;
+                          }
+                        })
+                        .map((order) => (
+                          <tr key={order.id_order}>
+                            <td>{String(order.id_order).padStart(4, "0")}</td>
+                            <td className='situation-cell'>
+                              <Select<StatusOption, false>
+                                options={statusOptions}
+                                value={statusOptions.find((opt) => opt.value === order.status)}
+                                onChange={(selected: SingleValue<StatusOption>) => {
+                                  if (selected) handleStatusChange(order.id_order, selected.value);
+                                }}
+                                styles={customStyles}
+                                isSearchable={false}
+                                isDisabled={isUpdating}
+                                isLoading={isUpdating && updatingOrderId === order.id_order}
+                              />
+                            </td>
+                            <td>
+                              {order.first_name} {order.last_name}
+                            </td>
+                            <td>{formatDateJP(order.date)} {order.pickupHour}</td>
+                            <td>
+                              <ul>
+                                {order.cakes.map((cake, index) => (
+                                  <li key={`${order.id_order}-${cake.cake_id}-${index}`}>
+                                    {cake.name}
+                                    {cake.size} - ¥{cake.price}<br />
+                                  </li>
+                                ))}
+                              </ul>
+                            </td>
+                            <td style={{ textAlign: "left" }}>
+                              <ul>
+                                {order.cakes.map((cake, index) => (
+                                  <li key={`${order.id_order}-${cake.cake_id}-${index}`}>
+                                    {cake.amount}
+                                  </li>
+                                ))}
+                              </ul>
+                            </td>
+                            <td className='message-cell' style={{ textAlign: "left" }}>
+                              <ul>
+                                {order.cakes.map((cake, index) => (
+                                  <li key={`${order.id_order}-${cake.cake_id}-${index}`} >
+                                    {cake.message_cake}
+                                  </li>
+                                ))}
+                              </ul>
+                            </td>
+                            <td className='message-cell'>
+                              <li>
+                                {order.message || " "}
+                              </li>
+                            </td>
+                            <td>{order.tel}</td>
+                            <td>{order.email}</td>
+                            <td>
+                              <button
+                                onClick={() => setEditingOrder(order)}
+                                style={{
+                                  padding: "0.25rem 0.5rem",
+                                  backgroundColor: "#007bff",
+                                  color: "white",
+                                  border: "none",
+                                  borderRadius: "4px",
+                                  cursor: "pointer",
+                                  fontSize: "0.8rem"
+                                }}
+                              >
+                                編集
+                              </button>
+                            </td>
+                          </tr>
+                        ))}
+                    </tbody>
+                  </table>
+                </div>
+              );
+            })}
+
+          {/* Cards (mobile) */}
+          <div className="mobile-orders">
+            {activeOrders.map((order) => (
+              <div className="order-card" key={order.id_order}>
+                <Select<StatusOption, false>
+                  options={statusOptions}
+                  value={statusOptions.find((opt) => opt.value === order.status)}
+                  onChange={(selected: SingleValue<StatusOption>) => {
+                    if (selected) handleStatusChange(order.id_order, selected.value);
+                  }}
+                  styles={customStyles}
+                  isSearchable={false}
+                  isDisabled={isUpdating}
+                  isLoading={isUpdating && updatingOrderId === order.id_order}
+                />
+                <div className="order-header">
+                  <span>受付番号: {String(order.id_order).padStart(4, "0")}</span>
+                </div>
+                <p>お名前: {order.first_name} {order.last_name}</p>
+                <p>受取日: {formatDateJP(order.date)} {order.pickupHour}</p>
+                <details>
+                  <summary>ご注文内容</summary>
+                  <ul>
+                    {order.cakes.map((cake, index) => (
+                      <li key={`${cake.cake_id}-${index}`}>
+                        {cake.name} - 個数: {cake.amount} - {cake.size}
+                      </li>
+                    ))}
+                  </ul>
+                  <p>電話番号: {order.tel}</p>
+                  <p>メッセージ: {order.message || " "}</p>
+                </details>
+                <button
+                  onClick={() => setEditingOrder(order)}
+                  style={{
+                    marginTop: "0.5rem",
+                    padding: "0.5rem 1rem",
+                    backgroundColor: "#007bff",
+                    color: "white",
+                    border: "none",
+                    borderRadius: "4px",
+                    cursor: "pointer"
+                  }}
+                >
+                  編集
+                </button>
+              </div>
+            ))}
+          </div>
+        </>
+      )}
+    </>
+  );
+
+  // Componente para renderizar a tabela de pedidos passados
+  const PastOrdersTable = () => {
+    const sortedPastOrders = useMemo(() => {
+      return [...pastOrders].sort((a, b) => {
+        // Primeiro ordena por data (mais recente primeiro)
+        const dateA = new Date(a.date).getTime();
+        const dateB = new Date(b.date).getTime();
+        
+        if (dateA !== dateB) {
+          return dateB - dateA; // Mais recente primeiro
+        }
+        
+        // Se for a mesma data, ordena por horário
+        const timeA = a.pickupHour || "";
+        const timeB = b.pickupHour || "";
+        return timeA.localeCompare(timeB, "ja");
+      });
+    }, [pastOrders]);
+
+    return (
+      <>
+        {sortedPastOrders.length === 0 ? (
+          <p>終了またはキャンセルされた注文はありません。</p>
+        ) : (
+          <div className="table-wrapper scroll-cell table-order-container">
+            <table className="list-order-table table-order">
+              <thead>
+                <tr>
+                  <th>受付番号</th>
+                  <th>お名前</th>
+                  <th>受取希望日時</th>
+                  <th>お会計</th>
+                  <th>ご注文のケーキ</th>
+                  <th>個数</th>
+                  <th>メッセージ</th>
+                  <th>その他</th>
+                  <th>電話番号</th>
+                  <th>メールアドレス</th>
+                </tr>
+              </thead>
+              <tbody>
+                {sortedPastOrders.map(order => (
+                  <tr key={order.id_order}>
+                    <td>{String(order.id_order).padStart(4, "0")}</td>
+                    <td>{order.first_name} {order.last_name}</td>
+                    <td>{formatDateJP(order.date)} {order.pickupHour}</td>
+                    <td>{STATUS_OPTIONS.find(s => s.value === order.status)?.label || "不明"}</td>
+                    <td>
+                      <ul>
+                        {order.cakes.map((cake, i) => (
+                          <li key={i}>{cake.name}</li>
+                        ))}
+                      </ul>
+                    </td>
+                    <td>
+                      <ul>
+                        {order.cakes.map((cake, i) => (
+                          <li key={i}>{cake.amount}</li>
+                        ))}
+                      </ul>
+                    </td>
+                    <td>
+                      <ul>
+                        {order.cakes.map((cake, i) => (
+                          <li key={i}>{cake.message_cake}</li>
+                        ))}
+                      </ul>
+                    </td>
+                    <td>{order.message}</td>
+                    <td>{order.tel}</td>
+                    <td>{order.email}</td>
+                    
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        )}
+      </>
+    );
+  };
+
   return (
     <div className='list-order-container'>
       <div className="list-order-actions">
@@ -431,221 +773,28 @@ useEffect(() => {
         <p>注文が見つかりません。</p>
       ) : (
         <>
-          {/* Tabelas (desktop) */}
-          {displayOrders.map(([groupTitles, ordersForGroup]: [string, Order[]]) => {
-            const activeOrdersForGroup = ordersForGroup;
-            // .filter(order => {
-              // if (search.trim() === "キャンセル") return order.status === "e";
-            //   return order.status !== "e";
-            // });
+          {/* Abas */}
+          <div className="tabs-container">
+            <div className="tabs-header">
+              <button
+                className={`tab-button ${activeTab === "active" ? "active" : ""}`}
+                onClick={() => setActiveTab("active")}
+              >
+                📅 現在の注文 ({activeOrders.length})
+              </button>
+              <button
+                className={`tab-button ${activeTab === "past" ? "active" : ""}`}
+                onClick={() => setActiveTab("past")}
+              >
+                📜 終了・キャンセル済み ({pastOrders.length})
+              </button>
+            </div>
 
-            return (
-              <div key={groupTitles} className="table-wrapper scroll-cell table-order-container">
-                <table className="list-order-table table-order">
-                  <thead>
-                    <tr>
-                      <th className='id-cell'>受付番号</th>
-                      <th className='situation-cell'>
-                        <div className='filter-column'>
-                          お会計
-                          <select
-                            value={statusFilter}
-                            onChange={(e) => setStatusFilter(e.target.value)}
-                          >
-                            {filterOptions.map((opt) => (
-                              <option key={opt.value} value={opt.value}>
-                                {opt.label}
-                              </option>
-                            ))}
-                          </select>
-                        </div>
-                      </th>
-                      <th>お名前</th>
-                      <th>
-                        <div className='filter-column'>
-                          受取希望日時
-                          <div className='filter-column-date'>
-                            <select
-                              value={dateFilter}
-                              onChange={(e) => {
-                                setDateFilter(e.target.value);
-                                setHourFilter("すべて");
-                              }}
-                            >
-                              <option value="すべて">すべて</option>
-                              {Array.from(new Set(orders.map((o) => o.date)))
-                                .sort((a, b) => new Date(a).getTime() - new Date(b).getTime())
-                                .map((date) => (
-                                  <option key={date} value={date}>
-                                    {formatDate(date)}
-                                  </option>
-                                ))}
-                            </select>
-
-                            <select
-                              value={hourFilter}
-                              onChange={(e) => setHourFilter(e.target.value)}
-                              style={{ marginLeft: "6px" }}
-                            >
-                              <option value="すべて">すべて</option>
-                              {Array.from(
-                                new Set(
-                                  orders
-                                    .filter((o) => dateFilter === "すべて" || o.date === dateFilter)
-                                    .map((o) => o.pickupHour)
-                                )
-                              )
-                                .sort((a, b) => {
-                                  const numA = parseInt(a);
-                                  const numB = parseInt(b);
-                                  return numA - numB;
-                                })
-                                .map((hour) => (
-                                  <option key={hour} value={hour}>
-                                    {hour}
-                                  </option>
-                                ))}
-                            </select>
-                          </div>
-                        </div>
-                      </th>
-                      <th>
-                        <div className='filter-column'>
-                          ご注文のケーキ
-                          <select value={cakeFilter} onChange={(e) => setCakeFilter(e.target.value)}>
-                            <option value="すべて">すべて</option>
-                            {Array.from(
-                              new Set(
-                                orders.flatMap((o) => (o.cakes ?? []).map((c) => c.name))
-                              )
-                            ).map((cake) => (
-                              <option key={cake} value={cake}>{cake}</option>
-                            ))}
-                          </select>
-                        </div>
-                      </th>
-                      <th>個数</th>
-                      <th className='message-cell'>メッセージ</th>
-                      <th className='message-cell'>その他</th>
-                      <th>電話番号</th>
-                      <th>メールアドレス</th>
-                      <th>編集</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {activeOrdersForGroup
-                      .filter((order) => {
-                        const matchesStatus = statusFilter === "すべて" || order.status === statusFilter;
-                        const matchesCake = cakeFilter === "すべて" || order.cakes.some(cake => cake.name === cakeFilter);
-                        const matchesDate = dateFilter === "すべて" || formatDateJP(order.date) === formatDateJP(dateFilter);
-                        const matchesHour = hourFilter === "すべて" || order.pickupHour === hourFilter;
-                        
-                        return matchesStatus && matchesCake && matchesDate && matchesHour;
-                      })
-                      .sort((a, b) => {
-                        if (dateFilter !== "すべて") {
-                          const hourA = a.pickupHour || "";
-                          const hourB = b.pickupHour || "";
-                          return hourA.localeCompare(hourB, "ja");
-                        } else {
-                          const idA = Number(a.id_order) || 0;
-                          const idB = Number(b.id_order) || 0;
-                          return idA - idB;
-                        }
-                      })
-                      .map((order) => (
-                        <tr key={order.id_order}>
-                          <td>{String(order.id_order).padStart(4, "0")}</td>
-                          <td className='situation-cell'>
-                            <Select<StatusOption, false>
-                              options={statusOptions}
-                              value={statusOptions.find((opt) => opt.value === order.status)}
-                              onChange={(selected: SingleValue<StatusOption>) => {
-                                if (selected) handleStatusChange(order.id_order, selected.value);
-                              }}
-                              styles={customStyles}
-                              isSearchable={false}
-                              isDisabled={isUpdating}
-                              isLoading={isUpdating && updatingOrderId === order.id_order}
-                            />
-                          </td>
-                          <td>
-                            {order.first_name} {order.last_name}
-                          </td>
-                          <td>{formatDateJP(order.date)} {order.pickupHour}</td>
-                          <td>
-                            <ul>
-                              {order.cakes.map((cake, index) => (
-                                <li key={`${order.id_order}-${cake.cake_id}-${index}`}>
-                                  {cake.name}
-                                  {cake.size} - ¥{cake.price}<br />
-                                </li>
-                              ))}
-                            </ul>
-                          </td>
-                          <td style={{ textAlign: "left" }}>
-                            <ul>
-                              {order.cakes.map((cake, index) => (
-                                <li key={`${order.id_order}-${cake.cake_id}-${index}`}>
-                                  {cake.amount}
-                                </li>
-                              ))}
-                            </ul>
-                          </td>
-                          <td className='message-cell' style={{ textAlign: "left" }}>
-                            <ul>
-                              {order.cakes.map((cake, index) => (
-                                <li key={`${order.id_order}-${cake.cake_id}-${index}`} >
-                                  {/* <div
-                                    className={`ellipsis-text`}
-                                    onClick={() => setExpandedOrderId(expandedOrderId === order.id_order ? null : order.id_order)}
-                                    title={expandedOrderId ? "" : "クリックして全メッセージを表示"}
-                                    style={{ cursor: "pointer" }}
-                                  > */}
-                                    {cake.message_cake}
-                                  {/* </div> */}
-                                </li>
-                              ))}
-                            </ul>
-                          </td>
-                          <td className='message-cell'>
-                            {/* <div
-                              className={`ellipsis-text ${expandedOrderId === order.id_order ? 'expanded' : ''}`}
-                              onClick={() => setExpandedOrderId(expandedOrderId === order.id_order ? null : order.id_order)}
-                              title={expandedOrderId ? "" : "クリックして全メッセージを表示"}
-                              style={{ cursor: "pointer" }}
-                            > */}
-                            <li>
-                              {order.message || " "}
-
-                            </li>
-                            {/* </div> */}
-                          </td>
-                          <td>{order.tel}</td>
-                          <td>{order.email}</td>
-                          <td>
-                            <button
-                              onClick={() => setEditingOrder(order)}
-                              style={{
-                                padding: "0.25rem 0.5rem",
-                                backgroundColor: "#007bff",
-                                color: "white",
-                                border: "none",
-                                borderRadius: "4px",
-                                cursor: "pointer",
-                                fontSize: "0.8rem"
-                              }}
-                            >
-                              編集
-                            </button>
-                          </td>
-                        </tr>
-                      ))}
-                  </tbody>
-                </table>
-              </div>
-            );
-          })}
+            <div className="tab-content">
+              {activeTab === "active" && <ActiveOrdersTable />}
+              {activeTab === "past" && <PastOrdersTable />}
+            </div>
+          </div>
 
           {/* Modal de edição */}
           {editingOrder && (
@@ -655,56 +804,6 @@ useEffect(() => {
               handleSaveEdit={handleSaveEdit}
             />
           )}
-
-          {/* Cards (mobile) */}
-          <div className="mobile-orders">
-            {orders.map((order) => (
-              <div className="order-card" key={order.id_order}>
-                <Select<StatusOption, false>
-                  options={statusOptions}
-                  value={statusOptions.find((opt) => opt.value === order.status)}
-                  onChange={(selected: SingleValue<StatusOption>) => {
-                    if (selected) handleStatusChange(order.id_order, selected.value);
-                  }}
-                  styles={customStyles}
-                  isSearchable={false}
-                  isDisabled={isUpdating}
-                  isLoading={isUpdating && updatingOrderId === order.id_order}
-                />
-                <div className="order-header">
-                  <span>受付番号: {String(order.id_order).padStart(4, "0")}</span>
-                </div>
-                <p>お名前: {order.first_name} {order.last_name}</p>
-                <p>受取日: {formatDateJP(order.date)} {order.pickupHour}</p>
-                <details>
-                  <summary>ご注文内容</summary>
-                  <ul>
-                    {order.cakes.map((cake, index) => (
-                      <li key={`${cake.cake_id}-${index}`}>
-                        {cake.name} - 個数: {cake.amount} - {cake.size}
-                      </li>
-                    ))}
-                  </ul>
-                  <p>電話番号: {order.tel}</p>
-                  <p>メッセージ: {order.message || " "}</p>
-                </details>
-                <button
-                  onClick={() => setEditingOrder(order)}
-                  style={{
-                    marginTop: "0.5rem",
-                    padding: "0.5rem 1rem",
-                    backgroundColor: "#007bff",
-                    color: "white",
-                    border: "none",
-                    borderRadius: "4px",
-                    cursor: "pointer"
-                  }}
-                >
-                  編集
-                </button>
-              </div>
-            ))}
-          </div>
         </>
       )}
     </div>
