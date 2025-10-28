@@ -236,7 +236,7 @@ export default function SalesOrder() {
 
   if (monthlyData.length === 0) return (
     <div className="loading-container">
-      <p>Carregando dados...</p>
+      <p>Loading...</p>
     </div>
   );
 

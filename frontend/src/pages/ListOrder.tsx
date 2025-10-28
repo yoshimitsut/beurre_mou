@@ -155,7 +155,7 @@ export default function ListOrder() {
   const activeOrders = useMemo(() => {
     return orders.filter(o => {
       const date = new Date(o.date).setHours(0, 0, 0, 0);
-      const notCanceled = o.status !== "e";
+      const notCanceled = o.status !== "e" && o.status !== "d";
       const isFutureOrToday = date >= today;
       return notCanceled && isFutureOrToday;
     });
@@ -164,7 +164,7 @@ export default function ListOrder() {
   const pastOrders = useMemo(() => {
     return orders.filter(o => {
       const date = new Date(o.date).setHours(0, 0, 0, 0);
-      return o.status === "e" || date < today;
+      return o.status === "e" || date < today || o.status === "d";
     });
   }, [orders, today]);
 
