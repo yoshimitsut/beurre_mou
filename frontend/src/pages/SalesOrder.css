@@ -286,8 +286,8 @@
 
 /* 🔹 Cabeçalhos compactos apenas com dias */
 .summary-table th:not(:first-child):not(:last-child) {
-  min-width: 50px;
-  max-width: 60px;
+  min-width: 40px;
+  max-width: 45px;
   padding: 8px 4px;
   /* font-size: 12px; */
   text-align: center;

@@ -113,6 +113,7 @@
   display: flex;
   align-items: center;
   justify-content: center;
+  min-height: -webkit-fill-available;
 }
 
 .cake-info {
@@ -126,8 +127,44 @@
   height: 2.5em;
 } */
 
+.modal-close-button {
+  padding: 0.75rem 1.5rem;
+  background-color: #6c757d;
+  color: white;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+}
+
+.modal-edit-content {
+  display: flex;
+  gap: 2rem;
+
+  .modal-name {
+    width: 50%;
+  }
+
+}
+
+.react-datepicker__input-container input, .input-group {
+  padding: 10px 0px 10px 10px;
+  font-size: 0.9rem;
+  border-radius: 5px;
+  background-color: #fff;
+}
 
 @media (max-width: 450px) { 
+  .modal-title {
+    font-size: 1rem;
+  }
+  .modal-close-button {
+    width: 2rem;
+    padding: 5px 4px;
+  }
+  .modal-edit-content {
+  gap: .5rem;
+  }
+
   .cake-info-1{
     align-items: flex-start;
     flex-direction: column;

@@ -21,7 +21,7 @@ export default function ListOrder() {
   const [scannedOrderId, setScannedOrderId] = useState<number | null>(null);
   const [search, setSearch] = useState('');
   const [viewMode] = useState<"date" | "order">("order");
-  const [activeTab, setActiveTab] = useState<"active" | "past">("active");
+  const [activeTab, setActiveTab] = useState<"active" | "completed" | "cancelled" | "past">("active");
 
   const [isUpdating, setIsUpdating] = useState(false);
   const [updatingOrderId, setUpdatingOrderId] = useState<number | null>(null);
@@ -149,24 +149,38 @@ export default function ListOrder() {
     }
   }, [viewMode, sortedGroupedOrders, orders]);
 
-  // Separar pedidos ativos e cancelados/passados
+  // 🔹 SEPARAR PEDIDOS POR CATEGORIAS
   const today = new Date().setHours(0, 0, 0, 0);
 
+  // Pedidos Ativos: status a, b, c com data futura ou hoje
   const activeOrders = useMemo(() => {
     return orders.filter(o => {
       const date = new Date(o.date).setHours(0, 0, 0, 0);
-      const notCanceled = o.status !== "e" && o.status !== "d";
+      const isActiveStatus = o.status === "a" || o.status === "b" || o.status === "c";
       const isFutureOrToday = date >= today;
-      return notCanceled && isFutureOrToday;
+      return isActiveStatus && isFutureOrToday;
     });
   }, [orders, today]);
 
-  const pastOrders = useMemo(() => {
+  // 🔹 Pedidos com Data Anterior: status a, b, c com data passada
+  const pastDateOrders = useMemo(() => {
     return orders.filter(o => {
       const date = new Date(o.date).setHours(0, 0, 0, 0);
-      return o.status === "e" || date < today || o.status === "d";
+      const isActiveStatus = o.status === "a" || o.status === "b" || o.status === "c";
+      const isPastDate = date < today;
+      return isActiveStatus && isPastDate;
     });
   }, [orders, today]);
+
+  // Pedidos Finalizados: status d (お渡し済み)
+  const completedOrders = useMemo(() => {
+    return orders.filter(o => o.status === "d");
+  }, [orders]);
+
+  // Pedidos Cancelados: status e (キャンセル)
+  const cancelledOrders = useMemo(() => {
+    return orders.filter(o => o.status === "e");
+  }, [orders]);
 
   const formatDate = (isoString: string) => {
     const date = new Date(isoString);
@@ -362,7 +376,7 @@ export default function ListOrder() {
     }),
   };
 
-  // Componente para renderizar a tabela de pedidos ativos
+  // 🔹 COMPONENTE PARA PEDIDOS ATIVOS
   const ActiveOrdersTable = () => (
     <>
       {activeOrders.length === 0 ? (
@@ -411,7 +425,7 @@ export default function ListOrder() {
                                 }}
                               >
                                 <option value="すべて">すべて</option>
-                                {Array.from(new Set(orders.map((o) => o.date)))
+                                {Array.from(new Set(activeOrders.map((o) => o.date)))
                                   .sort((a, b) => new Date(a).getTime() - new Date(b).getTime())
                                   .map((date) => (
                                     <option key={date} value={date}>
@@ -428,7 +442,7 @@ export default function ListOrder() {
                                 <option value="すべて">すべて</option>
                                 {Array.from(
                                   new Set(
-                                    orders
+                                    activeOrders
                                       .filter((o) => dateFilter === "すべて" || o.date === dateFilter)
                                       .map((o) => o.pickupHour)
                                   )
@@ -454,7 +468,7 @@ export default function ListOrder() {
                               <option value="すべて">すべて</option>
                               {Array.from(
                                 new Set(
-                                  orders.flatMap((o) => (o.cakes ?? []).map((c) => c.name))
+                                  activeOrders.flatMap((o) => (o.cakes ?? []).map((c) => c.name))
                                 )
                               ).map((cake) => (
                                 <option key={cake} value={cake}>{cake}</option>
@@ -624,11 +638,11 @@ export default function ListOrder() {
     </>
   );
 
-  // Componente para renderizar a tabela de pedidos passados
-  const PastOrdersTable = () => {
-    const sortedPastOrders = useMemo(() => {
-      return [...pastOrders].sort((a, b) => {
-        // Primeiro ordena por data (mais recente primeiro)
+  // 🔹 COMPONENTE PARA PEDIDOS COM DATA ANTERIOR
+  const PastDateOrdersTable = () => {
+    const sortedPastDateOrders = useMemo(() => {
+      return [...pastDateOrders].sort((a, b) => {
+        // Ordena por data (mais recente primeiro)
         const dateA = new Date(a.date).getTime();
         const dateB = new Date(b.date).getTime();
         
@@ -641,40 +655,53 @@ export default function ListOrder() {
         const timeB = b.pickupHour || "";
         return timeA.localeCompare(timeB, "ja");
       });
-    }, []);
+    }, [pastDateOrders]);
 
     return (
       <>
-        {sortedPastOrders.length === 0 ? (
-          <p>終了またはキャンセルされた注文はありません。</p>
+        {sortedPastDateOrders.length === 0 ? (
+          <p>過去の日付の注文はありません。</p>
         ) : (
           <div className="table-wrapper scroll-cell table-order-container">
             <table className="list-order-table table-order">
               <thead>
                 <tr>
                   <th>受付番号</th>
+                  <th className='situation-cell'>お会計</th>
                   <th>お名前</th>
                   <th>受取希望日時</th>
-                  <th>お会計</th>
                   <th>ご注文のケーキ</th>
                   <th>個数</th>
-                  <th>メッセージ</th>
-                  <th>その他</th>
+                  <th className='message-cell'>メッセージ</th>
+                  <th className='message-cell'>その他</th>
                   <th>電話番号</th>
                   <th>メールアドレス</th>
+                  <th>編集</th>
                 </tr>
               </thead>
               <tbody>
-                {sortedPastOrders.map(order => (
+                {sortedPastDateOrders.map(order => (
                   <tr key={order.id_order}>
                     <td>{String(order.id_order).padStart(4, "0")}</td>
+                    <td className='situation-cell'>
+                      <Select<StatusOption, false>
+                        options={statusOptions}
+                        value={statusOptions.find((opt) => opt.value === order.status)}
+                        onChange={(selected: SingleValue<StatusOption>) => {
+                          if (selected) handleStatusChange(order.id_order, selected.value);
+                        }}
+                        styles={customStyles}
+                        isSearchable={false}
+                        isDisabled={isUpdating}
+                        isLoading={isUpdating && updatingOrderId === order.id_order}
+                      />
+                    </td>
                     <td>{order.first_name} {order.last_name}</td>
                     <td>{formatDateJP(order.date)} {order.pickupHour}</td>
-                    <td>{STATUS_OPTIONS.find(s => s.value === order.status)?.label || "不明"}</td>
                     <td>
                       <ul>
                         {order.cakes.map((cake, i) => (
-                          <li key={i}>{cake.name}</li>
+                          <li key={i}>{cake.name} {cake.size}</li>
                         ))}
                       </ul>
                     </td>
@@ -695,7 +722,182 @@ export default function ListOrder() {
                     <td>{order.message}</td>
                     <td>{order.tel}</td>
                     <td>{order.email}</td>
-                    
+                    <td>
+                      <button
+                        onClick={() => setEditingOrder(order)}
+                        style={{
+                          padding: "0.25rem 0.5rem",
+                          backgroundColor: "#007bff",
+                          color: "white",
+                          border: "none",
+                          borderRadius: "4px",
+                          cursor: "pointer",
+                          fontSize: "0.8rem"
+                        }}
+                      >
+                        編集
+                      </button>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        )}
+      </>
+    );
+  };
+
+  // 🔹 COMPONENTE PARA PEDIDOS FINALIZADOS
+  const CompletedOrdersTable = () => {
+    const sortedCompletedOrders = useMemo(() => {
+      return [...completedOrders].sort((a, b) => {
+        // Ordena por data (mais recente primeiro)
+        const dateA = new Date(a.date).getTime();
+        const dateB = new Date(b.date).getTime();
+        
+        if (dateA !== dateB) {
+          return dateB - dateA; // Mais recente primeiro
+        }
+        
+        // Se for a mesma data, ordena por horário
+        const timeA = a.pickupHour || "";
+        const timeB = b.pickupHour || "";
+        return timeA.localeCompare(timeB, "ja");
+      });
+    }, [completedOrders]);
+
+    return (
+      <>
+        {sortedCompletedOrders.length === 0 ? (
+          <p>お渡し済みの注文はありません。</p>
+        ) : (
+          <div className="table-wrapper scroll-cell table-order-container">
+            <table className="list-order-table table-order">
+              <thead>
+                <tr>
+                  <th>受付番号</th>
+                  <th>お名前</th>
+                  <th>受取希望日時</th>
+                  <th>ご注文のケーキ</th>
+                  <th>個数</th>
+                  <th>メッセージ</th>
+                  <th>その他</th>
+                  <th>電話番号</th>
+                  <th>メールアドレス</th>
+                  <th>最終更新</th>
+                </tr>
+              </thead>
+              <tbody>
+                {sortedCompletedOrders.map(order => (
+                  <tr key={order.id_order}>
+                    <td>{String(order.id_order).padStart(4, "0")}</td>
+                    <td>{order.first_name} {order.last_name}</td>
+                    <td>{formatDateJP(order.date)} {order.pickupHour}</td>
+                    <td>
+                      <ul>
+                        {order.cakes.map((cake, i) => (
+                          <li key={i}>{cake.name} {cake.size}</li>
+                        ))}
+                      </ul>
+                    </td>
+                    <td>
+                      <ul>
+                        {order.cakes.map((cake, i) => (
+                          <li key={i}>{cake.amount}</li>
+                        ))}
+                      </ul>
+                    </td>
+                    <td>
+                      <ul>
+                        {order.cakes.map((cake, i) => (
+                          <li key={i}>{cake.message_cake}</li>
+                        ))}
+                      </ul>
+                    </td>
+                    <td>{order.message}</td>
+                    <td>{order.tel}</td>
+                    <td>{order.email}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        )}
+      </>
+    );
+  };
+
+  // 🔹 COMPONENTE PARA PEDIDOS CANCELADOS
+  const CancelledOrdersTable = () => {
+    const sortedCancelledOrders = useMemo(() => {
+      return [...cancelledOrders].sort((a, b) => {
+        // Ordena por data (mais recente primeiro)
+        const dateA = new Date(a.date).getTime();
+        const dateB = new Date(b.date).getTime();
+        
+        if (dateA !== dateB) {
+          return dateB - dateA; // Mais recente primeiro
+        }
+        
+        // Se for a mesma data, ordena por horário
+        const timeA = a.pickupHour || "";
+        const timeB = b.pickupHour || "";
+        return timeA.localeCompare(timeB, "ja");
+      });
+    }, [cancelledOrders]);
+
+    return (
+      <>
+        {sortedCancelledOrders.length === 0 ? (
+          <p>キャンセルされた注文はありません。</p>
+        ) : (
+          <div className="table-wrapper scroll-cell table-order-container">
+            <table className="list-order-table table-order">
+              <thead>
+                <tr>
+                  <th>受付番号</th>
+                  <th>お名前</th>
+                  <th>受取希望日時</th>
+                  <th>ご注文のケーキ</th>
+                  <th>個数</th>
+                  <th>メッセージ</th>
+                  <th>その他</th>
+                  <th>電話番号</th>
+                  <th>メールアドレス</th>
+                  <th>キャンセル日</th>
+                </tr>
+              </thead>
+              <tbody>
+                {sortedCancelledOrders.map(order => (
+                  <tr key={order.id_order}>
+                    <td>{String(order.id_order).padStart(4, "0")}</td>
+                    <td>{order.first_name} {order.last_name}</td>
+                    <td>{formatDateJP(order.date)} {order.pickupHour}</td>
+                    <td>
+                      <ul>
+                        {order.cakes.map((cake, i) => (
+                          <li key={i}>{cake.name} {cake.size}</li>
+                        ))}
+                      </ul>
+                    </td>
+                    <td>
+                      <ul>
+                        {order.cakes.map((cake, i) => (
+                          <li key={i}>{cake.amount}</li>
+                        ))}
+                      </ul>
+                    </td>
+                    <td>
+                      <ul>
+                        {order.cakes.map((cake, i) => (
+                          <li key={i}>{cake.message_cake}</li>
+                        ))}
+                      </ul>
+                    </td>
+                    <td>{order.message}</td>
+                    <td>{order.tel}</td>
+                    <td>{order.email}</td>
                   </tr>
                 ))}
               </tbody>
@@ -773,7 +975,7 @@ export default function ListOrder() {
         <p>注文が見つかりません。</p>
       ) : (
         <>
-          {/* Abas */}
+          {/* 🔹 ABAS ATUALIZADAS - 4 ABAS AGORA */}
           <div className="tabs-container">
             <div className="tabs-header">
               <button
@@ -786,13 +988,27 @@ export default function ListOrder() {
                 className={`tab-button ${activeTab === "past" ? "active" : ""}`}
                 onClick={() => setActiveTab("past")}
               >
-                📜 終了・キャンセル済み ({pastOrders.length})
+                ⏰ 過去の日付 ({pastDateOrders.length})
+              </button>
+              <button
+                className={`tab-button ${activeTab === "completed" ? "active" : ""}`}
+                onClick={() => setActiveTab("completed")}
+              >
+                ✅ お渡し済み ({completedOrders.length})
+              </button>
+              <button
+                className={`tab-button ${activeTab === "cancelled" ? "active" : ""}`}
+                onClick={() => setActiveTab("cancelled")}
+              >
+                ❌ キャンセル ({cancelledOrders.length})
               </button>
             </div>
 
             <div className="tab-content">
               {activeTab === "active" && <ActiveOrdersTable />}
-              {activeTab === "past" && <PastOrdersTable />}
+              {activeTab === "past" && <PastDateOrdersTable />}
+              {activeTab === "completed" && <CompletedOrdersTable />}
+              {activeTab === "cancelled" && <CancelledOrdersTable />}
             </div>
           </div>
 

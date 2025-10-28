@@ -37,7 +37,7 @@ export default function OrderCake() {
 
   // Datas e calendário
   const today = new Date();
-  const diasABloquear = 3;
+  const diasABloquear = 4;
   const maxDate = endOfMonth(addDays(today, 90));
 
   const diasEspecificosPorMes = [
@@ -143,7 +143,7 @@ export default function OrderCake() {
         <CalendarContainer className={className}>{children}</CalendarContainer>
         <div className='calendar-notice'>
           <div style={{ padding: "20px" }}>
-            <p>３日前よりご予約可能（２週間後まで）</p>
+            <p>３日前よりご予約可能</p>
           </div>
           <div className='notice'>
             <div className='selectable'></div>
@@ -527,7 +527,7 @@ const customStylesHour: StylesConfig<TimeOptionType, false> = {
 />
               <label htmlFor="pickupHour" className='select-group'>受け取り希望時間</label>
             </div>
-            <div className='input-group'>
+            <div className='input-group' style={{display: 'none'}}>
               <label htmlFor="message">その他</label>
               <textarea name="message" id="message" placeholder=""></textarea>
             </div>
