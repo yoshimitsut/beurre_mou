@@ -33,18 +33,6 @@ export default function EditOrderModal({ editingOrder, setEditingOrder, handleSa
     })()
     : null
   );
-  // const allowedDates = [
-  //   new Date(2025, 11, 24), // 24 de Dezembro de 2025 (local)
-  //   new Date(2025, 11, 25), // 25 de Dezembro de 2025 (local)
-  // ];
-
-
-//   console.log('Debug - Datas:', {
-//   dataOriginal: editingOrder.date,
-//   selectedDate: selectedDate?.toString(),
-//   selectedDateLocal: selectedDate ? formatDateForBackend(selectedDate) : null,
-//   timezone: Intl.DateTimeFormat().resolvedOptions().timeZone
-// });
 
   // Fetch bolos
   useEffect(() => {

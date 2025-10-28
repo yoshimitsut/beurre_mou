@@ -9,7 +9,7 @@ export default function StoreLogin() {
   const location = useLocation();
 
   // Senha para a loja (você pode mudar isso)
-  const STORE_PASSWORD = '123';
+  const STORE_PASSWORD = 'beurremou0301';
 
   //Pedir a senha 1 vez só
 

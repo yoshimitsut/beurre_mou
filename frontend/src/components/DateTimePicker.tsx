@@ -88,18 +88,6 @@ export default function DateTimePicker({
 }: DateTimePickerProps) {
   const [pickupHour, setPickupHour] = useState(selectedTime || "");
 
-  // const MyContainer = ({ className, children }: MyContainerProps) => (
-  //   <div>
-  //     <CalendarContainer className={className}>{children}</CalendarContainer>
-  //     <div className="calendar-notice">
-  //       <div className="notice">
-  //         <div className="selectable"></div>
-  //         <span>予約可能日 / <span className="yassumi">x</span> 予約不可</span>
-  //       </div>
-  //     </div>
-  //   </div>
-  // );
-
   const renderDayContents = (day: number, date: Date) => {
     const isBlocked = excludedDates.some(d => isSameDay(d, date));
     const dayOfWeek = getDay(date);
@@ -110,7 +98,6 @@ export default function DateTimePicker({
     return (
       <div className={`day-cell ${extraClass}`}>
         <span>{day}</span>
-        {isBlocked && <span className="yassumi">x</span>}
         {!isBlocked && isAfter(date, today) && <div className="selectable"></div>}
       </div>
     );
