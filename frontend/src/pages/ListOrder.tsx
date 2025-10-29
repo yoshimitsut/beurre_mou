@@ -21,7 +21,7 @@ export default function ListOrder() {
   const [scannedOrderId, setScannedOrderId] = useState<number | null>(null);
   const [search, setSearch] = useState('');
   const [viewMode] = useState<"date" | "order">("order");
-  const [activeTab, setActiveTab] = useState<"active" | "completed" | "cancelled" | "past">("active");
+  const [activeTab, setActiveTab] = useState<"today" | "active" | "completed" | "cancelled" | "past">("today");
 
   const [isUpdating, setIsUpdating] = useState(false);
   const [updatingOrderId, setUpdatingOrderId] = useState<number | null>(null);
@@ -78,7 +78,7 @@ export default function ListOrder() {
           setOrders(normalized);
         })
         .catch((error) => {
-          console.error('Erro ao carregar pedidos:', error);
+          console.error('注文の読み込みエラー:', error);
         })
         .finally(() => setLoading(false));
     }, 500);
@@ -128,7 +128,7 @@ export default function ListOrder() {
         },
         (err) => console.warn("QRコード読み取りエラー:", err)
       )
-      .catch((err) => console.error("Erro ao iniciar câmera:", err));
+      .catch((err) => console.error("カメラ起動エラー:", err));
 
     return () => {
       html5QrCode.stop().then(() => html5QrCode.clear());
@@ -151,6 +151,14 @@ export default function ListOrder() {
 
   // 🔹 SEPARAR PEDIDOS POR CATEGORIAS
   const today = new Date().setHours(0, 0, 0, 0);
+
+  // 🔹 Pedidos de Hoje: todos os status com data de hoje
+  const todayOrders = useMemo(() => {
+    return orders.filter(o => {
+      const date = new Date(o.date).setHours(0, 0, 0, 0);
+      return date === today;
+    });
+  }, [orders, today]);
 
   // Pedidos Ativos: status a, b, c com data futura ou hoje
   const activeOrders = useMemo(() => {
@@ -193,7 +201,7 @@ export default function ListOrder() {
     if (!order) return;
 
     const statusMap: Record<string, string> = {
-      a: "未",
+      a: "未入金",
       b: "オンライン予約",
       c: "店頭支払い済",
       d: "お渡し済",
@@ -204,7 +212,7 @@ export default function ListOrder() {
     const nextStatus = statusMap[newStatus];
 
     const confirmed = window.confirm(
-      `(確認)ステータスを変更しますか？\n\n` +
+      `【確認】ステータスを変更しますか？\n\n` +
       `受付番号: ${String(order.id_order).padStart(4, "0")}\n` +
       `お名前: ${order.first_name} ${order.last_name}\n\n` +
       `${currentStatus} → ${nextStatus}`
@@ -228,11 +236,11 @@ export default function ListOrder() {
         data = await res.json();
       } catch (e) {
         console.error(e);
-        throw new Error(`Resposta inválida do servidor (status ${res.status})`);
+        throw new Error(`サーバーからの応答が無効です（ステータス ${res.status}）`);
       }
 
       if (!res.ok || !data || !data.success) {
-        throw new Error(data?.error || `Falha ao salvar (status ${res.status})`);
+        throw new Error(data?.error || `保存に失敗しました（ステータス ${res.status}）`);
       }
 
       setOrders((old) =>
@@ -240,8 +248,8 @@ export default function ListOrder() {
       );
 
     } catch (err) {
-      console.error("Erro ao atualizar status:", err);
-      alert("Erro ao salvar status no servidor. A lista será recarregada.");
+      console.error("ステータス更新エラー:", err);
+      alert("サーバーへのステータス保存中にエラーが発生しました。リストを再読み込みします。");
 
       setRefreshKey((k) => k + 1);
 
@@ -280,10 +288,10 @@ export default function ListOrder() {
       setRefreshKey(prev => prev + 1);
       
       setEditingOrder(null);
-      alert("✅ 注文が更新されました。");
+      alert("✅ 注文が正常に更新されました。");
     } catch (err) {
-      console.error("❌ Erro ao salvar edição:", err);
-      alert("更新エラーが発生しました。");
+      console.error("❌ 編集保存エラー:", err);
+      alert("❌ 更新中にエラーが発生しました。");
     }
   };
 
@@ -374,6 +382,175 @@ export default function ListOrder() {
       ...provided,
       padding: "1px",
     }),
+  };
+
+  // 🔹 COMPONENTE PARA PEDIDOS DE HOJE
+  const TodayOrdersTable = () => {
+    const sortedTodayOrders = useMemo(() => {
+      return [...todayOrders].sort((a, b) => {
+        // Ordena por horário de retirada
+        const timeA = a.pickupHour || "";
+        const timeB = b.pickupHour || "";
+        return timeA.localeCompare(timeB, "ja");
+      });
+    }, [todayOrders]);
+
+    return (
+      <>
+        {sortedTodayOrders.length === 0 ? (
+          <p>本日の注文はありません。</p>
+        ) : (
+          <div className="table-wrapper scroll-cell table-order-container">
+            <table className="list-order-table table-order">
+              <thead>
+                <tr>
+                  <th className='id-cell'>受付番号</th>
+                  <th className='situation-cell'>
+                    <div className='filter-column'>
+                      お会計
+                      <select
+                        value={statusFilter}
+                        onChange={(e) => setStatusFilter(e.target.value)}
+                      >
+                        {filterOptions.map((opt) => (
+                          <option key={opt.value} value={opt.value}>
+                            {opt.label}
+                          </option>
+                        ))}
+                      </select>
+                    </div>
+                  </th>
+                  <th>お名前</th>
+                  <th>
+                    <div className='filter-column'>
+                      受取希望時間
+                      <select
+                        value={hourFilter}
+                        onChange={(e) => setHourFilter(e.target.value)}
+                      >
+                        <option value="すべて">すべて</option>
+                        {Array.from(
+                          new Set(todayOrders.map((o) => o.pickupHour))
+                        )
+                          .sort((a, b) => {
+                            const numA = parseInt(a);
+                            const numB = parseInt(b);
+                            return numA - numB;
+                          })
+                          .map((hour) => (
+                            <option key={hour} value={hour}>
+                              {hour}
+                            </option>
+                          ))}
+                      </select>
+                    </div>
+                  </th>
+                  <th>
+                    <div className='filter-column'>
+                      ご注文のケーキ
+                      <select value={cakeFilter} onChange={(e) => setCakeFilter(e.target.value)}>
+                        <option value="すべて">すべて</option>
+                        {Array.from(
+                          new Set(
+                            todayOrders.flatMap((o) => (o.cakes ?? []).map((c) => c.name))
+                          )
+                        ).map((cake) => (
+                          <option key={cake} value={cake}>{cake}</option>
+                        ))}
+                      </select>
+                    </div>
+                  </th>
+                  <th>個数</th>
+                  <th className='message-cell'>ケーキメッセージ</th>
+                  <th className='message-cell'>その他メッセージ</th>
+                  <th>電話番号</th>
+                  <th>メールアドレス</th>
+                  <th>編集</th>
+                </tr>
+              </thead>
+              <tbody>
+                {sortedTodayOrders
+                  .filter((order) => {
+                    const matchesStatus = statusFilter === "すべて" || order.status === statusFilter;
+                    const matchesCake = cakeFilter === "すべて" || order.cakes.some(cake => cake.name === cakeFilter);
+                    const matchesHour = hourFilter === "すべて" || order.pickupHour === hourFilter;
+                    
+                    return matchesStatus && matchesCake && matchesHour;
+                  })
+                  .map((order) => (
+                    <tr key={order.id_order}>
+                      <td>{String(order.id_order).padStart(4, "0")}</td>
+                      <td className='situation-cell'>
+                        <Select<StatusOption, false>
+                          options={statusOptions}
+                          value={statusOptions.find((opt) => opt.value === order.status)}
+                          onChange={(selected: SingleValue<StatusOption>) => {
+                            if (selected) handleStatusChange(order.id_order, selected.value);
+                          }}
+                          styles={customStyles}
+                          isSearchable={false}
+                          isDisabled={isUpdating}
+                          isLoading={isUpdating && updatingOrderId === order.id_order}
+                        />
+                      </td>
+                      <td>{order.first_name} {order.last_name}</td>
+                      <td>{order.pickupHour}</td>
+                      <td>
+                        <ul>
+                          {order.cakes.map((cake, index) => (
+                            <li key={`${order.id_order}-${cake.cake_id}-${index}`}>
+                              {cake.name} {cake.size} - ¥{cake.price}
+                            </li>
+                          ))}
+                        </ul>
+                      </td>
+                      <td style={{ textAlign: "left" }}>
+                        <ul>
+                          {order.cakes.map((cake, index) => (
+                            <li key={`${order.id_order}-${cake.cake_id}-${index}`}>
+                              {cake.amount}
+                            </li>
+                          ))}
+                        </ul>
+                      </td>
+                      <td className='message-cell' style={{ textAlign: "left" }}>
+                        <ul>
+                          {order.cakes.map((cake, index) => (
+                            <li key={`${order.id_order}-${cake.cake_id}-${index}`} >
+                              {cake.message_cake}
+                            </li>
+                          ))}
+                        </ul>
+                      </td>
+                      <td className='message-cell'>
+                        {order.message || " "}
+                      </td>
+                      <td>{order.tel}</td>
+                      <td>{order.email}</td>
+                      <td>
+                        <button
+                          onClick={() => setEditingOrder(order)}
+                          style={{
+                            padding: "0.25rem 0.5rem",
+                            backgroundColor: "#007bff",
+                            color: "white",
+                            border: "none",
+                            borderRadius: "4px",
+                            cursor: "pointer",
+                            fontSize: "0.8rem"
+                          }}
+                        >
+                          編集
+                        </button>
+                      </td>
+                    </tr>
+                  ))}
+              </tbody>
+            </table>
+          </div>
+        )}
+      </>
+    );
   };
 
   // 🔹 COMPONENTE PARA PEDIDOS ATIVOS
@@ -477,8 +654,8 @@ export default function ListOrder() {
                           </div>
                         </th>
                         <th>個数</th>
-                        <th className='message-cell'>メッセージ</th>
-                        <th className='message-cell'>その他</th>
+                        <th className='message-cell'>ケーキメッセージ</th>
+                        <th className='message-cell'>その他メッセージ</th>
                         <th>電話番号</th>
                         <th>メールアドレス</th>
                         <th>編集</th>
@@ -672,8 +849,8 @@ export default function ListOrder() {
                   <th>受取希望日時</th>
                   <th>ご注文のケーキ</th>
                   <th>個数</th>
-                  <th className='message-cell'>メッセージ</th>
-                  <th className='message-cell'>その他</th>
+                  <th className='message-cell'>ケーキメッセージ</th>
+                  <th className='message-cell'>その他メッセージ</th>
                   <th>電話番号</th>
                   <th>メールアドレス</th>
                   <th>編集</th>
@@ -781,8 +958,8 @@ export default function ListOrder() {
                   <th>受取希望日時</th>
                   <th>ご注文のケーキ</th>
                   <th>個数</th>
-                  <th>メッセージ</th>
-                  <th>その他</th>
+                  <th>ケーキメッセージ</th>
+                  <th>その他メッセージ</th>
                   <th>電話番号</th>
                   <th>メールアドレス</th>
                 </tr>
@@ -860,8 +1037,8 @@ export default function ListOrder() {
                   <th>受取希望日時</th>
                   <th>ご注文のケーキ</th>
                   <th>個数</th>
-                  <th>メッセージ</th>
-                  <th>その他</th>
+                  <th>ケーキメッセージ</th>
+                  <th>その他メッセージ</th>
                   <th>電話番号</th>
                   <th>メールアドレス</th>
                 </tr>
@@ -920,10 +1097,10 @@ export default function ListOrder() {
         <div className='btn-actions'>
           <ExcelExportButton data={orders} filename='注文ケーキ.xlsx' sheetName='注文' />
           <button onClick={() => setShowScanner(true)} className='list-btn qrcode-btn'>
-            <img src="/icons/qr-code.ico" alt="qrcode icon" />
+            <img src="/icons/qr-code.ico" alt="QRコードアイコン" />
           </button>
           <button onClick={() => navigate("/ordertable")} className='list-btn'>
-            <img src="/icons/graph.ico" alt="graphic icon" />
+            <img src="/icons/graph.ico" alt="グラフアイコン" />
           </button>
         </div>
       </div>
@@ -968,14 +1145,20 @@ export default function ListOrder() {
       )}
 
       {loading ? (
-        <p>Loading...</p>
+        <p>読み込み中...</p>
       ) : orders.length === 0 ? (
         <p>注文が見つかりません。</p>
       ) : (
         <>
-          {/* 🔹 ABAS ATUALIZADAS - 4 ABAS AGORA */}
+          {/* 🔹 ABAS ATUALIZADAS - 5 ABAS AGORA */}
           <div className="tabs-container">
             <div className="tabs-header">
+              <button
+                className={`tab-button ${activeTab === "today" ? "active" : ""}`}
+                onClick={() => setActiveTab("today")}
+              >
+                🎯 本日お渡し予定分 ({todayOrders.length})
+              </button>
               <button
                 className={`tab-button ${activeTab === "active" ? "active" : ""}`}
                 onClick={() => setActiveTab("active")}
@@ -1003,6 +1186,7 @@ export default function ListOrder() {
             </div>
 
             <div className="tab-content">
+              {activeTab === "today" && <TodayOrdersTable />}
               {activeTab === "active" && <ActiveOrdersTable />}
               {activeTab === "past" && <PastDateOrdersTable />}
               {activeTab === "completed" && <CompletedOrdersTable />}

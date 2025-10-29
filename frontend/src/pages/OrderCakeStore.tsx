@@ -489,7 +489,9 @@ const customStylesHour: StylesConfig<TimeOptionType, false> = {
           </div>
 
           <div className="date-information">
-            <label htmlFor="date" className='title-information'>*受取日時 / その他</label>
+            <label htmlFor="date" className='title-information'>*受取日時
+               {/* / その他 */}
+               </label>
             <div className='input-group'>
               <label htmlFor="datepicker" className='datepicker'>*受け取り希望日</label>
               <DatePicker

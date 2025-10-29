@@ -3,9 +3,7 @@ import { useState, useEffect } from "react";
 import Select, { type SingleValue, type StylesConfig } from "react-select";
 import type { CSSObjectWithLabel, GroupBase } from "react-select";
 import DateTimePicker from "./DateTimePicker";
-import type { Order, Cake, OrderCake, 
-  // TimeslotSQL, 
-  SizeOption } from "../types/types";
+import type { Order, Cake, OrderCake, SizeOption } from "../types/types";
 import './EditOrderModal.css';
 import { formatDateForBackend } from "../utils/dateUtils";
 
@@ -22,11 +20,9 @@ export default function EditOrderModal({ editingOrder, setEditingOrder, handleSa
   const [cakes, setCakes] = useState<OrderCake[]>(editingOrder.cakes ? [...editingOrder.cakes] : []);
   const [isSaving, setIsSaving] = useState(false);
   const [selectedTime, setSelectedTime] = useState(editingOrder.pickupHour || "");
-  // const [timeSlotsData, setTimeSlotsData] = useState<TimeslotSQL[]>([]);
   
   const [selectedDate, setSelectedDate] = useState<Date | null>(
   editingOrder.date ? 
-    // Converter string YYYY-MM-DD para Date local
     (() => {
       const [year, month, day] = editingOrder.date.split('-').map(Number);
       return new Date(year, month - 1, day);
@@ -42,16 +38,6 @@ export default function EditOrderModal({ editingOrder, setEditingOrder, handleSa
       .catch(err => console.error(err));
   }, []);
 
-  // Fetch timeslots
-  // useEffect(() => {
-  //   fetch(`${API_URL}/api/timeslots`)
-  //     .then(res => res.json())
-  //     .then(data => {
-  //       if (Array.isArray(data.timeslots)) setTimeSlotsData(data.timeslots);
-  //     })
-  //     .catch(err => console.error("Erro ao carregar datas:", err));
-  // }, []);
-
   const updateCake = (index: number, field: keyof OrderCake, value: string | number) => {
     setCakes(prev => prev.map((c, i) => (i === index ? { ...c, [field]: value } : c)));
   };
@@ -59,14 +45,14 @@ export default function EditOrderModal({ editingOrder, setEditingOrder, handleSa
   const addCake = () => {
     if (cakesData.length > 0) {
       const firstCake = cakesData[0];
-      const firstAvailableSize = firstCake.sizes.find(s => s.stock > 0) || firstCake.sizes[0];
+      const firstSize = firstCake.sizes[0];
       
       const newCake: OrderCake = {
         cake_id: firstCake.id,
         name: firstCake.name,
         amount: 1,
-        size: firstAvailableSize?.size || "",
-        price: firstAvailableSize?.price || 0,
+        size: firstSize?.size || "",
+        price: firstSize?.price || 0,
         message_cake: ""
       };
       
@@ -86,32 +72,20 @@ export default function EditOrderModal({ editingOrder, setEditingOrder, handleSa
     return cakesData.find(cake => cake.id === cakeId);
   };
 
-  const getSizeOptionsWithStock = (cakeId: number, index: number): SizeOption[] => {
+  const getSizeOptions = (cakeId: number): SizeOption[] => {
     const cakeData = getCakeDataById(cakeId);
     if (!cakeData) return [];
 
-    return cakeData.sizes.map(s => {
-      const used = cakes.reduce((acc, c, i) => {
-        if (i !== index && c.cake_id === cakeId && c.size === s.size) return acc + c.amount;
-        return acc;
-      }, 0);
-
-      const remainingStock = Math.max(0, s.stock - used);
-
-      return {
-        ...s,
-        isDisabled: remainingStock <= 0,
-        label: remainingStock > 0
-          ? `${s.size} ￥${s.price.toLocaleString()} （残り${remainingStock}個）`
-          : `${s.size} ￥${s.price.toLocaleString()} （定員に達した為、選択できません。）`
-      };
-    });
+    return cakeData.sizes.map(s => ({
+      ...s,
+      label: `${s.size} ￥${s.price.toLocaleString()}`
+    }));
   };
 
   const cakeOptions = cakesData.map(c => ({ value: String(c.id), label: c.name }));
 
   const handleSave = async () => {
-    setIsSaving(true); // desativa o botão imediatamente
+    setIsSaving(true);
 
     try {
       const updatedOrder: Order = {
@@ -123,23 +97,14 @@ export default function EditOrderModal({ editingOrder, setEditingOrder, handleSa
         pickupHour: selectedTime || editingOrder.pickupHour,
       };
 
-      // console.log("Dados a serem salvos:", updatedOrder);
-
       await handleSaveEdit(updatedOrder);
     } catch (err) {
       console.error("Erro ao salvar:", err);
       alert("エラーが発生しました。もう一度お試しください。");
     } finally {
-      setIsSaving(false); // reativa o botão após o salvamento (ou erro)
+      setIsSaving(false);
     }
   };
-  // const updatedOrder: Order = {
-  //   ...editingOrder,
-  //   cakes: cakes,
-  //   date: formatDateForBackend(selectedDate), // Usar a função corrigida
-  //   pickupHour: selectedTime || editingOrder.pickupHour,
-  // };
-  
 
   type OptionType = { value: string; label: string };
 
@@ -279,7 +244,7 @@ export default function EditOrderModal({ editingOrder, setEditingOrder, handleSa
         display: "flex",
         gap: "1rem",
         alignItems: "center",
-        flexWrap: "wrap", // <-- quebra linha no mobile
+        flexWrap: "wrap",
       }}
       className="cake-row"
     >
@@ -295,8 +260,7 @@ export default function EditOrderModal({ editingOrder, setEditingOrder, handleSa
               const newCakeId = Number(val.value);
               const selectedCake = getCakeDataById(newCakeId);
               if (selectedCake) {
-                const firstAvailableSize =
-                  selectedCake.sizes.find(s => s.stock > 0) || selectedCake.sizes[0];
+                const firstSize = selectedCake.sizes[0];
                 setCakes(prev =>
                   prev.map((c, i) =>
                     i === index
@@ -304,8 +268,8 @@ export default function EditOrderModal({ editingOrder, setEditingOrder, handleSa
                           ...c,
                           cake_id: newCakeId,
                           name: val.label,
-                          size: firstAvailableSize?.size || "",
-                          price: firstAvailableSize?.price || 0,
+                          size: firstSize?.size || "",
+                          price: firstSize?.price || 0,
                         }
                       : c
                   )
@@ -320,9 +284,9 @@ export default function EditOrderModal({ editingOrder, setEditingOrder, handleSa
       <div style={{ flex: 1, minWidth: "200px" }}>
         <label>サイズを選択:</label>
         <Select<SizeOption, false, GroupBase<SizeOption>>
-          options={getSizeOptionsWithStock(cake.cake_id, index)}
+          options={getSizeOptions(cake.cake_id)}
           value={
-            getSizeOptionsWithStock(cake.cake_id, index).find(
+            getSizeOptions(cake.cake_id).find(
               s => s.size === cake.size
             ) || null
           }
@@ -339,20 +303,8 @@ export default function EditOrderModal({ editingOrder, setEditingOrder, handleSa
           isSearchable={false}
           classNamePrefix="react-select-edit"
           required
-          isOptionDisabled={option => !!option.isDisabled}
           formatOptionLabel={option =>
-            !option.isDisabled ? (
-              `${option.size} ￥${option.price.toLocaleString()} （${(
-                option.price + option.price * 0.08
-              ).toLocaleString("ja-JP")}税込）`
-            ) : (
-              <span>
-                {option.size} ￥{option.price.toLocaleString()}
-                <span style={{ color: "red", fontSize: "0.8rem" }}>
-                  （定員に達した為、選択できません。）
-                </span>
-              </span>
-            )
+            `${option.size} ￥${option.price.toLocaleString()}`
           }
         />
       </div>
@@ -396,7 +348,6 @@ export default function EditOrderModal({ editingOrder, setEditingOrder, handleSa
             setSelectedDate={setSelectedDate}
             selectedTime={selectedTime}
             setSelectedTime={setSelectedTime}
-            // allowedDates={allowedDates}
           />
         </div>
 
