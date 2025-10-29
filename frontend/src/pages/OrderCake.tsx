@@ -37,7 +37,7 @@ export default function OrderCake() {
 
   // Datas e calendário
   const today = new Date();
-  const diasABloquear = 4;
+  const diasABloquear = 2;
   const maxDate = endOfMonth(addDays(today, 90));
 
   const diasEspecificosPorMes = [
