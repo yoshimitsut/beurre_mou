@@ -34,34 +34,32 @@
   overflow: hidden;
 
   .cake-description {
-    width: 25rem;
+    width: 95%;
     white-space: pre-line;
+    font-size: 1.8rem;
   }
   img {
-    width: 25em;
+    /* width: 25em; */
     width: 100%;
     height: 100%;
     object-fit: cover;
   }
   .main-right {
     object-fit: cover;
-    width: 50vw; 
+    width: 59vw;
+    max-height: 99.3vh;
   }
   .main-left {
-    width: 49vw; 
+    width: 39vw; 
     display: flex;
     gap: .75em;
     flex-direction: column;
     align-items: center;
-    padding: 1.5rem;
+    padding: 2.5rem 1.5rem;
     justify-content: space-around;
 
     .cake-name {
-      font-size: 2rem;;
-    }
-
-    .cake-description {
-      font-size: 1.2rem;
+      font-size: 3rem;
     }
 
     table {
@@ -75,10 +73,10 @@
 }
 
 .reserve-btn {
-  width: 9rem;
-  height: 3rem;
+  width: 11rem;
+  height: 5rem;
   border-radius: 30px;
-  font-size: 20px;
+  font-size: 38px;
   cursor: pointer;
   transition: 0.5s all;
 }
@@ -87,6 +85,30 @@
   background-color: #c9c9c9d2;
 }
 
+.cake-プチガトー4り{
+  .main-right {
+    width: 59vw;
+  }
+
+  .main-left {
+    width: 39vw;
+  }
+}
+
+.cake-プチガトー5り{
+  .main-right {
+    width: 59vw;
+  }
+
+  .main-left {
+    width: 39vw;
+  }
+}
+
+.reserve-btn {
+  background: none;
+  border: none;
+}
 
 @media (max-width: 990px) {
   .cake-main {
@@ -101,12 +123,17 @@
   .main-right, .main-left {
     flex: none; 
     width: 100% !important;    
+    /* height: 45% !important; */
   }
   .main-right {
     object-fit: cover;
   }
   .cake-description {
-    width: 80vw;
+    width: 100%;
+    font-size: 1.5rem !important;
+  }
+  .cake-inf-table {
+    font-size: 1.2rem !important;
   }
 }
 
@@ -114,19 +141,25 @@
   .cake-wrapper {
     flex-direction: row;
   }
+  
   .cake-main {
     .cake-description {
-      width: 85vw;
+      width: 100%;
     }
 
     .main-left {
 
-    .cake-name {
-      font-size: 1.5rem;
-    }
-    .cake-description {
-      font-size: 1rem;
-    }
+      .cake-name {
+        font-size: 1.5rem;
+      }
+
+      .cake-description {
+        font-size: 1.3rem !important;
+      }
     }
   } 
+
+  .cake-inf-table {
+    font-size: 1.2rem !important;
+  }
 }

@@ -30,6 +30,15 @@ export default function CakeInformations() {
       cake.name.trim().toLowerCase() === cakeName.trim().toLowerCase()
   );
 
+  // 🔹 Gerar nome da classe baseado no nome do bolo
+  const getCakeClassName = (cakeName: string): string => {
+    // Remove caracteres especiais e espaços, converte para minúsculas
+    return `cake-${cakeName
+      .toLowerCase()
+      .replace(/[^a-z0-9\u3040-\u309F\u30A0-\u30FF]/g, '') // Mantém letras, números e caracteres japoneses
+      .replace(/\s+/g, '-')}`;
+  };
+
   const handleReserve = () => {
     if (!selectedCake) return;
     navigate(`/order?cake=${encodeURIComponent(selectedCake.name.trim())}`);
@@ -46,7 +55,7 @@ export default function CakeInformations() {
   return (
     <div className="cake-screen">
       <div className="cake-wrapper">
-        <div className="cake-main">
+        <div className={`cake-main ${getCakeClassName(selectedCake.name)}`}>
           <div className="main-right">
             {selectedCake.image && (
               <img
@@ -60,11 +69,11 @@ export default function CakeInformations() {
             <h2 className="cake-name">{selectedCake.name}</h2>
             <p className="cake-description">{selectedCake.description}</p>
 
-            <table
+            <table className="cake-inf-table"
               style={{
                 margin: "20px auto",
                 borderCollapse: "collapse",
-                fontSize: "1.3rem"
+                fontSize: "2rem"
               }}
             >
               <tbody>
@@ -77,6 +86,7 @@ export default function CakeInformations() {
                       ¥
                       {/* {size.price.toLocaleString("ja-JP")} */}
                       {size.price.toLocaleString("ja-JP")} 税込
+                      {size.stock === 0 && <span style={{ color: "red"}}>  完売</span>}
                     </td>
                   </tr>
                 ))}
@@ -84,7 +94,7 @@ export default function CakeInformations() {
             </table>
 
             <button onClick={handleReserve} className="reserve-btn">
-              予約
+               
             </button>
           </div>
         </div>
