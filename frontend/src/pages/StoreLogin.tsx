@@ -8,36 +8,21 @@ export default function StoreLogin() {
   const navigate = useNavigate();
   const location = useLocation();
 
-  // Senha para a loja (você pode mudar isso)
-  const STORE_PASSWORD = 'beurremou0301';
+  // 🧩 Lista de senhas válidas
+  const VALID_PASSWORDS = ['beurremou0301', 't123'];
 
-  //Pedir a senha 1 vez só
-
-  // const handleLogin = (e: React.FormEvent) => {
-  //   e.preventDefault();
-    
-  //   if (password === STORE_PASSWORD) {
-  //     localStorage.setItem('store_authenticated', 'true');
-  //     const from = location.state?.from?.pathname || '/list';
-  //     navigate(from, { replace: true });
-  //   } else {
-  //     setError('パスワードが正しくありません');
-  //   }
-  // };
-
-//Pedir sempre a senha:
-
+  // Pedir senha sempre (sessionStorage)
   const handleLogin = (e: React.FormEvent) => {
-  e.preventDefault();
-  
-  if (password === STORE_PASSWORD) {
-    sessionStorage.setItem('store_authenticated', 'true'); // Mude para sessionStorage
-    const from = location.state?.from?.pathname || '/list';
-    navigate(from, { replace: true });
-  } else {
-    setError('パスワードが正しくありません');
-  }
-};
+    e.preventDefault();
+
+    if (VALID_PASSWORDS.includes(password)) {
+      sessionStorage.setItem('store_authenticated', 'true');
+      const from = location.state?.from?.pathname || '/list';
+      navigate(from, { replace: true });
+    } else {
+      setError('パスワードが正しくありません');
+    }
+  };
 
   return (
     <div className="login-container">
