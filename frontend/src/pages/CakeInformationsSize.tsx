@@ -47,19 +47,8 @@ export default function CakeInformations() {
     <div className="cake-screen">
       <div className="cake-wrapper">
         <div className="cake-main">
-          <div className="main-right">
-            {selectedCake.image && (
-              <img
-                src={`image/${selectedCake.image}`}
-                alt={selectedCake.name}
-              />
-            )}
-          </div>
-
+          
           <div className="main-left">
-            <h2 className="cake-name">{selectedCake.name}</h2>
-            <p className="cake-description">{selectedCake.description}</p>
-
             <table
               style={{
                 margin: "20px auto",
@@ -83,7 +72,7 @@ export default function CakeInformations() {
               </tbody>
             </table>
 
-            <button onClick={handleReserve} className="reserve-btn">
+            <button onClick={handleReserve} style={{display: "none"}} className="reserve-btn">
               予約
             </button>
           </div>

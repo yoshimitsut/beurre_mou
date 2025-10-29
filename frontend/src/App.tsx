@@ -6,6 +6,7 @@ import SalesOrder from './pages/SalesOrder';
 import Check from './pages/Check';
 import Hero from './pages/Hero';
 import CakeInformation from './pages/CakeInformations';
+import CakeInformationSize from './pages/CakeInformationsSize';
 import OrderCakeStore from './pages/OrderCakeStore';
 import StoreLogin from './pages/StoreLogin';
 import ProtectedRoute from './components/ProtectedRoute';
@@ -16,6 +17,7 @@ function App() {
       <Routes>
         <Route path="/" element={<Hero />} />
         <Route path="/cakeinformation" element={<CakeInformation />} />
+        <Route path="/cakeinformationsize" element={<CakeInformationSize />} />
         <Route path="/order" element={<OrderCake />} />
 
         <Route path="/orderstore" element={

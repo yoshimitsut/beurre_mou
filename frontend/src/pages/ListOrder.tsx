@@ -785,7 +785,6 @@ export default function ListOrder() {
                   <th>その他</th>
                   <th>電話番号</th>
                   <th>メールアドレス</th>
-                  <th>最終更新</th>
                 </tr>
               </thead>
               <tbody>
@@ -865,7 +864,6 @@ export default function ListOrder() {
                   <th>その他</th>
                   <th>電話番号</th>
                   <th>メールアドレス</th>
-                  <th>キャンセル日</th>
                 </tr>
               </thead>
               <tbody>
