@@ -156,7 +156,8 @@ export default function ListOrder() {
   const todayOrders = useMemo(() => {
     return orders.filter(o => {
       const date = new Date(o.date).setHours(0, 0, 0, 0);
-      return date === today;
+      const isFinish = o.status !== "d"
+      return date === today && isFinish;
     });
   }, [orders, today]);
 
