@@ -1158,7 +1158,7 @@ export default function ListOrder() {
                 className={`tab-button ${activeTab === "today" ? "active" : ""}`}
                 onClick={() => setActiveTab("today")}
               >
-                🎯 本日お渡し予定分 ({todayOrders.length})
+                🎂 本日お渡し予定分 ({todayOrders.length})
               </button>
               <button
                 className={`tab-button ${activeTab === "active" ? "active" : ""}`}
