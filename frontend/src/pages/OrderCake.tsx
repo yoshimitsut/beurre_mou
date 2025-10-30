@@ -40,6 +40,8 @@ export default function OrderCake() {
   const diasABloquear = 2;
   const maxDate = endOfMonth(addDays(today, 90));
 
+  const [fruitOption, setFruitOption] = useState<"yes" | "no">("no");
+
   const diasEspecificosPorMes = [
     { day: 2, month: 10 }, { day: 3, month: 10 }, { day: 9, month: 10 }, { day: 10, month: 10 },
     { day: 16, month: 10 }, { day: 17, month: 10 }, { day: 23, month: 10 }, { day: 24, month: 10 },
@@ -433,6 +435,35 @@ const customStylesHour: StylesConfig<TimeOptionType, false> = {
                       <label className='select-group'>*ケーキのサイズ</label>
                     </div>
                   )}
+                  <div className="input-group-radio">
+  <label>フルーツ盛り </label>
+  <div className="pill-group">
+    <label className={`pill ${fruitOption === "yes" ? "active" : ""}`}>
+      <input
+        type="radio"
+        name="fruit-option"
+        value="yes"
+        checked={fruitOption === "yes"}
+        onChange={() => setFruitOption("yes")}
+      />
+      有り ＋648円（税込）
+    </label>
+    <label className={`pill ${fruitOption === "no" ? "active" : ""}`}>
+      <input
+        type="radio"
+        name="fruit-option"
+        value="no"
+        checked={fruitOption === "no"}
+        onChange={() => setFruitOption("no")}
+      />
+      無し
+    </label>
+  </div>
+</div>
+
+
+
+                  
                   <div className='input-group'>
                     <Select<OptionType>
                       options={Array.from({ length: 10 }, (_, i) => ({ value: String(i + 1), label: String(i + 1) }))}
@@ -446,6 +477,8 @@ const customStylesHour: StylesConfig<TimeOptionType, false> = {
                     />
                     <label className='select-group'>*個数:</label>
                   </div>
+                  
+
                   
                   <div className='input-group'>
                     <label htmlFor="message_cake">メッセージプレート</label>
@@ -518,15 +551,15 @@ const customStylesHour: StylesConfig<TimeOptionType, false> = {
             </div>
             <div className='input-group'>
               <Select<TimeOptionType>
-  options={timeSlots}
-  value={timeSlots.find(h => h.value === pickupHour)}
-  onChange={(selected) => setPickupHour(selected?.value || "時間を選択")}
-  classNamePrefix="react-select"
-  styles={customStylesHour}
-  placeholder="時間を選択"
-  isSearchable={false}
-  required
-/>
+                options={timeSlots}
+                value={timeSlots.find(h => h.value === pickupHour)}
+                onChange={(selected) => setPickupHour(selected?.value || "時間を選択")}
+                classNamePrefix="react-select"
+                styles={customStylesHour}
+                placeholder="時間を選択"
+                isSearchable={false}
+                required
+              />
               <label htmlFor="pickupHour" className='select-group'>受け取り希望時間</label>
             </div>
             <div className='input-group' style={{display: 'none'}}>

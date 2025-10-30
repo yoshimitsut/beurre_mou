@@ -462,7 +462,7 @@ export default function ListOrder() {
                     </div>
                   </th>
                   <th>個数</th>
-                  <th className='message-cell'>ケーキメッセージ</th>
+                  <th className='message-cell'>メッセージプレート</th>
                   <th className='message-cell'>その他メッセージ</th>
                   <th>電話番号</th>
                   <th>メールアドレス</th>
@@ -655,7 +655,7 @@ export default function ListOrder() {
                           </div>
                         </th>
                         <th>個数</th>
-                        <th className='message-cell'>ケーキメッセージ</th>
+                        <th className='message-cell'>プレートメッセージ</th>
                         <th className='message-cell'>その他メッセージ</th>
                         <th>電話番号</th>
                         <th>メールアドレス</th>
@@ -850,7 +850,7 @@ export default function ListOrder() {
                   <th>受取希望日時</th>
                   <th>ご注文のケーキ</th>
                   <th>個数</th>
-                  <th className='message-cell'>ケーキメッセージ</th>
+                  <th className='message-cell'>メッセージプレート</th>
                   <th className='message-cell'>その他メッセージ</th>
                   <th>電話番号</th>
                   <th>メールアドレス</th>
@@ -959,7 +959,7 @@ export default function ListOrder() {
                   <th>受取希望日時</th>
                   <th>ご注文のケーキ</th>
                   <th>個数</th>
-                  <th>ケーキメッセージ</th>
+                  <th>メッセージプレート</th>
                   <th>その他メッセージ</th>
                   <th>電話番号</th>
                   <th>メールアドレス</th>
@@ -1038,7 +1038,7 @@ export default function ListOrder() {
                   <th>受取希望日時</th>
                   <th>ご注文のケーキ</th>
                   <th>個数</th>
-                  <th>ケーキメッセージ</th>
+                  <th>メッセージプレート</th>
                   <th>その他メッセージ</th>
                   <th>電話番号</th>
                   <th>メールアドレス</th>
