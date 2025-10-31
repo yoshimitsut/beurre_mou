@@ -440,31 +440,32 @@ const customStylesHour: StylesConfig<TimeOptionType, false> = {
                     </div>
                   )}
 
-<div className="input-group-radio">
-  <label>フルーツ盛り </label>
-  <div className="pill-group">
-    <label className={`pill ${fruitOption === "有り" ? "active" : ""}`}>
-      <input
-        type="radio"
-        name="fruit-option"
-        value="有り"
-        checked={fruitOption === "有り"}
-        onChange={() => setFruitOption("有り")}
-      />
-      有り ＋648円（税込）
-    </label>
-    <label className={`pill ${fruitOption === "なし" ? "active" : ""}`}>
-      <input
-        type="radio"
-        name="fruit-option"
-        value="なし"
-        checked={fruitOption === "なし"}
-        onChange={() => setFruitOption("なし")}
-      />
-      無し
-    </label>
-  </div>
-</div>
+                  <div className="input-group-radio">
+                    <label>*フルーツ盛り </label>
+                    <div className="pill-group">
+                      
+                      <label className={`pill ${fruitOption === "なし" ? "active" : ""}`}>
+                        <input
+                          type="radio"
+                          name="fruit-option"
+                          value="なし"
+                          checked={fruitOption === "なし"}
+                          onChange={() => setFruitOption("なし")}
+                        />
+                        無し
+                      </label>
+                      <label className={`pill ${fruitOption === "有り" ? "active" : ""}`}>
+                        <input
+                          type="radio"
+                          name="fruit-option"
+                          value="有り"
+                          checked={fruitOption === "有り"}
+                          onChange={() => setFruitOption("有り")}
+                        />
+                        有り ＋648円（税込）
+                      </label>
+                    </div>
+                  </div>
 
 
 

@@ -310,6 +310,32 @@ export default function EditOrderModal({ editingOrder, setEditingOrder, handleSa
         />
       </div>
 
+      <div className="input-group-radio">
+        <label>*フルーツ盛り </label>
+        <div className="pill-group">
+          <label className={`pill ${cake.fruitOption === "なし" ? "active" : ""}`}>
+            <input
+              type="radio"
+              name="fruit-option"
+              value="なし"
+              checked={cake.fruitOption === "なし"}
+              onChange={() => updateCake(index, "fruitOption", "なし")}
+            />
+            無し
+          </label>
+          <label className={`pill ${cake.fruitOption === "有り" ? "active" : ""}`}>
+            <input
+              type="radio"
+              name="fruit-option"
+              value="有り"
+              checked={cake.fruitOption === "有り"}
+              onChange={() => updateCake(index, "fruitOption", "有り")}
+            />
+            有り ＋648円（税込）
+          </label>
+        </div>
+      </div>
+
       {/* 数量 */}
       <div style={{ minWidth: "100px" }}>
         <label>数量:</label>
