@@ -53,7 +53,8 @@ export default function EditOrderModal({ editingOrder, setEditingOrder, handleSa
         amount: 1,
         size: firstSize?.size || "",
         price: firstSize?.price || 0,
-        message_cake: ""
+        message_cake: "",
+        fruitOption: "なし",
       };
       
       setCakes(prev => [...prev, newCake]);

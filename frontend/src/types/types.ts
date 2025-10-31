@@ -36,7 +36,7 @@ export type OrderCake = {
   message_cake?: string;
   price: number;           // opcional
   name: string;            // útil para exibição
-  // stock?: number;
+  stock?: number;
   fruitOption: "有り" | "なし";
 };
 
