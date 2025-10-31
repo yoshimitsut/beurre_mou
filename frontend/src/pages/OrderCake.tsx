@@ -441,7 +441,6 @@ const customStylesHour: StylesConfig<TimeOptionType, false> = {
                   )}
 
                   <div className="input-group-radio">
-                    <label>*フルーツ盛り </label>
                     <div className="pill-group">
                       
                       <label className={`pill ${fruitOption === "なし" ? "active" : ""}`}>
@@ -465,6 +464,7 @@ const customStylesHour: StylesConfig<TimeOptionType, false> = {
                         有り ＋648円（税込）
                       </label>
                     </div>
+                          <label className='select-group-radio'>*フルーツ盛り </label>
                   </div>
 
 
