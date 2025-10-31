@@ -26,7 +26,7 @@ export default function OrderCake() {
 
   const [cakesData, setCakesData] = useState<Cake[]>();
   const [cakes, setCakes] = useState<OrderCake[]>([
-    { cake_id: 0, name: "", amount: 1, size: "", price: 1, message_cake: "" }
+    { cake_id: 0, name: "", amount: 1, size: "", price: 1, message_cake: "", fruitOption: "なし" }
   ]);
 
   const [selectedDate, setSelectedDate] = useState<Date | null>(null);
@@ -40,7 +40,7 @@ export default function OrderCake() {
   const diasABloquear = 2;
   const maxDate = endOfMonth(addDays(today, 90));
 
-  const [fruitOption, setFruitOption] = useState<"yes" | "no">("no");
+  const [fruitOption, setFruitOption] = useState<"有り" | "なし">("なし");
 
   const diasEspecificosPorMes = [
     { day: 2, month: 10 }, { day: 3, month: 10 }, { day: 9, month: 10 }, { day: 10, month: 10 },
@@ -132,7 +132,8 @@ export default function OrderCake() {
           amount: 1,
           size: "",
           price: 1,
-          message_cake: ""
+          message_cake: "",
+          fruitOption: "なし"
         }]);
       }
     }
@@ -159,7 +160,7 @@ export default function OrderCake() {
   const addCake = () => {
     setCakes(prev => [
       ...prev,
-      { cake_id: 0, name: "", amount: 1, size: "", price: 1, message_cake: "" }
+      { cake_id: 0, name: "", amount: 1, size: "", price: 1, message_cake: "", fruitOption: "なし"}
     ]);
   };
 
@@ -306,7 +307,8 @@ const customStylesHour: StylesConfig<TimeOptionType, false> = {
           amount: c.amount,
           price: c.price,
           size: c.size,
-          message_cake: c.message_cake || ""
+          message_cake: c.message_cake || "",
+          fruitOption
         };
       })
     }; 
@@ -328,10 +330,12 @@ const customStylesHour: StylesConfig<TimeOptionType, false> = {
             amount: 1,
             size: "",
             price: 1,
-            message_cake: ""
+            message_cake: "",
+            fruitOption: "なし"
           }]);
         }
         setSelectedDate(null);
+        setFruitOption("なし");
         setPickupHour("時間を選択");
         (document.getElementById("first-name") as HTMLInputElement).value = "";
         (document.getElementById("last-name") as HTMLInputElement).value = "";
@@ -435,26 +439,27 @@ const customStylesHour: StylesConfig<TimeOptionType, false> = {
                       <label className='select-group'>*ケーキのサイズ</label>
                     </div>
                   )}
-                  <div className="input-group-radio">
+
+<div className="input-group-radio">
   <label>フルーツ盛り </label>
   <div className="pill-group">
-    <label className={`pill ${fruitOption === "yes" ? "active" : ""}`}>
+    <label className={`pill ${fruitOption === "有り" ? "active" : ""}`}>
       <input
         type="radio"
         name="fruit-option"
-        value="yes"
-        checked={fruitOption === "yes"}
-        onChange={() => setFruitOption("yes")}
+        value="有り"
+        checked={fruitOption === "有り"}
+        onChange={() => setFruitOption("有り")}
       />
       有り ＋648円（税込）
     </label>
-    <label className={`pill ${fruitOption === "no" ? "active" : ""}`}>
+    <label className={`pill ${fruitOption === "なし" ? "active" : ""}`}>
       <input
         type="radio"
         name="fruit-option"
-        value="no"
-        checked={fruitOption === "no"}
-        onChange={() => setFruitOption("no")}
+        value="なし"
+        checked={fruitOption === "なし"}
+        onChange={() => setFruitOption("なし")}
       />
       無し
     </label>
