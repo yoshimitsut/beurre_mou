@@ -6,19 +6,27 @@ import DateTimePicker from "./DateTimePicker";
 import type { Order, Cake, OrderCake, SizeOption } from "../types/types";
 import './EditOrderModal.css';
 import { formatDateForBackend } from "../utils/dateUtils";
+import FruitOptionRadio from "./FruitOptionRadio";
 
 type Props = {
   editingOrder: Order;
   setEditingOrder: (order: Order | null) => void;
   handleSaveEdit: (updatedOrder: Order) => void;
+  isSaving: boolean; // 🔹 ADICIONE ESTA LINHA
 };
 
 const API_URL = import.meta.env.VITE_API_URL;
 
-export default function EditOrderModal({ editingOrder, setEditingOrder, handleSaveEdit }: Props) {
+export default function EditOrderModal({ 
+  editingOrder, 
+  setEditingOrder, 
+  handleSaveEdit,
+  isSaving // 🔹 RECEBA A PROP
+}: Props) {
   const [cakesData, setCakesData] = useState<Cake[]>([]);
   const [cakes, setCakes] = useState<OrderCake[]>(editingOrder.cakes ? [...editingOrder.cakes] : []);
-  const [isSaving, setIsSaving] = useState(false);
+  // 🔹 REMOVA o estado local isSaving: const [isSaving, setIsSaving] = useState(false);
+  
   const [selectedTime, setSelectedTime] = useState(editingOrder.pickupHour || "");
   
   const [selectedDate, setSelectedDate] = useState<Date | null>(
@@ -54,7 +62,7 @@ export default function EditOrderModal({ editingOrder, setEditingOrder, handleSa
         size: firstSize?.size || "",
         price: firstSize?.price || 0,
         message_cake: "",
-        fruitOption: "なし",
+        fruit_option: "無し", // 🔹 Corrigido para "なし"
       };
       
       setCakes(prev => [...prev, newCake]);
@@ -86,8 +94,7 @@ export default function EditOrderModal({ editingOrder, setEditingOrder, handleSa
   const cakeOptions = cakesData.map(c => ({ value: String(c.id), label: c.name }));
 
   const handleSave = async () => {
-    setIsSaving(true);
-
+    // 🔹 REMOVA o setIsSaving daqui
     try {
       const updatedOrder: Order = {
         ...editingOrder,
@@ -97,13 +104,11 @@ export default function EditOrderModal({ editingOrder, setEditingOrder, handleSa
           : editingOrder.date,
         pickupHour: selectedTime || editingOrder.pickupHour,
       };
-
-      await handleSaveEdit(updatedOrder);
+      handleSaveEdit(updatedOrder);
+      
     } catch (err) {
       console.error("Erro ao salvar:", err);
       alert("エラーが発生しました。もう一度お試しください。");
-    } finally {
-      setIsSaving(false);
     }
   };
 
@@ -185,13 +190,15 @@ export default function EditOrderModal({ editingOrder, setEditingOrder, handleSa
             <h3>ご注文のケーキ:</h3>
             <button 
               onClick={addCake}
+              disabled={isSaving} // 🔹 Desabilita durante o salvamento
               style={{
                 padding: "0.5rem 1rem",
-                backgroundColor: "#007bff",
+                backgroundColor: isSaving ? "#6c757d" : "#007bff",
                 color: "white",
                 border: "none",
                 borderRadius: "4px",
-                cursor: "pointer"
+                cursor: isSaving ? "not-allowed" : "pointer",
+                opacity: isSaving ? 0.7 : 1,
               }}
             >
               + ケーキを追加
@@ -203,17 +210,18 @@ export default function EditOrderModal({ editingOrder, setEditingOrder, handleSa
               {cakes.length > 1 && (
                 <button 
                   onClick={() => removeCake(index)}
+                  disabled={isSaving} // 🔹 Desabilita durante o salvamento
                   style={{
                     position: "absolute",
                     top: "8px",
                     right: "8px",
-                    backgroundColor: "#dc3545",
+                    backgroundColor: isSaving ? "#6c757d" : "#dc3545",
                     color: "white",
                     border: "none",
                     borderRadius: "4px",
                     width: "24px",
                     height: "24px",
-                    cursor: "pointer",
+                    cursor: isSaving ? "not-allowed" : "pointer",
                     display: "flex",
                     alignItems: "center",
                     justifyContent: "center",
@@ -226,145 +234,130 @@ export default function EditOrderModal({ editingOrder, setEditingOrder, handleSa
               )}
               
               <div
-  style={{
-    marginBottom: 16,
-    display: "flex",
-    gap: "1rem",
-    alignItems: "flex-start",
-    flexWrap: "wrap",
-  }}
-  className="cake-container"
->
-  <div className="cake-number">{index + 1}</div>
+                style={{
+                  marginBottom: 16,
+                  display: "flex",
+                  gap: "1rem",
+                  alignItems: "flex-start",
+                  flexWrap: "wrap",
+                }}
+                className="cake-container"
+              >
+                <div className="cake-number">{index + 1}</div>
 
-  <div style={{ flex: 1, minWidth: "280px" }}>
-    {/* Linha com tipo, tamanho e quantidade */}
-    <div
-      style={{
-        marginBottom: 8,
-        display: "flex",
-        gap: "1rem",
-        alignItems: "center",
-        flexWrap: "wrap",
-      }}
-      className="cake-row"
-    >
-      {/* ケーキ名 */}
-      <div style={{ flex: 1, minWidth: "200px" }} className="cake-info-1">
-        <label>ケーキ名:</label>
-        <Select<OptionType, false, GroupBase<OptionType>>
-          styles={customStyles}
-          options={cakeOptions}
-          value={cakeOptions.find(opt => String(opt.value) === String(cake.cake_id))}
-          onChange={(val: SingleValue<OptionType>) => {
-            if (val) {
-              const newCakeId = Number(val.value);
-              const selectedCake = getCakeDataById(newCakeId);
-              if (selectedCake) {
-                const firstSize = selectedCake.sizes[0];
-                setCakes(prev =>
-                  prev.map((c, i) =>
-                    i === index
-                      ? {
-                          ...c,
-                          cake_id: newCakeId,
-                          name: val.label,
-                          size: firstSize?.size || "",
-                          price: firstSize?.price || 0,
+                <div style={{ flex: 1, minWidth: "280px" }}>
+                  {/* Linha com tipo, tamanho e quantidade */}
+                  <div
+                    style={{
+                      marginBottom: 8,
+                      display: "flex",
+                      gap: "1rem",
+                      alignItems: "center",
+                      flexWrap: "wrap",
+                    }}
+                    className="cake-row"
+                  >
+                    {/* ケーキ名 */}
+                    <div style={{ flex: 1, minWidth: "200px" }} className="cake-info-1">
+                      <label>ケーキ名:</label>
+                      <Select<OptionType, false, GroupBase<OptionType>>
+                        styles={customStyles}
+                        options={cakeOptions}
+                        value={cakeOptions.find(opt => String(opt.value) === String(cake.cake_id))}
+                        onChange={(val: SingleValue<OptionType>) => {
+                          if (val && !isSaving) { // 🔹 Não permite mudar durante salvamento
+                            const newCakeId = Number(val.value);
+                            const selectedCake = getCakeDataById(newCakeId);
+                            if (selectedCake) {
+                              const firstSize = selectedCake.sizes[0];
+                              setCakes(prev =>
+                                prev.map((c, i) =>
+                                  i === index
+                                    ? {
+                                        ...c,
+                                        cake_id: newCakeId,
+                                        name: val.label,
+                                        size: firstSize?.size || "",
+                                        price: firstSize?.price || 0,
+                                      }
+                                    : c
+                                )
+                              );
+                            }
+                          }
+                        }}
+                        isDisabled={isSaving} // 🔹 Desabilita durante salvamento
+                      />
+                    </div>
+
+                    {/* サイズ */}
+                    <div style={{ flex: 1, minWidth: "200px" }}>
+                      <label>サイズを選択:</label>
+                      <Select<SizeOption, false, GroupBase<SizeOption>>
+                        options={getSizeOptions(cake.cake_id)}
+                        value={
+                          getSizeOptions(cake.cake_id).find(
+                            s => s.size === cake.size
+                          ) || null
                         }
-                      : c
-                  )
-                );
-              }
-            }
-          }}
-        />
-      </div>
+                        onChange={selected => {
+                          if (selected && !isSaving) { // 🔹 Não permite mudar durante salvamento
+                            setCakes(prev =>
+                              prev.map((c, i) =>
+                                i === index ? { ...c, size: selected.size, price: selected.price } : c
+                              )
+                            );
+                          }
+                        }}
+                        placeholder="サイズを選択"
+                        isSearchable={false}
+                        classNamePrefix="react-select-edit"
+                        required
+                        isDisabled={isSaving} // 🔹 Desabilita durante salvamento
+                        formatOptionLabel={option =>
+                          `${option.size} ￥${option.price.toLocaleString()}`
+                        }
+                      />
+                    </div>
 
-      {/* サイズ */}
-      <div style={{ flex: 1, minWidth: "200px" }}>
-        <label>サイズを選択:</label>
-        <Select<SizeOption, false, GroupBase<SizeOption>>
-          options={getSizeOptions(cake.cake_id)}
-          value={
-            getSizeOptions(cake.cake_id).find(
-              s => s.size === cake.size
-            ) || null
-          }
-          onChange={selected => {
-            if (selected) {
-              setCakes(prev =>
-                prev.map((c, i) =>
-                  i === index ? { ...c, size: selected.size, price: selected.price } : c
-                )
-              );
-            }
-          }}
-          placeholder="サイズを選択"
-          isSearchable={false}
-          classNamePrefix="react-select-edit"
-          required
-          formatOptionLabel={option =>
-            `${option.size} ￥${option.price.toLocaleString()}`
-          }
-        />
-      </div>
+                    <FruitOptionRadio
+                      value={cake.fruit_option}
+                      onChange={(val) => !isSaving && updateCake(index, "fruit_option", val)} // 🔹 Não permite mudar durante salvamento
+                      name={`fruit-option-${index}`}
+                      label="フルーツ盛り"
+                      required
+                    />
 
-      <div className="input-group-radio">
-        <label>*フルーツ盛り </label>
-        <div className="pill-group">
-          <label className={`pill ${cake.fruitOption === "なし" ? "active" : ""}`}>
-            <input
-              type="radio"
-              name="fruit-option"
-              value="なし"
-              checked={cake.fruitOption === "なし"}
-              onChange={() => updateCake(index, "fruitOption", "なし")}
-            />
-            無し
-          </label>
-          <label className={`pill ${cake.fruitOption === "有り" ? "active" : ""}`}>
-            <input
-              type="radio"
-              name="fruit-option"
-              value="有り"
-              checked={cake.fruitOption === "有り"}
-              onChange={() => updateCake(index, "fruitOption", "有り")}
-            />
-            有り ＋648円（税込）
-          </label>
-        </div>
-      </div>
+                    {/* 数量 */}
+                    <div style={{ width: "49%" }}>
+                      <label>数量:</label>
+                      <input
+                        className="input-text-modal"
+                        type="number"
+                        min="1"
+                        value={cake.amount}
+                        onChange={e => !isSaving && updateCake(index, "amount", Number(e.target.value))} // 🔹 Não permite mudar durante salvamento
+                        style={{ width: "100%" }}
+                        disabled={isSaving} // 🔹 Desabilita durante salvamento
+                      />
+                    </div>
+                  </div>
 
-      {/* 数量 */}
-      <div style={{ minWidth: "100px" }}>
-        <label>数量:</label>
-        <input
-          className="input-text-modal"
-          type="number"
-          min="1"
-          value={cake.amount}
-          onChange={e => updateCake(index, "amount", Number(e.target.value))}
-          style={{ width: "100%" }}
-        />
-      </div>
-    </div>
-
-    {/* メッセージ */}
-    <div>
-      <label>メッセージプレート:</label>
-      <input
-        type="text"
-        className="input-text-modal"
-        value={cake.message_cake || ""}
-        onChange={e => updateCake(index, "message_cake", e.target.value)}
-        style={{ width: "100%" }}
-        placeholder="メッセージを入力（任意）"
-      />
-    </div>
-  </div>
-</div>
-
+                  {/* メッセージ */}
+                  <div>
+                    <label>メッセージプレート:</label>
+                    <input
+                      type="text"
+                      className="input-text-modal"
+                      value={cake.message_cake || ""}
+                      onChange={e => !isSaving && updateCake(index, "message_cake", e.target.value)} // 🔹 Não permite mudar durante salvamento
+                      style={{ width: "100%" }}
+                      placeholder="メッセージを入力（任意）"
+                      disabled={isSaving} // 🔹 Desabilita durante salvamento
+                    />
+                  </div>
+                </div>
+              </div>
             </div>
           ))}
         </div>
@@ -375,6 +368,7 @@ export default function EditOrderModal({ editingOrder, setEditingOrder, handleSa
             setSelectedDate={setSelectedDate}
             selectedTime={selectedTime}
             setSelectedTime={setSelectedTime}
+            // disabled={isSaving} // 🔹 Passe a prop se o DateTimePicker suportar
           />
         </div>
 
@@ -382,16 +376,17 @@ export default function EditOrderModal({ editingOrder, setEditingOrder, handleSa
           <label>メッセージ：</label>
           <textarea 
             value={editingOrder.message || ""} 
-            onChange={(e) => setEditingOrder({ ...editingOrder, message: e.target.value })} 
+            onChange={(e) => !isSaving && setEditingOrder({ ...editingOrder, message: e.target.value })} // 🔹 Não permite mudar durante salvamento
             style={{ width: "100%", minHeight: "80px" }}
             placeholder="全体メッセージを入力（任意）"
+            disabled={isSaving} // 🔹 Desabilita durante salvamento
           />
         </div>
 
         <div className="modal-buttons" style={{ marginTop: "1rem", display: "flex", gap: "1rem", flexDirection: "row-reverse" }}>
           <button 
             onClick={handleSave}
-            disabled={isSaving}
+            disabled={isSaving} // 🔹 Use a prop isSaving
             style={{
               padding: "0.75rem 1.5rem",
               backgroundColor: isSaving ? "#6c757d" : "#007bff",
@@ -404,7 +399,6 @@ export default function EditOrderModal({ editingOrder, setEditingOrder, handleSa
           >
             {isSaving ? "保存中..." : "保存"}
           </button>
-
         </div>
       </div>
     </div>

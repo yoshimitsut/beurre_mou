@@ -82,7 +82,7 @@ app.post('/api/reservar', async (req, res) => {
       // inserir na tabela order_cakes
       await conn.query(
         'INSERT INTO order_cakes (order_id, cake_id, size, amount, message_cake, fruit_option) VALUES (?,?,?,?,?,?)',
-        [orderId, orderCake.cake_id, orderCake.size, orderCake.amount, orderCake.message_cake, orderCake.fruitOption]
+        [orderId, orderCake.cake_id, orderCake.size, orderCake.amount, orderCake.message_cake, orderCake.fruit_option]
       );
       
       // atualizar estoque
@@ -97,7 +97,7 @@ app.post('/api/reservar', async (req, res) => {
     const qrCodeContentId = 'qrcode_order_id';
     
     if (newOrder.message === ''){
-      newOrder.message = 'なし'
+      newOrder.message = '無し'
     }
 
     const htmlContent = `
@@ -112,7 +112,7 @@ app.post('/api/reservar', async (req, res) => {
     <h3 style="border-bottom: 2px solid #333; padding-bottom: 5px;">ご注文商品</h3>
             
     ${newOrder.cakes.map(cake => { 
-      const fruitPrice = cake.fruitOption === '有り' ? 648 : 0;
+      const fruitPrice = cake.fruit_option === '有り' ? 648 : 0;
       const cakeTotalPrice = (cake.price + fruitPrice) * cake.amount;
 
       return `
@@ -131,8 +131,8 @@ app.post('/api/reservar', async (req, res) => {
               ${cake.size ? `<p style="margin: 5px 0;"><strong>サイズ:</strong> ${cake.size}</p>` : ''}
               <p style="margin: 5px 0;"><strong>個数:</strong> ${cake.amount}個</p>
               <p style="margin: 5px 0;"><strong>価格:</strong> ¥${Math.trunc(cake.price).toLocaleString("ja-JP")}</p>
-              ${cake.message_cake ? `<p style="margin: 5px 0;"><strong>メッセージプレート:</strong> ${cake.message_cake || 'なし'}</p>` : ''}
-              <p style="margin: 5px 0;"><strong>フルーツ盛り:</strong> ${cake.fruitOption === '有り' ? '有り ＋648円' : '無し'}
+              ${cake.message_cake ? `<p style="margin: 5px 0;"><strong>メッセージプレート:</strong> ${cake.message_cake || '無し'}</p>` : ''}
+              <p style="margin: 5px 0;"><strong>フルーツ盛り:</strong> ${cake.fruit_option === '有り' ? '有り ＋648円' : '無し'}
               <hr/>
               <strong>小計 ${(cakeTotalPrice).toLocaleString("ja-JP")}</strong>
               </td>
@@ -145,7 +145,7 @@ app.post('/api/reservar', async (req, res) => {
         <h3 style="margin: 0; color: #000;">合計金額</h3>
         <p style="font-size: 24px; font-weight: bold; margin: 10px 0 0 0;">
           ¥${Math.trunc(newOrder.cakes.reduce((total, cake) => {
-            const fruitPrice = cake.fruitOption === '有り' ? 648 : 0;
+            const fruitPrice = cake.fruit_option === '有り' ? 648 : 0;
             return total + ((cake.price + fruitPrice) * cake.amount)
             }, 0)).toLocaleString("ja-JP")
           }
@@ -206,15 +206,17 @@ app.put('/api/orders/:id_order', async (req, res) => {
     status
   } = req.body;
   
+  // console.log("🧁 Recebido do frontend:", req.body);
+  // return
   const transporter = nodemailer.createTransport({
     host: "smtp.gmail.com",
     port: 587,
     secure: false,
     auth: {
-        user: "beurre.mou.yoyaku@gmail.com",
-        // user: "shimitsutanaka@gmail.com",
-        pass: "fsyflipjqvfafpph"
-        // pass: "vmiepzoxltefekcr"
+        // user: "beurre.mou.yoyaku@gmail.com",
+        user: "shimitsutanaka@gmail.com",
+        // pass: "fsyflipjqvfafpph"
+        pass: "vmiepzoxltefekcr"
     }
   });
 
@@ -245,10 +247,10 @@ app.put('/api/orders/:id_order', async (req, res) => {
     );
 
     // 4. LÓGICA DE ESTOQUE - Comparar cakes antigos e novos
-    if (previousStatus !== 'e' && status !== 'e') {
+    // if (previousStatus !== 'e' && status !== 'e') {
       // Apenas ajustar estoque se não for cancelamento
-      await adjustStock(conn, oldCakes, cakes);
-    }
+      // await adjustStock(conn, oldCakes, cakes);
+    // }
 
     // 5. Remover cakes antigos e adicionar novos
     await conn.query('DELETE FROM order_cakes WHERE order_id = ?', [id_order]);
@@ -257,8 +259,8 @@ app.put('/api/orders/:id_order', async (req, res) => {
     for (const cake of cakes) {
       await conn.query(
         `INSERT INTO order_cakes (order_id, cake_id, amount, size, message_cake, fruit_option)
-         VALUES (?, ?, ?, ?, ?, ?)`,
-        [id_order, cake.cake_id, cake.amount, cake.size, cake.message_cake || '', cake.fruitOption]
+        VALUES (?, ?, ?, ?, ?, ?)`,
+        [id_order, cake.cake_id, cake.amount, cake.size, cake.message_cake || '', cake.fruit_option]
       );
     }
 
@@ -284,100 +286,100 @@ app.put('/api/orders/:id_order', async (req, res) => {
     }
 
     // Função para ajustar estoque baseado nas diferenças
-    async function adjustStock(conn, oldCakes, newCakes) {
-      // console.log("=== INICIANDO AJUSTE DE ESTOQUE ===");
+    // async function adjustStock(conn, oldCakes, newCakes) {
+    //   // console.log("=== INICIANDO AJUSTE DE ESTOQUE ===");
       
-      // Criar mapas para facilitar a comparação
-      const oldCakeMap = new Map();
-      const newCakeMap = new Map();
+    //   // Criar mapas para facilitar a comparação
+    //   const oldCakeMap = new Map();
+    //   const newCakeMap = new Map();
 
-      // Preencher mapa de cakes antigos
-      oldCakes.forEach(cake => {
-        const key = `${cake.cake_id}-${cake.size}`;
-        // console.log(`PEDIDO ANTIGO: ${key} - Quantidade: ${cake.amount}`);
-        oldCakeMap.set(key, cake.amount);
-      });
+    //   // Preencher mapa de cakes antigos
+    //   oldCakes.forEach(cake => {
+    //     const key = `${cake.cake_id}-${cake.size}`;
+    //     // console.log(`PEDIDO ANTIGO: ${key} - Quantidade: ${cake.amount}`);
+    //     oldCakeMap.set(key, cake.amount);
+    //   });
 
-      // Preencher mapa de cakes novos
-      newCakes.forEach(cake => {
-        const key = `${cake.cake_id}-${cake.size}`;
-        // console.log(`PEDIDO NOVO: ${key} - Quantidade: ${cake.amount}`);
-        newCakeMap.set(key, cake.amount);
-      });
+    //   // Preencher mapa de cakes novos
+    //   newCakes.forEach(cake => {
+    //     const key = `${cake.cake_id}-${cake.size}`;
+    //     // console.log(`PEDIDO NOVO: ${key} - Quantidade: ${cake.amount}`);
+    //     newCakeMap.set(key, cake.amount);
+    //   });
 
-      // console.log("=== PROCESSANDO DIFERENÇAS ===");
+    //   // console.log("=== PROCESSANDO DIFERENÇAS ===");
 
-      // 1. PRIMEIRO: Processar cakes que foram COMPLETAMENTE REMOVIDOS
-      for (const [key, oldAmount] of oldCakeMap) {
-        if (!newCakeMap.has(key)) {
-          const [cakeId, size] = key.split('-');
-          // console.log(`🔵 BOLO REMOVIDO: ${key} - Devolvendo estoque: ${oldAmount}`);
+    //   // 1. PRIMEIRO: Processar cakes que foram COMPLETAMENTE REMOVIDOS
+    //   for (const [key, oldAmount] of oldCakeMap) {
+    //     if (!newCakeMap.has(key)) {
+    //       const [cakeId, size] = key.split('-');
+    //       // console.log(`🔵 BOLO REMOVIDO: ${key} - Devolvendo estoque: ${oldAmount}`);
           
-          // Devolver todo o estoque do cake removido
-          await conn.query(
-            'UPDATE cake_sizes SET stock = stock + ? WHERE cake_id = ? AND size = ?',
-            [oldAmount, cakeId, size]
-          );
-        }
-      }
+    //       // Devolver todo o estoque do cake removido
+    //       await conn.query(
+    //         'UPDATE cake_sizes SET stock = stock + ? WHERE cake_id = ? AND size = ?',
+    //         [oldAmount, cakeId, size]
+    //       );
+    //     }
+    //   }
 
-      // 2. SEGUNDO: Processar cakes que foram COMPLETAMENTE ADICIONADOS
-      for (const [key, newAmount] of newCakeMap) {
-        if (!oldCakeMap.has(key)) {
-          const [cakeId, size] = key.split('-');
-          // console.log(`🟢 NOVO BOLO ADICIONADO: ${key} - Removendo estoque: ${newAmount}`);
+    //   // 2. SEGUNDO: Processar cakes que foram COMPLETAMENTE ADICIONADOS
+    //   for (const [key, newAmount] of newCakeMap) {
+    //     if (!oldCakeMap.has(key)) {
+    //       const [cakeId, size] = key.split('-');
+    //       // console.log(`🟢 NOVO BOLO ADICIONADO: ${key} - Removendo estoque: ${newAmount}`);
           
-          // Remover estoque do novo cake adicionado
-          await conn.query(
-            'UPDATE cake_sizes SET stock = stock - ? WHERE cake_id = ? AND size = ?',
-            [newAmount, cakeId, size]
-          );
-        }
-      }
+    //       // Remover estoque do novo cake adicionado
+    //       await conn.query(
+    //         'UPDATE cake_sizes SET stock = stock - ? WHERE cake_id = ? AND size = ?',
+    //         [newAmount, cakeId, size]
+    //       );
+    //     }
+    //   }
 
-      // 3. TERCEIRO: Processar cakes que foram MODIFICADOS (existem em ambos)
-      const allKeys = new Set([...oldCakeMap.keys(), ...newCakeMap.keys()]);
+    //   // 3. TERCEIRO: Processar cakes que foram MODIFICADOS (existem em ambos)
+    //   const allKeys = new Set([...oldCakeMap.keys(), ...newCakeMap.keys()]);
 
-      for (const key of allKeys) {
-        const [cakeId, size] = key.split('-');
-        const oldAmount = oldCakeMap.get(key) || 0;
-        const newAmount = newCakeMap.get(key) || 0;
+    //   for (const key of allKeys) {
+    //     const [cakeId, size] = key.split('-');
+    //     const oldAmount = oldCakeMap.get(key) || 0;
+    //     const newAmount = newCakeMap.get(key) || 0;
         
-        // Só processa se existir em AMBOS os mapas
-        if (oldCakeMap.has(key) && newCakeMap.has(key)) {
-          const difference = newAmount - oldAmount;
+    //     // Só processa se existir em AMBOS os mapas
+    //     if (oldCakeMap.has(key) && newCakeMap.has(key)) {
+    //       const difference = newAmount - oldAmount;
 
-          if (difference !== 0) {
-            if (difference > 0) {
-              // Aumentou a quantidade - diminuir estoque
-              // console.log(`📈 QUANTIDADE AUMENTOU: ${key} - Diferença: +${difference} (Antigo: ${oldAmount} → Novo: ${newAmount})`);
-              await conn.query(
-                'UPDATE cake_sizes SET stock = stock - ? WHERE cake_id = ? AND size = ?',
-                [difference, cakeId, size]
-              );
-            } else {
-              // Diminuiu a quantidade - aumentar estoque
-              // console.log(`📉 QUANTIDADE DIMINUIU: ${key} - Diferença: ${difference} (Antigo: ${oldAmount} → Novo: ${newAmount})`);
-              await conn.query(
-                'UPDATE cake_sizes SET stock = stock + ? WHERE cake_id = ? AND size = ?',
-                [Math.abs(difference), cakeId, size]
-              );
-            }
-          } else {
-            // console.log(`⚖️ QUANTIDADE IGUAL: ${key} - Quantidade: ${oldAmount}`);
-          }
-        }
-      }
+    //       if (difference !== 0) {
+    //         if (difference > 0) {
+    //           // Aumentou a quantidade - diminuir estoque
+    //           // console.log(`📈 QUANTIDADE AUMENTOU: ${key} - Diferença: +${difference} (Antigo: ${oldAmount} → Novo: ${newAmount})`);
+    //           await conn.query(
+    //             'UPDATE cake_sizes SET stock = stock - ? WHERE cake_id = ? AND size = ?',
+    //             [difference, cakeId, size]
+    //           );
+    //         } else {
+    //           // Diminuiu a quantidade - aumentar estoque
+    //           // console.log(`📉 QUANTIDADE DIMINUIU: ${key} - Diferença: ${difference} (Antigo: ${oldAmount} → Novo: ${newAmount})`);
+    //           await conn.query(
+    //             'UPDATE cake_sizes SET stock = stock + ? WHERE cake_id = ? AND size = ?',
+    //             [Math.abs(difference), cakeId, size]
+    //           );
+    //         }
+    //       } else {
+    //         // console.log(`⚖️ QUANTIDADE IGUAL: ${key} - Quantidade: ${oldAmount}`);
+    //       }
+    //     }
+    //   }
 
-      // console.log("=== AJUSTE DE ESTOQUE CONCLUÍDO ===");
-    }
+    //   // console.log("=== AJUSTE DE ESTOQUE CONCLUÍDO ===");
+    // }
 
     // 8. Gerar QR Code e enviar email
     const qrCodeBuffer = await QRCode.toBuffer(String(id_order).padStart(4, "0"), { type: 'png', width: 400 });
     const qrCodeContentId = 'qrcode_order_id';
 
     const cakeListHtml = cakes.map(cake => {
-      const fruitPrice = cake.fruitOption === '有り' ? 648 : 0;
+      const fruitPrice = cake.fruit_option === '有り' ? 648 : 0;
       const cakeTotalPrice = (cake.price + fruitPrice) * cake.amount;
  
       return `
@@ -396,6 +398,7 @@ app.put('/api/orders/:id_order', async (req, res) => {
               <p style="margin: 5px 0;"><strong>サイズ:</strong> ${cake.size}</p>
               <p style="margin: 5px 0;"><strong>個数:</strong> ${cake.amount}個</p>
               <p style="margin: 5px 0;"><strong>価格:</strong> ¥${Math.trunc(cake.price).toLocaleString()}</p>
+              <p style="margin: 5px 0;"><strong>フルーツ盛り:</strong> ${cake.fruit_option === '有り' ? '有り ＋648円' : '無し'}
               ${cake.message_cake ? `<p style="margin: 5px 0;"><strong>メッセージプレート:</strong> ${cake.message_cake}</p>` : ''}
               <hr/>
               <strong>小計: ¥${Math.trunc(cakeTotalPrice).toLocaleString("ja-JP")}</strong>
@@ -406,7 +409,7 @@ app.put('/api/orders/:id_order', async (req, res) => {
 
     // Calcular total geral
     const totalGeral = cakes.reduce((total, cake) => {
-      const fruitPrice = cake.fruitOption === '有り' ? 648 : 0;
+      const fruitPrice = cake.fruit_option === '有り' ? 648 : 0;
       return total + ((cake.price + fruitPrice) * cake.amount);
     }, 0);
 
@@ -420,7 +423,7 @@ app.put('/api/orders/:id_order', async (req, res) => {
             <p><strong>お名前：</strong> ${first_name} ${last_name}様</p>
             <p><strong>受付番号：</strong> ${String(id_order).padStart(4, "0")}</p>
             <p><strong>受取日時：</strong> ${date} / ${pickupHour}</p>
-            <p><strong>メッセージ：</strong> ${message || 'なし'}</p>
+            <p><strong>メッセージ：</strong> ${message || '無し'}</p>
             
             <h3 style="border-bottom: 2px solid #333; padding-bottom: 5px;">ご注文商品</h3>
             ${cakeListHtml}
@@ -489,8 +492,10 @@ app.put('/api/reservar/:id_order', async (req, res) => {
     port: 587,
     secure: false,
     auth: {
-      user: "beurre.mou.yoyaku@gmail.com",
-      pass: "fsyflipjqvfafpph"
+      // user: "beurre.mou.yoyaku@gmail.com",
+      user: "shimitsutanaka@gmail.com",
+        // pass: "fsyflipjqvfafpph"
+        pass: "vmiepzoxltefekcr"
     }
   });
 

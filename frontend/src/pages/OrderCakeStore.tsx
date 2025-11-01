@@ -26,7 +26,7 @@ export default function OrderCake() {
 
   const [cakesData, setCakesData] = useState<Cake[]>();
   const [cakes, setCakes] = useState<OrderCake[]>([
-    { cake_id: 0, name: "", amount: 1, size: "", price: 1, message_cake: "", fruitOption: "なし" }
+    { cake_id: 0, name: "", amount: 1, size: "", price: 1, message_cake: "", fruit_option: "無し" }
   ]);
 
   const [selectedDate, setSelectedDate] = useState<Date | null>(null);
@@ -40,7 +40,7 @@ export default function OrderCake() {
   const diasABloquear = 2;
   const maxDate = endOfMonth(addDays(today, 90));
 
-  const [fruitOption, setFruitOption] = useState<"有り" | "なし">("なし");
+  const [fruitOption, setFruitOption] = useState<"有り" | "無し">("無し");
 
   const diasEspecificosPorMes = [
     { day: 2, month: 10 }, { day: 3, month: 10 }, { day: 9, month: 10 }, { day: 10, month: 10 },
@@ -133,7 +133,7 @@ export default function OrderCake() {
           size: "",
           price: 1,
           message_cake: "",
-          fruitOption: "なし"
+          fruit_option: "無し"
         }]);
       }
     }
@@ -160,7 +160,7 @@ export default function OrderCake() {
   const addCake = () => {
     setCakes(prev => [
       ...prev,
-      { cake_id: 0, name: "", amount: 1, size: "", price: 1, message_cake: "", fruitOption: "なし"}
+      { cake_id: 0, name: "", amount: 1, size: "", price: 1, message_cake: "", fruit_option: "無し"}
     ]);
   };
 
@@ -331,11 +331,11 @@ const customStylesHour: StylesConfig<TimeOptionType, false> = {
             size: "",
             price: 1,
             message_cake: "",
-            fruitOption: "なし"
+            fruit_option: "無し"
           }]);
         }
         setSelectedDate(null);
-        setFruitOption("なし");
+        setFruitOption("無し");
         setPickupHour("時間を選択");
         (document.getElementById("first-name") as HTMLInputElement).value = "";
         (document.getElementById("last-name") as HTMLInputElement).value = "";
@@ -440,31 +440,32 @@ const customStylesHour: StylesConfig<TimeOptionType, false> = {
                     </div>
                   )}
 
-<div className="input-group-radio">
-  <label>フルーツ盛り </label>
-  <div className="pill-group">
-    <label className={`pill ${fruitOption === "有り" ? "active" : ""}`}>
-      <input
-        type="radio"
-        name="fruit-option"
-        value="yes"
-        checked={fruitOption === "有り"}
-        onChange={() => setFruitOption("有り")}
-      />
-      有り ＋648円（税込）
-    </label>
-    <label className={`pill ${fruitOption === "なし" ? "active" : ""}`}>
-      <input
-        type="radio"
-        name="fruit-option"
-        value="no"
-        checked={fruitOption === "なし"}
-        onChange={() => setFruitOption("なし")}
-      />
-      無し
-    </label>
-  </div>
-</div>
+                  <div className="input-group-radio">
+                    <div className="pill-group">
+                      
+                      <label className={`pill ${fruitOption === "無し" ? "active" : ""}`}>
+                        <input
+                          type="radio"
+                          name="fruit-option"
+                          value="無し"
+                          checked={fruitOption === "無し"}
+                          onChange={() => setFruitOption("無し")}
+                        />
+                        無し
+                      </label>
+                      <label className={`pill ${fruitOption === "有り" ? "active" : ""}`}>
+                        <input
+                          type="radio"
+                          name="fruit-option"
+                          value="有り"
+                          checked={fruitOption === "有り"}
+                          onChange={() => setFruitOption("有り")}
+                        />
+                        有り ＋648円（税込）
+                      </label>
+                    </div>
+                    <label className='select-group-radio'>*フルーツ盛り </label>
+                  </div>
 
 
 

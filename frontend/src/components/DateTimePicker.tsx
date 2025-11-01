@@ -89,19 +89,22 @@ export default function DateTimePicker({
   const [pickupHour, setPickupHour] = useState(selectedTime || "");
 
   const renderDayContents = (day: number, date: Date) => {
-    const isBlocked = excludedDates.some(d => isSameDay(d, date));
-    const dayOfWeek = getDay(date);
-    const extraClass =
-      dayOfWeek === 0 ? "domingo-vermelho" :
-      dayOfWeek === 6 ? "sabado-azul" : "";
+  const today = new Date();
+  const isBlocked = excludedDates.some((d) => isSameDay(d, date));
+  const isSunday = getDay(date) === 0;
 
-    return (
-      <div className={`day-cell ${extraClass}`}>
-        <span>{day}</span>
-        {!isBlocked && isAfter(date, today) && <div className="selectable"></div>}
-      </div>
-    );
-  };
+  // normaliza o horário de "hoje" e compara timestamps
+  const isPast = date.getTime() < new Date(today.setHours(0, 0, 0, 0)).getTime();
+
+  const isGraySunday = isSunday && (isBlocked || isPast);
+
+  return (
+    <div className={`day-cell ${isGraySunday ? "domingo-cinza" : ""}`}>
+      <span>{day}</span>
+    </div>
+  );
+};
+
 
   // const isDateAllowed = (date: Date) =>
   //   allowedDates.some((d) => isSameDay(d, date));

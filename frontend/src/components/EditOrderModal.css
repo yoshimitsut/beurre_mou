@@ -99,6 +99,10 @@
   gap: 2em;
 }
 
+.cake-row {
+  justify-content: space-between;
+}
+
 .cake-item {
   display: flex;
   align-items: stretch; /* faz o número ocupar a altura total do texto */
@@ -127,6 +131,10 @@
   height: 2.5em;
 } */
 
+.day-cell.domingo-cinza span {
+  color: #b0b0b0 !important; 
+}
+
 .modal-close-button {
   padding: 0.75rem 1.5rem;
   background-color: #6c757d;
@@ -148,8 +156,13 @@
 
 .pill-group {
   display: flex;
-  gap: 1rem;
-  width: 96%;
+  gap: 0.5rem;
+  width: 100%;
+  padding-right: 30px;
+  label {
+    font-weight: 400;
+    font-size: small;
+  }
 }
 
 .pill {

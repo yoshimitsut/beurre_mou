@@ -36,6 +36,8 @@ export default function ListOrder() {
   const location = useLocation();
   const [refreshKey, setRefreshKey] = useState(0);
 
+  const [isSavingEdit, setIsSavingEdit] = useState(false);
+
   type FilterOption = {
     value: string;
     label: string;
@@ -70,12 +72,13 @@ export default function ListOrder() {
       const searchUrl = search
         ? `${import.meta.env.VITE_API_URL}/api/list?search=${encodeURIComponent(search)}`
         : `${import.meta.env.VITE_API_URL}/api/list`;
-      
-      fetch(searchUrl)
+        
+        fetch(searchUrl)
         .then((res) => res.json())
         .then((data) => {
           const normalized = Array.isArray(data) ? data : (data.orders || []);
           setOrders(normalized);
+          console.log("---"+normalized);
         })
         .catch((error) => {
           console.error('注文の読み込みエラー:', error);
@@ -156,8 +159,9 @@ export default function ListOrder() {
   const todayOrders = useMemo(() => {
     return orders.filter(o => {
       const date = new Date(o.date).setHours(0, 0, 0, 0);
-      const isFinish = o.status !== "d"
-      return date === today && isFinish;
+      const isFinish = o.status !== "d";  
+      const orderNoCanceled = o.status !== "e";
+      return date === today && isFinish && orderNoCanceled;
     });
   }, [orders, today]);
 
@@ -202,7 +206,7 @@ export default function ListOrder() {
     if (!order) return;
 
     const statusMap: Record<string, string> = {
-      a: "未入金",
+      a: "未",
       b: "オンライン予約",
       c: "店頭支払い済",
       d: "お渡し済",
@@ -267,25 +271,27 @@ export default function ListOrder() {
   const handleSaveEdit = async (updatedOrder: Order) => {
     if (!updatedOrder) return;
 
+    setIsSavingEdit(true);
+
     try {
       const res = await fetch(`${import.meta.env.VITE_API_URL}/api/orders/${updatedOrder.id_order}`, {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(updatedOrder),
       });
-
       const data = await res.json();
-
+      
+      
       if (!res.ok || !data.success) {
         throw new Error(data.error || "更新に失敗しました。");
       }
-
+      
       setOrders((old) =>
         old.map((o) =>
           o.id_order === updatedOrder.id_order ? updatedOrder : o
-        )
-      );
-
+    )
+  );
+  
       setRefreshKey(prev => prev + 1);
       
       setEditingOrder(null);
@@ -293,6 +299,8 @@ export default function ListOrder() {
     } catch (err) {
       console.error("❌ 編集保存エラー:", err);
       alert("❌ 更新中にエラーが発生しました。");
+    } finally {
+      setIsSavingEdit(false); 
     }
   };
 
@@ -462,6 +470,7 @@ export default function ListOrder() {
                     </div>
                   </th>
                   <th>個数</th>
+                  <th>フルーツ盛り</th>
                   <th className='message-cell'>メッセージプレート</th>
                   <th className='message-cell'>その他メッセージ</th>
                   <th>電話番号</th>
@@ -510,6 +519,15 @@ export default function ListOrder() {
                           {order.cakes.map((cake, index) => (
                             <li key={`${order.id_order}-${cake.cake_id}-${index}`}>
                               {cake.amount}
+                            </li>
+                          ))}
+                        </ul>
+                      </td>
+                      <td style={{ textAlign: "left" }}>
+                        <ul>
+                          {order.cakes.map((cake, index) => (
+                            <li key={`${order.id_order}-${cake.cake_id}-${index}`}>
+                              {cake.fruit_option}
                             </li>
                           ))}
                         </ul>
@@ -655,6 +673,7 @@ export default function ListOrder() {
                           </div>
                         </th>
                         <th>個数</th>
+                        <th>フルーツ盛り</th>
                         <th className='message-cell'>プレートメッセージ</th>
                         <th className='message-cell'>その他メッセージ</th>
                         <th>電話番号</th>
@@ -718,6 +737,15 @@ export default function ListOrder() {
                                 {order.cakes.map((cake, index) => (
                                   <li key={`${order.id_order}-${cake.cake_id}-${index}`}>
                                     {cake.amount}
+                                  </li>
+                                ))}
+                              </ul>
+                            </td>
+                            <td style={{ textAlign: "left" }}>
+                              <ul>
+                                {order.cakes.map((cake, index) => (
+                                  <li key={`${order.id_order}-${cake.cake_id}-${index}`}>
+                                    {cake.fruit_option}
                                   </li>
                                 ))}
                               </ul>
@@ -791,6 +819,14 @@ export default function ListOrder() {
                       </li>
                     ))}
                   </ul>
+                  
+                  <ul>
+                    {order.cakes.map((cake, index) => (
+                      <li key={`${cake.cake_id}-${index}`}>
+                        {cake.name} - フルーツ盛り: {cake.fruit_option}
+                      </li>
+                    ))}
+                  </ul>
                   <p>電話番号: {order.tel}</p>
                   <p>メッセージ: {order.message || " "}</p>
                 </details>
@@ -850,6 +886,7 @@ export default function ListOrder() {
                   <th>受取希望日時</th>
                   <th>ご注文のケーキ</th>
                   <th>個数</th>
+                  <th>フルーツ盛り</th>
                   <th className='message-cell'>メッセージプレート</th>
                   <th className='message-cell'>その他メッセージ</th>
                   <th>電話番号</th>
@@ -887,6 +924,13 @@ export default function ListOrder() {
                       <ul>
                         {order.cakes.map((cake, i) => (
                           <li key={i}>{cake.amount}</li>
+                        ))}
+                      </ul>
+                    </td>
+                    <td>
+                      <ul>
+                        {order.cakes.map((cake, i) => (
+                          <li key={i}>{cake.fruit_option}</li>
                         ))}
                       </ul>
                     </td>
@@ -959,6 +1003,7 @@ export default function ListOrder() {
                   <th>受取希望日時</th>
                   <th>ご注文のケーキ</th>
                   <th>個数</th>
+                  <th>フルーツ盛り</th>
                   <th>メッセージプレート</th>
                   <th>その他メッセージ</th>
                   <th>電話番号</th>
@@ -985,6 +1030,14 @@ export default function ListOrder() {
                         ))}
                       </ul>
                     </td>
+                    <td>
+                      <ul>
+                        {order.cakes.map((cake, i) => (
+                          <li key={i}>{cake.fruit_option}</li>
+                        ))}
+                      </ul>
+                    </td>
+                    
                     <td>
                       <ul>
                         {order.cakes.map((cake, i) => (
@@ -1038,6 +1091,7 @@ export default function ListOrder() {
                   <th>受取希望日時</th>
                   <th>ご注文のケーキ</th>
                   <th>個数</th>
+                  <th>フルーツ盛り</th>
                   <th>メッセージプレート</th>
                   <th>その他メッセージ</th>
                   <th>電話番号</th>
@@ -1061,6 +1115,13 @@ export default function ListOrder() {
                       <ul>
                         {order.cakes.map((cake, i) => (
                           <li key={i}>{cake.amount}</li>
+                        ))}
+                      </ul>
+                    </td>
+                    <td>
+                      <ul>
+                        {order.cakes.map((cake, i) => (
+                          <li key={i}>{cake.fruit_option}</li>
                         ))}
                       </ul>
                     </td>
@@ -1137,8 +1198,9 @@ export default function ListOrder() {
             {foundScannedOrder.cakes.map((cake, index) => (
               <li key={`${cake.cake_id}-${index}`}>
                 <span className='cake-name'>{cake.name}</span>
-                <span className='cake-amount'>¥{cake.size}</span>
-                <span className='cake-size'>個数: {cake.amount}</span>
+                <span className='cake-size'>¥{cake.size}</span>
+                <span className='cake-amount'>個数: {cake.amount}</span>
+                <span className='cake-fruitop'>フルーツ盛り: {cake.fruit_option}</span>
               </li>
             ))}
           </ul>
@@ -1201,6 +1263,7 @@ export default function ListOrder() {
               editingOrder={editingOrder}
               setEditingOrder={setEditingOrder}
               handleSaveEdit={handleSaveEdit}
+              isSaving={isSavingEdit}
             />
           )}
         </>
