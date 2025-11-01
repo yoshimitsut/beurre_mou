@@ -213,10 +213,10 @@ app.put('/api/orders/:id_order', async (req, res) => {
     port: 587,
     secure: false,
     auth: {
-        // user: "beurre.mou.yoyaku@gmail.com",
-        user: "shimitsutanaka@gmail.com",
-        // pass: "fsyflipjqvfafpph"
-        pass: "vmiepzoxltefekcr"
+        user: "beurre.mou.yoyaku@gmail.com",
+        // user: "shimitsutanaka@gmail.com",
+        pass: "fqqjpmcjleidbzko"
+        // pass: "vmiepzoxltefekcr"
     }
   });
 
@@ -492,10 +492,10 @@ app.put('/api/reservar/:id_order', async (req, res) => {
     port: 587,
     secure: false,
     auth: {
-      // user: "beurre.mou.yoyaku@gmail.com",
-      user: "shimitsutanaka@gmail.com",
-        // pass: "fsyflipjqvfafpph"
-        pass: "vmiepzoxltefekcr"
+      user: "beurre.mou.yoyaku@gmail.com",
+      // user: "shimitsutanaka@gmail.com",
+        pass: "fqqjpmcjleidbzko"
+        // pass: "vmiepzoxltefekcr"
     }
   });
 
