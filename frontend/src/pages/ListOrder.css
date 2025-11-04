@@ -1,3 +1,20 @@
+/* Scanner QR Code */
+#reader {
+  border: 2px solid #007bff !important;
+  border-radius: 8px;
+  overflow: hidden;
+}
+
+#reader__dashboard_section {
+  padding: 10px;
+  background: #f8f9fa;
+}
+
+#reader__dashboard_section_csr span {
+  color: #333;
+}
+
+
 ul {
   list-style: none;
   padding-left: 0;
