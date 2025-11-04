@@ -1196,8 +1196,29 @@ useEffect(() => {
       </div>
 
       {showScanner && (
-        <div id="reader" style={{ width: '300px', marginBottom: 20 }}></div>
+        <div style={{ position: 'relative', marginBottom: 20 }}>
+          <button 
+            onClick={() => setShowScanner(false)}
+            style={{
+              position: 'absolute',
+              top: '10px',
+              right: '10px',
+              zIndex: 1000,
+              background: 'red',
+              color: 'white',
+              border: 'none',
+              borderRadius: '50%',
+              width: '30px',
+              height: '30px',
+              cursor: 'pointer'
+            }}
+          >
+            ×
+          </button>
+          <div id="reader" style={{ width: '100%', maxWidth: '300px' }}></div>
+        </div>
       )}
+
 
       {foundScannedOrder && (
         <div style={{ border: '1px solid #007bff', padding: 12, marginBottom: 20 }}>
