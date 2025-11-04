@@ -1247,8 +1247,9 @@ useEffect(() => {
             {foundScannedOrder.cakes.map((cake, index) => (
               <li key={`${cake.cake_id}-${index}`}>
                 <span className='cake-name'>{cake.name}</span>
-                <span className='cake-size'>¥{cake.size}</span>
-                <span className='cake-amount'>個数: {cake.amount}</span>
+                <span className='cake-amount'>¥{cake.price.toLocaleString()}</span>
+                <span className='cake-size'>サイズ: {cake.size}</span>
+                <span className='cake-quantity'>個数: {cake.amount}</span>
                 <span className='cake-fruitop'>フルーツ盛り: {cake.fruit_option}</span>
               </li>
             ))}
