@@ -40,7 +40,7 @@ export default function OrderCake() {
   const diasABloquear = 2;
   const maxDate = endOfMonth(addDays(today, 90));
 
-  const [fruitOption, setFruitOption] = useState<"有り" | "無し">("無し");
+  const [, setFruitOption] = useState<"有り" | "無し">("無し");
 
   const diasEspecificosPorMes = [
     { day: 2, month: 10 }, { day: 3, month: 10 }, { day: 9, month: 10 }, { day: 10, month: 10 },
@@ -160,7 +160,7 @@ export default function OrderCake() {
   const addCake = () => {
     setCakes(prev => [
       ...prev,
-      { cake_id: 0, name: "", amount: 1, size: "", price: 1, message_cake: "", fruit_option: "無し"}
+      { cake_id: 0, name: "", amount: 1, size: "", price: 1, message_cake: "", fruit_option: "無し" }
     ]);
   };
 
@@ -308,7 +308,7 @@ const customStylesHour: StylesConfig<TimeOptionType, false> = {
           price: c.price,
           size: c.size,
           message_cake: c.message_cake || "",
-          fruitOption
+          fruit_option: c.fruit_option
         };
       })
     }; 
@@ -441,31 +441,30 @@ const customStylesHour: StylesConfig<TimeOptionType, false> = {
                   )}
 
                   <div className="input-group-radio">
-                    <div className="pill-group">
-                      
-                      <label className={`pill ${fruitOption === "無し" ? "active" : ""}`}>
-                        <input
-                          type="radio"
-                          name="fruit-option"
-                          value="無し"
-                          checked={fruitOption === "無し"}
-                          onChange={() => setFruitOption("無し")}
-                        />
-                        無し
-                      </label>
-                      <label className={`pill ${fruitOption === "有り" ? "active" : ""}`}>
-                        <input
-                          type="radio"
-                          name="fruit-option"
-                          value="有り"
-                          checked={fruitOption === "有り"}
-                          onChange={() => setFruitOption("有り")}
-                        />
-                        有り ＋648円（税込）
-                      </label>
-                    </div>
-                    <label className='select-group-radio'>*フルーツ盛り </label>
-                  </div>
+  <div className="pill-group">
+    <label className={`pill ${item.fruit_option === "無し" ? "active" : ""}`}>
+      <input
+        type="radio"
+        name={`fruit-option-${index}`}  // Nome único para cada bolo
+        value="無し"
+        checked={item.fruit_option === "無し"}
+        onChange={() => updateCake(index, "fruit_option", "無し")}
+      />
+      無し
+    </label>
+    <label className={`pill ${item.fruit_option === "有り" ? "active" : ""}`}>
+      <input
+        type="radio"
+        name={`fruit-option-${index}`}  // Nome único para cada bolo
+        value="有り"
+        checked={item.fruit_option === "有り"}
+        onChange={() => updateCake(index, "fruit_option", "有り")}
+      />
+      有り ＋648円（税込）
+    </label>
+  </div>
+  <label className='select-group-radio'>*フルーツ盛り</label>
+</div>
 
 
 
