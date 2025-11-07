@@ -43,17 +43,38 @@ export default function OrderCake() {
   const [, setFruitOption] = useState<"有り" | "無し">("無し");
 
   const diasEspecificosPorMes = [
-    { day: 2, month: 10 }, { day: 3, month: 10 }, { day: 9, month: 10 }, { day: 10, month: 10 },
-    { day: 16, month: 10 }, { day: 17, month: 10 }, { day: 23, month: 10 }, { day: 24, month: 10 },
-    { day: 30, month: 11 }, 
+    { day: 2, month: 10 }, 
+    { day: 3, month: 10 }, 
+    { day: 9, month: 10 }, 
+    { day: 10, month: 10 },
+    { day: 16, month: 10 }, 
+    { day: 17, month: 10 }, 
+    { day: 23, month: 10 }, 
+    { day: 24, month: 10 },
+    { day: 30, month: 10 }, 
     
-    { day: 1, month: 11 }, { day: 7, month: 11 }, { day: 8, month: 11 }, { day: 14, month: 11 }, { day: 15, month: 11 }, 
-    { day: 22, month: 11 }, { day: 23, month: 11 },
-    { day: 24, month: 11 },{ day: 25, month: 11 }, { day: 26, month: 11 },
+    { day: 1, month: 11 }, 
+    { day: 7, month: 11 }, 
+    { day: 8, month: 11 }, 
+    { day: 14, month: 11 }, 
+    { day: 15, month: 11 }, 
+    { day: 22, month: 11 }, 
+    { day: 23, month: 11 },
+    { day: 24, month: 11 },
+    { day: 25, month: 11 }, 
+    { day: 26, month: 11 },
 
-    { day: 4, month: 12 }, { day: 5, month: 12 }, { day: 6, month: 12 },
-    { day: 7, month: 12 }, { day: 8, month: 12 }, { day: 9, month: 12 }, { day: 13, month: 12 },
-    { day: 18, month: 12 }, { day: 19, month: 12 }, { day: 25, month: 12 }, { day: 26, month: 12 },
+    { day: 4, month: 12 }, 
+    { day: 5, month: 12 }, 
+    { day: 6, month: 12 },
+    { day: 7, month: 12 }, 
+    { day: 8, month: 12 }, 
+    { day: 9, month: 12 }, 
+    { day: 13, month: 12 },
+    { day: 18, month: 12 }, 
+    { day: 19, month: 12 }, 
+    { day: 25, month: 12 }, 
+    { day: 26, month: 12 },
   ];
 
   const gerarDiasBloqueadosInicio = () => {
