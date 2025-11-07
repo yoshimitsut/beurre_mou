@@ -38,7 +38,7 @@ export default function OrderCake() {
   // Datas e calendário
   const today = new Date();
   const diasABloquear = 2;
-  const maxDate = endOfMonth(addDays(today, 90));
+  const maxDate = endOfMonth(addDays(today, 60));
 
   const [, setFruitOption] = useState<"有り" | "無し">("無し");
 
