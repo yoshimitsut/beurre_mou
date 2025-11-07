@@ -415,7 +415,7 @@ app.put('/api/orders/:id_order', async (req, res) => {
 
     const mailOptions = {
         from: '"パティスリーブール・ムー" <beurre.mou.yoyaku@gmail.com>', 
-        to: email, 
+        to: [email, "beurre.mou.yoyaku@gmail.com"],
         subject: `🎂 ご注文内容変更のお知らせ - 受付番号 ${String(id_order).padStart(4, "0")}`,
         html: `
           <div style="border: 1px solid #ddd; padding: 20px; max-width: 400px; margin: 0 auto; font-family: Arial, sans-serif;">
@@ -563,7 +563,7 @@ app.put('/api/reservar/:id_order', async (req, res) => {
 
         const mailOptions = {
           from: '"パティスリーブール・ムー" <beurre.mou.yoyaku@gmail.com>',
-          to: order.email,
+          to: [order.email, "beurre.mou.yoyaku@gmail.com"],
           subject: `ご注文のキャンセル完了 - 受付番号 ${String(id_order).padStart(4, "0")}`,
           html: `
             <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; border: 1px solid #e0e0e0;">
