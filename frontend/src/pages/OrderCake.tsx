@@ -197,13 +197,34 @@ useEffect(() => {
 // 🔹 FUNÇÃO CORRIGIDA PARA VERIFICAR DATAS DISPONÍVEIS
 const isDateAllowed = (date: Date) => {
   const dateStr = format(date, 'yyyy-MM-dd');
+  
+  // 1. Verificar se a data é anterior à data atual
+  const isPastDate = date < today;
+  if (isPastDate) {
+    console.log(`🚫 Data ${dateStr} é anterior à data atual`);
+    return false;
+  }
+  
+  // 2. Verificar se a data está bloqueada (próximos 2 dias)
+  const isBlocked = excludedDates.some(blockedDate => 
+    isSameDay(blockedDate, date)
+  );
+  if (isBlocked) {
+    console.log(`🚫 Data ${dateStr} está bloqueada (próximos 2 dias)`);
+    return false;
+  }
+  
+  // 3. Verificar se a data tem horários disponíveis
   const hasAvailableSlots = availableDates.includes(dateStr);
-  const isNotBlocked = !excludedDates.some(d => isSameDay(d, date));
+  if (!hasAvailableSlots) {
+    console.log(`❌ Data ${dateStr} não tem horários disponíveis no banco`);
+    return false;
+  }
   
-  console.log(`🔍 Data: ${dateStr}, Disponível: ${hasAvailableSlots}, Não bloqueada: ${isNotBlocked}`);
-  
-  return hasAvailableSlots && isNotBlocked;
+  console.log(`✅ Data ${dateStr} está disponível`);
+  return true;
 };
+
 
   // 🔹 GERAR DATAS BLOQUEADAS (apenas os próximos X dias)
   const excludedDates = useMemo(() => {
