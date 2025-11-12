@@ -11,6 +11,8 @@ import OrderCakeStore from './pages/OrderCakeStore';
 import StoreLogin from './pages/StoreLogin';
 import ProtectedRoute from './components/ProtectedRoute';
 
+import TimeSlotsManagement from './pages/TimeSlotsManagement';
+
 function App() {
   return (
     <Router>
@@ -35,6 +37,12 @@ function App() {
         <Route path="/ordertable" element={
           <ProtectedRoute>
             <SalesOrder />
+          </ProtectedRoute>
+        } />
+
+        <Route path="/admin/date" element={
+          <ProtectedRoute>
+            <TimeSlotsManagement />
           </ProtectedRoute>
         } />
 

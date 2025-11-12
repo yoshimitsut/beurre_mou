@@ -6,6 +6,8 @@ const { Resend } = require('resend');
 const QRCode = require('qrcode');
 const nodemailer = require('nodemailer');
 
+const timeslotRoutes = require('./routers/timeslotRoutes');
+
 const app = express();
 const PORT = process.env.PORT || 3001;
 
@@ -14,6 +16,7 @@ const resend = new Resend("re_c8hnBVtD_JX19Sk4HsVZ7kayHwWFG16ZG");
 
 app.use(cors());
 app.use(express.json());
+
 
 // Teste de conexão
 app.get('/api/test', async (req, res) => {
@@ -41,25 +44,6 @@ app.get('/api/cake', async (req, res) => {
   } catch (err) {
     console.error(err);
     res.status(500).json({ success: false, error: 'Erro ao buscar bolos' });
-  }
-});
-
-app.get('/api/timeslots', async (req, res) => {
-  try {
-    const [timeslots] = await pool.query('SELECT * FROM timeslots ORDER BY date, time');
-
-    // Converte as datas para string YYYY-MM-DD
-    const formattedTimeslots = timeslots.map(t => ({
-      ...t,
-      date: t.date ? t.date.toISOString().split('T')[0] : null
-    }));
-
-    const availableDates = [...new Set(formattedTimeslots.map(t => t.date))];
-
-    res.json({ success: true, availableDates, timeslots: formattedTimeslots });
-  } catch (err) {
-    console.error(err);
-    res.status(500).json({ success: false, error: 'Erro ao buscar horários' });
   }
 });
 
@@ -752,5 +736,7 @@ app.get('/api/list', async (req, res) => {
   }
 });
 
+
+app.use('/api/timeslots', timeslotRoutes);
 
 app.listen(PORT, () => console.log(`Servidor rodando em http://localhost:${PORT}`));
