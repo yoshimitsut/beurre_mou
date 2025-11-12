@@ -38,7 +38,7 @@ const formatDate = (date: Date): string => {
   return [year, month, day].join('-');
 };
 
-const API_BASE_URL = import.meta.env.API_BASE_URL+'/api/timeslots';
+const API_BASE_URL = import.meta.env.VITE_API_URL+'/api/timeslots';
 
 type TabType = 'times' | 'days';
 
