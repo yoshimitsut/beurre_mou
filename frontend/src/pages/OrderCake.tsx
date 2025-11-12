@@ -1,12 +1,12 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import Select, { type StylesConfig, type GroupBase } from 'react-select';
 import DatePicker, { CalendarContainer } from "react-datepicker";
 import "react-datepicker/dist/react-datepicker.css";
 import { ja } from 'date-fns/locale';
 import { useNavigate, useSearchParams } from 'react-router-dom';
-import { addDays, isAfter, isSameDay, format, endOfMonth, getDay } from 'date-fns';
+import { addDays, isSameDay, format, endOfMonth, getDay } from 'date-fns';
 
-import type { Cake, OrderCake, OptionType, MyContainerProps, SizeOption, TimeOptionType } from "../types/types.ts";
+import type { Cake, OrderCake, OptionType, MyContainerProps, SizeOption, TimeOptionType, TimeslotSQL } from "../types/types.ts";
 import "./OrderCake.css";
 
 const API_URL = import.meta.env.VITE_API_URL;
@@ -30,10 +30,14 @@ export default function OrderCake() {
   ]);
 
   const [selectedDate, setSelectedDate] = useState<Date | null>(null);
-  // const [timeSlotsData, setTimeSlotsData] = useState<TimeslotSQL[]>([]);
+  const [timeSlotsData, setTimeSlotsData] = useState<TimeslotSQL[]>([]);
+  const [availableDates, setAvailableDates] = useState<string[]>([]);
+  const [hoursOptions, setHoursOptions] = useState<TimeOptionType[]>([]);
+  
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [pickupHour, setPickupHour] = useState("時間を選択");
   const [, setText] = useState("");
+
 
   // Datas e calendário
   const today = new Date();
@@ -42,81 +46,78 @@ export default function OrderCake() {
 
   const [, setFruitOption] = useState<"有り" | "無し">("無し");
 
-  const diasEspecificosPorMes = [
-    { day: 2, month: 10 }, 
-    { day: 3, month: 10 }, 
-    { day: 9, month: 10 }, 
-    { day: 10, month: 10 },
-    { day: 16, month: 10 }, 
-    { day: 17, month: 10 }, 
-    { day: 23, month: 10 }, 
-    { day: 24, month: 10 },
-    { day: 30, month: 10 }, 
-    
-    { day: 1, month: 11 }, 
-    { day: 7, month: 11 }, 
-    { day: 8, month: 11 }, 
-    { day: 14, month: 11 }, 
-    { day: 15, month: 11 }, 
-    { day: 22, month: 11 }, 
-    { day: 23, month: 11 },
-    { day: 24, month: 11 },
-    { day: 25, month: 11 }, 
-    { day: 26, month: 11 },
+  // const diasEspecificosPorMes = [
+  //   { day: 14, month: 11 }, 
+  //   { day: 15, month: 11 }, 
+  //   { day: 22, month: 11 }, 
+  //   { day: 23, month: 11 },
+  //   { day: 24, month: 11 },
+  //   { day: 25, month: 11 }, 
+  //   { day: 26, month: 11 },
 
-    { day: 4, month: 12 }, 
-    { day: 5, month: 12 }, 
-    { day: 6, month: 12 },
-    { day: 7, month: 12 }, 
-    { day: 8, month: 12 }, 
-    { day: 9, month: 12 }, 
-    { day: 13, month: 12 },
-    { day: 18, month: 12 }, 
-    { day: 19, month: 12 }, 
-    { day: 25, month: 12 }, 
-    { day: 26, month: 12 },
-  ];
+  //   { day: 4, month: 12 }, 
+  //   { day: 5, month: 12 }, 
+  //   { day: 6, month: 12 },
+  //   { day: 7, month: 12 }, 
+  //   { day: 8, month: 12 }, 
+  //   { day: 9, month: 12 }, 
+  //   { day: 13, month: 12 },
+  //   { day: 18, month: 12 }, 
+  //   { day: 19, month: 12 }, 
+  //   { day: 25, month: 12 }, 
+  //   { day: 26, month: 12 },
+  // ];
 
-  const gerarDiasBloqueadosInicio = () => {
-    const datas = [];
-    let data = today;
-    while (datas.length < diasABloquear) {
-      datas.push(data);
-      data = addDays(data, 1);
-    }
-    return datas;
-  };
+  // const gerarDiasBloqueadosInicio = () => {
+  //   const datas = [];
+  //   let data = today;
+  //   while (datas.length < diasABloquear) {
+  //     datas.push(data);
+  //     data = addDays(data, 1);
+  //   }
+  //   return datas;
+  // };
 
-  const gerarDatasEspecificasComMes = () => {
-    const datas: Date[] = [];
-    diasEspecificosPorMes.forEach(({ day, month }) => {
-      const date = new Date(today.getFullYear(), month, day);
-      if (isAfter(date, today)) {
-        datas.push(date);
-      }
-    });
-    return datas;
-  };
+  // const gerarDatasEspecificasComMes = () => {
+  //   const datas: Date[] = [];
+  //   diasEspecificosPorMes.forEach(({ day, month }) => {
+  //     const date = new Date(today.getFullYear(), month, day);
+  //     if (isAfter(date, today)) {
+  //       datas.push(date);
+  //     }
+  //   });
+  //   return datas;
+  // };
 
-  const excludedDates = [
-    ...gerarDiasBloqueadosInicio(),
-    ...gerarDatasEspecificasComMes(),
-  ];
+  // const excludedDates = [
+  //   ...gerarDiasBloqueadosInicio(),
+  //   ...gerarDatasEspecificasComMes(),
+  // ];
 
-  const isDateAllowed = (date: Date) => !excludedDates.some((d) => isSameDay(d, date));
+  // const isDateAllowed = (date: Date) => !excludedDates.some((d) => isSameDay(d, date));
 
-  const timeSlots: TimeOptionType[] = [
-    { id: 1, value: "11:00〜12:00", label: "11:00〜12:00" },
-    { id: 2, value: "12:00〜13:00", label: "12:00〜13:00" },
-    { id: 3, value: "13:00〜14:00", label: "13:00〜14:00" },
-    { id: 4, value: "14:00〜15:00", label: "14:00〜15:00" },
-    { id: 5, value: "15:00〜16:00", label: "15:00〜16:00" },
-    { id: 6, value: "16:00〜17:00", label: "16:00〜17:00" },
-    { id: 7, value: "17:00〜18:00", label: "17:00〜18:00" },
-    { id: 8, value: "18:00〜19:00", label: "18:00〜19:00" }
-  ];
+  // const timeSlots: TimeOptionType[] = [
+  //   { id: 1, value: "11:00〜12:00", label: "11:00〜12:00" },
+  //   { id: 2, value: "12:00〜13:00", label: "12:00〜13:00" },
+  //   { id: 3, value: "13:00〜14:00", label: "13:00〜14:00" },
+  //   { id: 4, value: "14:00〜15:00", label: "14:00〜15:00" },
+  //   { id: 5, value: "15:00〜16:00", label: "15:00〜16:00" },
+  //   { id: 6, value: "16:00〜17:00", label: "16:00〜17:00" },
+  //   { id: 7, value: "17:00〜18:00", label: "17:00〜18:00" },
+  //   { id: 8, value: "18:00〜19:00", label: "18:00〜19:00" }
+  // ];
 
-  // Efeitos
+
+
+
+
+
+
+
+
+
+
+  // Carragar bolos
   useEffect(() => {
     fetch(`${API_URL}/api/cake`)
       .then(res => res.json())
@@ -130,19 +131,98 @@ export default function OrderCake() {
       .catch(err => console.error("Erro ao carregar bolos:", err));
   }, []);
 
-  // useEffect(() => {
-  //   fetch(`${API_URL}/api/timeslots`)
-  //     .then(res => res.json())
-  //     .then((data) => {
-  //       if (Array.isArray(data.timeslots)) {
-  //         setTimeSlotsData(data.timeslots);
-  //       } else {
-  //         console.error("Formato inesperado de timeslots:", data);
-  //         setTimeSlotsData([]);
-  //       }
-  //     })
-  //     .catch(err => console.error("Erro ao carregar datas:", err));
-  // }, []);
+    // 🔹 CARREGAR DATAS E HORÁRIOS DISPONÍVEIS DO BANCO
+    useEffect(() => {
+      fetch(`${API_URL}/api/timeslots/`)
+        .then(res => res.json())
+        .then((data) => {
+          if (data.success && Array.isArray(data.timeslots)) {
+            setTimeSlotsData(data.timeslots);
+            
+            // Extrair datas únicas que têm horários disponíveis
+            const uniqueDates = [...new Set(
+              data.timeslots.map((slot: TimeslotSQL) => slot.date.split("T")[0])
+            )] as string[];
+            
+            setAvailableDates(uniqueDates);
+            console.log('📅 Datas disponíveis com horários:', uniqueDates);
+            console.log('⏰ Horários carregados:', data.timeslots.length);
+          } else {
+            console.error("Formato inesperado de timeslots:", data);
+            setTimeSlotsData([]);
+            setAvailableDates([]);
+          }
+        })
+        .catch(err => {
+          console.error("Erro ao carregar datas:", err);
+          setTimeSlotsData([]);
+          setAvailableDates([]);
+        });
+    }, []);
+
+
+  // 🔹 GERAR DATAS BLOQUEADAS (apenas os próximos X dias)
+  const excludedDates = useMemo(() => {
+    const blockedDates: Date[] = [];
+    
+    // Bloquear apenas os próximos X dias
+    for (let i = 0; i < diasABloquear; i++) {
+      const blockedDate = addDays(today, i);
+      blockedDates.push(blockedDate);
+    }
+
+    console.log('🚫 Datas bloqueadas:', blockedDates.map(d => format(d, 'yyyy-MM-dd')));
+    return blockedDates;
+  }, [today, diasABloquear]);
+
+  // 🔹 FUNÇÃO SIMPLIFICADA - APENAS DATAS COM HORÁRIOS DISPONÍVEIS
+  const isDateAllowed = (date: Date) => {
+    const dateStr = format(date, 'yyyy-MM-dd');
+    const hasAvailableSlots = availableDates.includes(dateStr); // Verifica se tem slots no banco
+    const isNotBlocked = !excludedDates.some(d => isSameDay(d, date)); // Verifica se não está nos próximos 2 dias
+    
+    // Você não precisa mais do isNotBlocked aqui se usar 'excludeDates' no DatePicker,
+    // mas se quiser manter uma única função de filtro:
+    return hasAvailableSlots && isNotBlocked;
+  };
+
+  // 🔹 ATUALIZAR HORÁRIOS QUANDO A DATA MUDAR
+  useEffect(() => {
+    if (!selectedDate) {
+      setHoursOptions([]);
+      setPickupHour("時間を選択");
+      return;
+    }
+
+    const formattedDate = format(selectedDate, 'yyyy-MM-dd');
+    console.log('📅 Buscando horários para:', formattedDate);
+
+    // Filtrar horários disponíveis para a data selecionada
+    const availableSlots = timeSlotsData.filter((slot: TimeslotSQL) => {
+      const slotDateStr = slot.date.split("T")[0];
+      return slotDateStr === formattedDate;
+    });
+
+    console.log('⏰ Horários disponíveis:', availableSlots);
+
+    // Converter para options do Select
+    const options: TimeOptionType[] = availableSlots.map((slot: TimeslotSQL) => ({
+      id: slot.id,
+      value: slot.time,
+      label: `${slot.time}`,
+      isDisabled: false // Todos já são disponíveis
+    }));
+
+    setHoursOptions(options);
+
+    // Resetar o horário selecionado se não estiver mais disponível
+    if (pickupHour !== "時間を選択" && !options.find(opt => opt.value === pickupHour)) {
+      setPickupHour("時間を選択");
+    }
+  }, [selectedDate, timeSlotsData, pickupHour]);
+
+
+
 
   const selectedCakeName = searchParams.get("cake");
   useEffect(() => {
@@ -209,8 +289,25 @@ export default function OrderCake() {
   //   setSelectedDate(date);
   // };
 
-  const renderDayContents = (day: number, date: Date) => {
-    const isBlocked = excludedDates.some(d => isSameDay(d, date));
+  // const renderDayContents = (day: number, date: Date) => {
+  //   const isBlocked = excludedDates.some(d => isSameDay(d, date));
+  //   const dayOfWeek = getDay(date);
+    
+  //   const extraClass =
+  //     dayOfWeek === 0 ? "domingo-vermelho" :
+  //     dayOfWeek === 6 ? "sabado-azul" : "";
+
+  //   return (
+  //     <div className={`day-cell ${extraClass}`}>
+  //       <span>{day}</span>
+  //       {isBlocked && <span className="yassumi">x</span>}
+  //       {!isBlocked && isAfter(date, today) && <div className="selectable"></div>}
+  //     </div>
+  //   );
+  // };
+  
+const renderDayContents = (day: number, date: Date) => {
+    const isSelectable = isDateAllowed(date);
     const dayOfWeek = getDay(date);
     
     const extraClass =
@@ -220,12 +317,12 @@ export default function OrderCake() {
     return (
       <div className={`day-cell ${extraClass}`}>
         <span>{day}</span>
-        {isBlocked && <span className="yassumi">x</span>}
-        {!isBlocked && isAfter(date, today) && <div className="selectable"></div>}
+        {!isSelectable && <span className="yassumi">x</span>}
+        {isSelectable && <div className="selectable"></div>}
       </div>
     );
   };
-  
+
 const customStylesHour: StylesConfig<TimeOptionType, false> = {
   option: (provided, state) => ({
       ...provided,
@@ -551,10 +648,9 @@ const customStylesHour: StylesConfig<TimeOptionType, false> = {
             </div>
           </div>
 
+          
           <div className="date-information">
-            <label htmlFor="date" className='title-information'>*受取日時
-               {/* / その他 */}
-               </label>
+            <label htmlFor="date" className='title-information'>*受取日時</label>
             <div className='input-group'>
               <label htmlFor="datepicker" className='datepicker'>*受け取り希望日</label>
               <DatePicker
@@ -562,6 +658,7 @@ const customStylesHour: StylesConfig<TimeOptionType, false> = {
                 onChange={(date) => setSelectedDate(date)}
                 minDate={today}
                 maxDate={maxDate}
+                // includeDates={availableDatesFromSQL}
                 excludeDates={excludedDates}
                 filterDate={isDateAllowed}
                 dateFormat="yyyy年MM月dd日"
@@ -579,19 +676,23 @@ const customStylesHour: StylesConfig<TimeOptionType, false> = {
                 renderDayContents={renderDayContents}
               />
             </div>
+
             <div className='input-group'>
               <Select<TimeOptionType>
-                options={timeSlots}
-                value={timeSlots.find(h => h.value === pickupHour)}
+                options={hoursOptions}
+                value={hoursOptions.find(h => h.value === pickupHour)}
                 onChange={(selected) => setPickupHour(selected?.value || "時間を選択")}
                 classNamePrefix="react-select"
                 styles={customStylesHour}
-                placeholder="時間を選択"
+                placeholder={selectedDate ? "時間を選択" : "日付を選択してください"}
                 isSearchable={false}
+                isDisabled={!selectedDate || hoursOptions.length === 0}
                 required
               />
               <label htmlFor="pickupHour" className='select-group'>受け取り希望時間</label>
             </div>
+
+
             <div className='input-group' style={{display: 'none'}}>
               <label htmlFor="message">その他</label>
               <textarea name="message" id="message" placeholder=""></textarea>
