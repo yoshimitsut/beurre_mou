@@ -198,10 +198,10 @@ ul {
 
 .list-order-table th.situation-cell,
 .list-order-table td.situation-cell {
-  min-width: 161px; 
+  min-width: 165px; 
 }
 
-.id-cell {
+.id-order-cell {
   width: 30px !important;
 }
 

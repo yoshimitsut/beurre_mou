@@ -5,6 +5,21 @@ import "./CakeInformations.css";
 
 const API_URL = import.meta.env.VITE_API_URL;
 
+
+
+// 現在オンライン予約を一時的に停止しております。
+
+// 恐れ入りますが、直接お電話にてご予約をお願いいたします。
+
+// open 11:00 - 19:00
+// 休業日：カレンダーをご確認ください。
+// TEL: 080-9854-2849
+
+// お手数をお掛けしますがよろしくお願いいたします。
+// beurre mou
+
+
+
 export default function CakeInformations() {
   const [cakes, setCakes] = useState<Cake[]>([]);
   const [searchParams] = useSearchParams();

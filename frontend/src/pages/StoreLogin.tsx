@@ -11,13 +11,16 @@ export default function StoreLogin() {
   // 🧩 Lista de senhas válidas
   const VALID_PASSWORDS = ['beurremou0301', 't123'];
 
-  // Pedir senha sempre (sessionStorage)
   const handleLogin = (e: React.FormEvent) => {
     e.preventDefault();
 
     if (VALID_PASSWORDS.includes(password)) {
       sessionStorage.setItem('store_authenticated', 'true');
+      
+      // 🔥 CORREÇÃO: Obter a rota original do state
       const from = location.state?.from?.pathname || '/list';
+      console.log('Redirecionando para:', from); // Para debug
+      
       navigate(from, { replace: true });
     } else {
       setError('パスワードが正しくありません');

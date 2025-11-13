@@ -86,7 +86,7 @@ export default function CakeInformations() {
                       ¥
                       {/* {size.price.toLocaleString("ja-JP")} */}
                       {size.price.toLocaleString("ja-JP")} 税込
-                      {size.stock === 0 && <span style={{ color: "red"}}>  完売</span>}
+                      {/* {size.stock === 0 && <span style={{ color: "red"}}>  完売</span>} */}
                     </td>
                   </tr>
                 ))}

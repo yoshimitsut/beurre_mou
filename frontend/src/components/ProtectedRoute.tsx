@@ -1,5 +1,6 @@
+// components/ProtectedRoute.jsx
 import { useState, useEffect } from 'react';
-import { Navigate } from 'react-router-dom';
+import { Navigate, useLocation } from 'react-router-dom';
 
 interface ProtectedRouteProps {
   children: React.ReactNode;
@@ -7,23 +8,27 @@ interface ProtectedRouteProps {
 
 export default function ProtectedRoute({ children }: ProtectedRouteProps) {
   const [isAuthenticated, setIsAuthenticated] = useState<boolean | null>(null);
+  const location = useLocation();
 
-  // Pedia apenas 1 vez
-  // useEffect(() => {
-  //   // Verificar se o usuário está autenticado
-  //   const authStatus = localStorage.getItem('store_authenticated') === 'true';
-  //   setIsAuthenticated(authStatus);
-  // }, []);
-
-  //Pedir senha sempre
   useEffect(() => {
     const authStatus = sessionStorage.getItem('store_authenticated') === 'true';
     setIsAuthenticated(authStatus);
   }, []);
 
   if (isAuthenticated === null) {
-    return <div>読み込み中...</div>; // Loading
+    return <div>読み込み中...</div>;
   }
 
-  return isAuthenticated ? <>{children}</> : <Navigate to="/store-login" replace />;
+  // Se não está autenticado, redireciona para o login MAS guarda a localização atual
+  if (!isAuthenticated) {
+    return (
+      <Navigate 
+        to="/store-login" 
+        replace 
+        state={{ from: location }} // 🔥 IMPORTANTE: Passa a localização atual
+      />
+    );
+  }
+
+  return <>{children}</>;
 }
