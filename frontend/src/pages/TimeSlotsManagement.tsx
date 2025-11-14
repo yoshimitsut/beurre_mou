@@ -1,5 +1,18 @@
 import React, { useState, useEffect } from 'react';
 import './TimeSlotsManagement.css';
+import "react-datepicker/dist/react-datepicker.css";
+// import { ja } from 'date-fns/locale';
+// import { format } from 'date-fns';
+
+import { 
+  format, 
+  startOfMonth, 
+  endOfMonth, 
+  eachDayOfInterval, 
+  addMonths,
+  subMonths
+} from 'date-fns';
+import { ja } from 'date-fns/locale';
 
 // TypeScriptの型定義
 interface TimeslotBatchCreatorProps {
@@ -49,6 +62,15 @@ const TimeslotBatchCreator: React.FC<TimeslotBatchCreatorProps> = ({ onTimeslots
   const [timeSlots, setTimeSlots] = useState<TimeSlot[]>([]);
   const [existingDayTimeSlots, setExistingDayTimeSlots] = useState<DayTimeSlot[]>([]);
   
+  const handleSelectAllTimes = (): void => {
+    const allTimes = timeSlots.map(slot => slot.time_value);
+    setSelectedTimes(allTimes);
+  }
+
+  const handleDeselectAllTimes = (): void => {
+    setSelectedTimes([]);
+  }
+
   // 新しい状態: 時間追加フォーム
   const [newTime, setNewTime] = useState<string>('');
   const [isAddingTime, setIsAddingTime] = useState<boolean>(false);
@@ -59,6 +81,36 @@ const TimeslotBatchCreator: React.FC<TimeslotBatchCreatorProps> = ({ onTimeslots
   const [isLoading, setIsLoading] = useState<boolean>(false);
   const [isLoadingTimes, setIsLoadingTimes] = useState<boolean>(true);
   const [, setIsLoadingExisting] = useState<boolean>(false);
+
+
+  // 既存の時間帯があるかチェック
+  const hasExistingSlots = existingDayTimeSlots.length > 0;
+
+  const [currentMonth, setCurrentMonth] = useState(new Date());
+  // const [selectedDate, setSelectedDate] = useState('');
+
+  const monthStart = startOfMonth(currentMonth);
+  const monthEnd = endOfMonth(currentMonth);
+  const monthDays = eachDayOfInterval({ start: monthStart, end: monthEnd });
+
+  const nextMonth = () => setCurrentMonth(prev => addMonths(prev, 1));
+  const prevMonth = () => setCurrentMonth(prev => subMonths(prev, 1));
+
+  const handleDateSelect = (date: Date) => {
+    const dateKey = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')}`;
+    setSelectedDate(dateKey);
+    console.log('Data selecionada:', dateKey);
+  };
+
+  const isDateSelected = (date: Date) => {
+    if (!selectedDate) return false;
+    
+    const [selectedYear, selectedMonth, selectedDay] = selectedDate.split('-').map(Number);
+    
+    return date.getFullYear() === selectedYear &&
+           date.getMonth() + 1 === selectedMonth &&
+           date.getDate() === selectedDay;
+  };
 
   // すべての利用可能な時間を取得
   const fetchTimeSlots = async () => {
@@ -327,8 +379,6 @@ const TimeslotBatchCreator: React.FC<TimeslotBatchCreatorProps> = ({ onTimeslots
     }
   };
 
-  // 既存の時間帯があるかチェック
-  const hasExistingSlots = existingDayTimeSlots.length > 0;
 
   return (
     <div className="timeslot-batch-creator">
@@ -356,43 +406,71 @@ const TimeslotBatchCreator: React.FC<TimeslotBatchCreatorProps> = ({ onTimeslots
         {/* Aba: Gerenciamento de Dias */}
         {activeTab === 'days' && (
           <div className="timeslot-batch-creator__day-management">
+
             <h3 className="timeslot-batch-creator__subtitle">日別時間帯設定</h3>
             <p>日付を選択し、時間帯を管理してください。チェックを外すと時間帯が削除されます。</p>
 
             <form onSubmit={handleSubmit}>
-              <div className="timeslot-batch-creator__form-row">
+              <div className='timeslot-content'>
+                <div className="timeslot-batch-creator__form-row">
+                  <div className="timeslot-batch-creator__form-group">
+                    <label htmlFor="date" className="timeslot-batch-creator__label">収集日:</label>
+                    <div className="month-calendar">
+                    <div className="calendar-header">
+                      <button onClick={prevMonth}>‹</button>
+                      <h3>{format(currentMonth, 'yyyy年MM月', { locale: ja })}</h3>
+                      <button onClick={nextMonth}>›</button>
+                    </div>
+                    
+                    <div className="calendar-grid">
+                      {['日', '月', '火', '水', '木', '金', '土'].map(day => (
+                        <div key={day} className="calendar-weekday">{day}</div>
+                      ))}
+                      
+                      {monthDays.map(day => (
+                        <button
+                          key={day.toString()}
+                          className={`calendar-day ${
+                            isDateSelected(day) ? 'selected' : ''
+                          }`}
+                          onClick={() => handleDateSelect(day)}
+                        >
+                          {format(day, 'd')}
+                        </button>
+                      ))}
+                    </div>
+                    
+                    {/* {selectedDate && (
+                      <div className="selected-date">
+                        選択された日付: {selectedDate}
+                      </div>
+                    )} */}
+                  </div>
+                  </div>
+                </div>
+
+<div className='timeslot-add-content'>
+                {/* 現在登録されている時間帯表示 */}
+                {hasExistingSlots && (
+                  <div className="timeslot-batch-creator__current-slots">
+                    <h4 className="timeslot-batch-creator__subtitle">
+                      📋 {selectedDate} の登録済み時間帯
+                    </h4>
+                    <p className="timeslot-batch-creator__help-text">
+                      ※ チェックを外すと時間帯が削除されます
+                    </p>
+                  </div>
+                )}
+
+                {/* 時間選択 */}
                 <div className="timeslot-batch-creator__form-group">
-                  <label htmlFor="date" className="timeslot-batch-creator__label">収集日:</label>
-                  <input
-                    id="date"
-                    type="date"
-                    value={selectedDate}
-                    onChange={(e) => setSelectedDate(e.target.value)}
-                    required
-                    className="timeslot-batch-creator__input"
-                    min={formatDate(new Date())}
-                  />
-                </div>
-              </div>
-
-              {/* 現在登録されている時間帯表示 */}
-              {hasExistingSlots && (
-                <div className="timeslot-batch-creator__current-slots">
-                  <h4 className="timeslot-batch-creator__subtitle">
-                    📋 {selectedDate} の登録済み時間帯
-                  </h4>
-                  <p className="timeslot-batch-creator__help-text">
-                    ※ チェックを外すと時間帯が削除されます
-                  </p>
-                </div>
-              )}
-
-              {/* 時間選択 */}
-              <div className="timeslot-batch-creator__form-group">
                   <label className="timeslot-batch-creator__label">
                     時間帯の選択 ({selectedTimes.length}個選択中)
                   </label>
                   
+                    {/* 🔥 BOTÕES DE SELEÇÃO EM MASSA */}
+                  
+            
                   {isLoadingTimes ? (
                     <div className="timeslot-batch-creator__loading">
                       時間を読み込み中...
@@ -404,6 +482,30 @@ const TimeslotBatchCreator: React.FC<TimeslotBatchCreatorProps> = ({ onTimeslots
                   ) : (
                     <>
                       <div className="timeslot-batch-creator__time-grid">
+                        <div>
+                          <div className="timeslot-batch-creator__bulk-actions">
+                            <div className='timeslot-batch-selec-all'>
+                              <button
+                                type="button"
+                                className="timeslot-batch-creator__bulk-button timeslot-batch-creator__bulk-button--select"
+                                onClick={handleSelectAllTimes}
+                                disabled={timeSlots.length === 0 || selectedTimes.length === timeSlots.length}
+                              >
+                                すべて選択
+                              </button>
+                              <button
+                                type="button"
+                                className="timeslot-batch-creator__bulk-button timeslot-batch-creator__bulk-button--deselect"
+                                onClick={handleDeselectAllTimes}
+                                disabled={selectedTimes.length === 0}
+                              >
+                                すべて解除
+                              </button>
+
+                            </div>
+                          </div>
+                        </div>
+
                         {timeSlots.map((timeSlot) => {
                           const isExisting = existingDayTimeSlots.some(slot => slot.time === timeSlot.time_value);
                           const isSelected = selectedTimes.includes(timeSlot.time_value);
@@ -420,7 +522,7 @@ const TimeslotBatchCreator: React.FC<TimeslotBatchCreatorProps> = ({ onTimeslots
                               title={isExisting ? '登録済み - チェックを外すと削除されます' : 'クリックで選択'}
                             >
                               {timeSlot.time_value}
-                              {isExisting && <span className="timeslot-batch-creator__existing-badge">登録済み</span>}
+                              {isExisting && <span className="timeslot-batch-creator__existing-badge"> 登録済み</span>}
                             </div>
                           );
                         })}
@@ -428,7 +530,7 @@ const TimeslotBatchCreator: React.FC<TimeslotBatchCreatorProps> = ({ onTimeslots
                       
                       <div className="timeslot-batch-creator__selection-info">
                         <p className="timeslot-batch-creator__selected-count">
-                          <strong>選択された時間: {selectedTimes.length}個</strong>
+                          <strong>選択された時間: {selectedTimes.length}個 / {timeSlots.length}個</strong>
                         </p>
                         {selectedTimes.length > 0 && (
                           <p className="timeslot-batch-creator__selected-times">
@@ -438,17 +540,20 @@ const TimeslotBatchCreator: React.FC<TimeslotBatchCreatorProps> = ({ onTimeslots
                       </div>
                     </>
                   )}
+                </div>
+
+      </div>
               </div>
 
-              <button 
-                type="submit" 
-                className="timeslot-batch-creator__submit-button"
-                disabled={isLoading || !selectedDate}
-              >
-                {isLoading ? '保存中...' : `変更を保存`}
-              </button>
-            </form>
-          </div>
+            <button 
+              type="submit" 
+              className="timeslot-batch-creator__submit-button"
+              disabled={isLoading || !selectedDate}
+            >
+              {isLoading ? '保存中...' : `変更を保存`}
+            </button>
+          </form>
+        </div>
         )}
 
         {/* Aba: Gerenciamento de Horários */}
