@@ -27,12 +27,11 @@ const formatDataForExcel = (orders: Order[]) => {
       'ケーキ名': cake.name,
       'サイズ/価格': cake.size,
       '個数': cake.amount,
-      'フルーツ盛り': cake.fruit_option,
       '受取日': order.date,
       '受け取り時間': order.pickupHour,
       'メッセージ ケーキ': cake.message_cake || 'なし',
       'その他': order.message || 'なし',
-      '注文日': order.date_order,
+      '注文日': order.date_order && order.date_order.split('T')[0],
       '電話番号': order.tel,
       'メールアドレス': order.email,
     }))
