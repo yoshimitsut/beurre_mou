@@ -322,6 +322,14 @@ body {
     border: 1px solid #919191;
     border-radius: 0.4rem
   }
+  .css-1qdu2hq-control{
+    background-color: white;
+  }
+
+  .pill {
+    display: flex;
+    justify-content: space-around;
+  }
 
   .pill-group {
     display: flex;
