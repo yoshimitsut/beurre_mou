@@ -616,7 +616,7 @@ const customStylesHour: StylesConfig<TimeOptionType, false> = {
         checked={item.fruit_option === "無し"}
         onChange={() => updateCake(index, "fruit_option", "無し")}
       />
-      <span style={{width:"120px", textAlign: "start"}}>通常盛り</span><span style={{width:"60px", textAlign: "end"}}>+0円</span> 
+      <span style={{width:"120px", textAlign: "start"}}>通常盛り</span><span style={{width:"70px", textAlign: "end"}}>+0円</span> 
     </label>
     <label className={`pill ${item.fruit_option === "有り" ? "active" : ""}`}>
       <input
@@ -626,7 +626,7 @@ const customStylesHour: StylesConfig<TimeOptionType, false> = {
         checked={item.fruit_option === "有り"}
         onChange={() => updateCake(index, "fruit_option", "有り")}
       />
-      <span style={{width:"125px", textAlign: "start"}}>フルーツ増し</span><span style={{width:"60px", textAlign: "end"}}>+648円</span>      
+      <span style={{width:"125px", textAlign: "start"}}>フルーツ増し</span><span style={{width:"70px", textAlign: "end"}}>+648円</span>      
     </label>
   </div>
   <label className='select-group-radio'>*フルーツ盛り</label>
