@@ -1,8 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import './TimeSlotsManagement.css';
 import "react-datepicker/dist/react-datepicker.css";
-// import { ja } from 'date-fns/locale';
-// import { format } from 'date-fns';
 
 import { 
   format, 
@@ -13,6 +11,23 @@ import {
   subMonths
 } from 'date-fns';
 import { ja } from 'date-fns/locale';
+
+// 🔥 CORREÇÃO: Funções para timezone do Japão
+const getJapanDate = (): Date => {
+  const now = new Date();
+  const jstOffset = 9 * 60; // JST é UTC+9
+  const localOffset = now.getTimezoneOffset();
+  const jstTime = new Date(now.getTime() + (jstOffset + localOffset) * 60000);
+  return jstTime;
+};
+
+const formatDateForJapan = (date: Date): string => {
+  const jstDate = new Date(date.getTime() + (9 * 60 * 60000));
+  const year = jstDate.getFullYear();
+  const month = String(jstDate.getMonth() + 1).padStart(2, '0');
+  const day = String(jstDate.getDate()).padStart(2, '0');
+  return `${year}-${month}-${day}`;
+};
 
 // TypeScriptの型定義
 interface TimeslotBatchCreatorProps {
@@ -38,26 +53,14 @@ interface DayTimeSlot {
   limit_slots: number;
 }
 
-// YYYY-MM-DD形式で日付をフォーマットするヘルパー関数
-const formatDate = (date: Date): string => {
-  const d = new Date(date);
-  let month = '' + (d.getMonth() + 1);
-  let day = '' + d.getDate();
-  const year = d.getFullYear();
-
-  if (month.length < 2) month = '0' + month;
-  if (day.length < 2) day = '0' + day;
-
-  return [year, month, day].join('-');
-};
-
 const API_BASE_URL = import.meta.env.VITE_API_URL+'/api/timeslots';
 
 type TabType = 'times' | 'days';
 
 const TimeslotBatchCreator: React.FC<TimeslotBatchCreatorProps> = ({ onTimeslotsCreated }) => {
   const [activeTab, setActiveTab] = useState<TabType>('days');
-  const [selectedDate, setSelectedDate] = useState<string>(formatDate(new Date())); 
+  // 🔥 CORREÇÃO: Usar data do Japão
+  const [selectedDate, setSelectedDate] = useState<string>(formatDateForJapan(getJapanDate())); 
   const [selectedTimes, setSelectedTimes] = useState<string[]>([]); 
   const [timeSlots, setTimeSlots] = useState<TimeSlot[]>([]);
   const [existingDayTimeSlots, setExistingDayTimeSlots] = useState<DayTimeSlot[]>([]);
@@ -82,12 +85,11 @@ const TimeslotBatchCreator: React.FC<TimeslotBatchCreatorProps> = ({ onTimeslots
   const [isLoadingTimes, setIsLoadingTimes] = useState<boolean>(true);
   const [, setIsLoadingExisting] = useState<boolean>(false);
 
-
   // 既存の時間帯があるかチェック
   const hasExistingSlots = existingDayTimeSlots.length > 0;
 
-  const [currentMonth, setCurrentMonth] = useState(new Date());
-  // const [selectedDate, setSelectedDate] = useState('');
+  // 🔥 CORREÇÃO: Usar data atual do Japão
+  const [currentMonth, setCurrentMonth] = useState(getJapanDate());
 
   const monthStart = startOfMonth(currentMonth);
   const monthEnd = endOfMonth(currentMonth);
@@ -96,20 +98,18 @@ const TimeslotBatchCreator: React.FC<TimeslotBatchCreatorProps> = ({ onTimeslots
   const nextMonth = () => setCurrentMonth(prev => addMonths(prev, 1));
   const prevMonth = () => setCurrentMonth(prev => subMonths(prev, 1));
 
+  // 🔥 CORREÇÃO: Usar formatação para Japão
   const handleDateSelect = (date: Date) => {
-    const dateKey = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')}`;
+    const dateKey = formatDateForJapan(date);
     setSelectedDate(dateKey);
-    console.log('Data selecionada:', dateKey);
+    console.log('Data selecionada (JST):', dateKey);
   };
 
   const isDateSelected = (date: Date) => {
     if (!selectedDate) return false;
     
-    const [selectedYear, selectedMonth, selectedDay] = selectedDate.split('-').map(Number);
-    
-    return date.getFullYear() === selectedYear &&
-           date.getMonth() + 1 === selectedMonth &&
-           date.getDate() === selectedDay;
+    const dateToCompare = formatDateForJapan(date);
+    return dateToCompare === selectedDate;
   };
 
   // すべての利用可能な時間を取得
@@ -382,7 +382,7 @@ const TimeslotBatchCreator: React.FC<TimeslotBatchCreatorProps> = ({ onTimeslots
 
   return (
     <div className="timeslot-batch-creator">
-      <h2 className="timeslot-batch-creator__title">📅 時間帯管理システム</h2>
+      <h2 className="timeslot-batch-creator__title">📅 時間帯管理</h2>
       
       {/* Abas de navegação */}
       <div className="timeslot-batch-creator__tabs">
@@ -468,9 +468,6 @@ const TimeslotBatchCreator: React.FC<TimeslotBatchCreatorProps> = ({ onTimeslots
                     時間帯の選択 ({selectedTimes.length}個選択中)
                   </label>
                   
-                    {/* 🔥 BOTÕES DE SELEÇÃO EM MASSA */}
-                  
-            
                   {isLoadingTimes ? (
                     <div className="timeslot-batch-creator__loading">
                       時間を読み込み中...
