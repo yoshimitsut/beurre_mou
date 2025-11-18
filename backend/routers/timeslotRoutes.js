@@ -1,14 +1,15 @@
 const express = require('express');
 const router = express.Router();
-const pool = require('../db'); 
+const pool = require('../config/db'); 
 
 // --------------------------------------------------------------------------------
 // Rota de Inserção em Lote (POST /api/timeslots/batch)
 // Lida com o formulário do React (seleciona data e múltiplos horários)
 // --------------------------------------------------------------------------------
 router.post('/batch', async (req, res) => {
-  // O frontend envia dates como um array de uma única data
   const { dates, times } = req.body;
+
+  // console.log('Recebendo lote:', { dates, times });
 
   if (!dates || !times || dates.length === 0 || times.length === 0) {
     return res.status(400).json({ success: false, error: 'Dados incompletos: Datas e horários de vagas são obrigatórios.' });
@@ -23,15 +24,25 @@ router.post('/batch', async (req, res) => {
     await conn.beginTransaction();
 
     for (const dateStr of dates) {
-      // 1. Inserir a data na tabela 'days' (ou ignorar se já existir) e obter o ID
-      // Nota: 'day_date' deve ser o nome da coluna DATE na sua tabela 'days'
-      await conn.query('INSERT IGNORE INTO days (day_date) VALUES (?)', [dateStr]);
-      const [dayRow] = await conn.query('SELECT id FROM days WHERE day_date = ?', [dateStr]);
-      const dayId = dayRow[0].id;
+      // console.log(`Processando data: ${dateStr}`);
+      
+      // 1. PRIMEIRO verificar se o dia já existe
+      const [existingDays] = await conn.query('SELECT id FROM days WHERE day_date = ?', [dateStr]);
+      
+      let dayId;
+      if (existingDays.length > 0) {
+        // Dia já existe, usar o ID existente
+        dayId = existingDays[0].id;
+        // console.log(`Dia ${dateStr} já existe com ID: ${dayId}`);
+      } else {
+        // Dia não existe, inserir novo
+        const [insertResult] = await conn.query('INSERT INTO days (day_date) VALUES (?)', [dateStr]);
+        dayId = insertResult.insertId;
+        // console.log(`Novo dia ${dateStr} inserido com ID: ${dayId}`);
+      }
 
       for (const timeStr of times) {
-        // 2. Obter o ID do horário na tabela 'times' (assume-se que estes horários já foram pré-cadastrados)
-        // Nota: 'time_value' deve ser o nome da coluna VARCHAR na sua tabela 'times'
+        // 2. Obter o ID do horário na tabela 'times'
         const [timeRow] = await conn.query('SELECT id FROM times WHERE time_value = ?', [timeStr]);
         
         if (timeRow.length === 0) {
@@ -41,8 +52,9 @@ router.post('/batch', async (req, res) => {
         }
         const timeId = timeRow[0].id;
 
+        // console.log(`Time ID para ${timeStr}: ${timeId}`);
+
         // 3. Inserir na tabela de ligação 'day_time_slots'
-        // INSERT IGNORE permite que a combinação duplicada (dia/horário) seja silenciosamente ignorada
         const [result] = await conn.query(
           'INSERT IGNORE INTO day_time_slots (day_id, time_id) VALUES (?, ?)',
           [dayId, timeId]
@@ -50,14 +62,17 @@ router.post('/batch', async (req, res) => {
         
         if (result.affectedRows > 0) {
             insertedCount++;
+            // console.log(`Inserido: ${dateStr} - ${timeStr}`);
         } else {
-            // Se affectedRows for 0 e não houver erro, significa que foi ignorado (chave duplicada)
-            skippedCount++; 
+            skippedCount++;
+            // console.log(`Ignorado (duplicado): ${dateStr} - ${timeStr}`);
         }
       }
     }
     
     await conn.commit();
+    // console.log(`Lote finalizado: ${insertedCount} inseridos, ${skippedCount} ignorados`);
+    
     res.json({ 
       success: true, 
       message: 'Lote de horários processado com sucesso!', 
@@ -131,7 +146,7 @@ router.post('/times', async (req, res) => {
   } catch (err) {
     console.error('Erro ao adicionar horário:', err);
     
-    // Verifica se é erro de duplicata
+    // Verifica se é erro ede duplicata
     if (err.code === 'ER_DUP_ENTRY') {
       return res.status(400).json({ 
         success: false, 

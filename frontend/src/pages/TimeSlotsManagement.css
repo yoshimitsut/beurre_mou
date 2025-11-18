@@ -47,7 +47,7 @@
 
 .timeslot-batch-creator__time-grid {
   display: grid;
-  /* grid-template-columns: repeat(auto-fill, minmax(90px, 1fr)); */
+  grid-template-columns: repeat(2, 1fr);
   gap: 10px;
   border: 1px solid #ddd;
   border-radius: 6px;
@@ -74,6 +74,11 @@
   color: #fff;
   font-weight: bold;
   box-shadow: 0 2px 4px rgba(0, 123, 255, 0.3);
+}
+.timeslot-batch-creator__submit-div {
+  width: 100%;
+  display: flex;
+  justify-content: flex-end;
 }
 
 .timeslot-batch-creator__submit-button {
@@ -324,12 +329,12 @@
 
 /* Títulos */
 .timeslot-batch-creator__subtitle {
-  font-size: 20px;
+  font-size: 16px;
   color: #333;
-  margin-bottom: 20px;
+  margin-bottom: 10px;
   border-bottom: 2px solid #007bff;
-  padding-bottom: 10px;
-  font-weight: 600;
+  padding-bottom: 5px;
+  font-weight: 500;
 }
 
 .timeslot-content {
@@ -464,18 +469,31 @@
   border: 1px solid #e9ecef;
 }
 
+.timeslot-batch-creator__help-text{
+  font-size: 0.8rem;
+}
+
+.timeslot-batch-creator__label {
+  font-size: 0.8;
+}
+
 /* TimeSlotsManagement.css - Adicione estas regras */
 .timeslot-batch-selec-all{
   display: flex;
   justify-content: space-between;
   width: 100%;
+  button {
+    width: 95%;
+  }
 }
 
 .timeslot-batch-creator__bulk-actions {
+  grid-column: 1 / -1;
   display: flex;
   gap: 10px;
   margin-bottom: 15px;
   flex-wrap: wrap;
+  width: 100%;
 }
 
 .timeslot-batch-creator__bulk-button {
@@ -532,6 +550,54 @@
 
 .timeslot-add-content {
   padding-top: 2.5rem;
+  width: 100%;
+}
+
+/* Indicadores visuais para os dias no calendário */
+.calendar-day--fully-selected {
+  background: #28a745 !important;
+  color: white !important;
+}
+
+.calendar-day--partially-selected {
+  background: #ffc107 !important;
+  color: black !important;
+}
+
+.calendar-day--none-selected {
+  /* background: #dc3545 !important; */
+  /* color: white !important; */
+}
+
+.calendar-day-partial-indicator {
+  position: absolute;
+  top: 2px;
+  right: 2px;
+  font-size: 12px;
+  font-weight: bold;
+}
+
+/* Botões adicionais */
+.timeslot-batch-creator__bulk-button--apply-all {
+  background: #17a2b8;
+  color: white;
+  border-color: #17a2b8;
+}
+
+.timeslot-batch-creator__bulk-button--apply-all:hover:not(:disabled) {
+  background: #138496;
+  border-color: #138496;
+}
+
+.timeslot-batch-creator__bulk-button--reset-all {
+  background: #6c757d;
+  color: white;
+  border-color: #6c757d;
+}
+
+.timeslot-batch-creator__bulk-button--reset-all:hover:not(:disabled) {
+  background: #545b62;
+  border-color: #545b62;
 }
 
 /* Responsivo */

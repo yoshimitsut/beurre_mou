@@ -8,28 +8,29 @@ import {
   endOfMonth, 
   eachDayOfInterval, 
   addMonths,
-  subMonths
+  subMonths,
 } from 'date-fns';
 import { ja } from 'date-fns/locale';
 
-// 🔥 CORREÇÃO: Funções para timezone do Japão
-const getJapanDate = (): Date => {
+// ----------------------------------------------------
+// FUNÇÕES DE DATA
+// ----------------------------------------------------
+
+const getJSTDate = (): Date => {
   const now = new Date();
-  const jstOffset = 9 * 60; // JST é UTC+9
-  const localOffset = now.getTimezoneOffset();
-  const jstTime = new Date(now.getTime() + (jstOffset + localOffset) * 60000);
-  return jstTime;
+  const jstString = new Date(now.getTime() + (9 * 60 * 60 * 1000)).toISOString().replace('Z', '+09:00');
+  return new Date(jstString);
 };
 
-const formatDateForJapan = (date: Date): string => {
-  const jstDate = new Date(date.getTime() + (9 * 60 * 60000));
-  const year = jstDate.getFullYear();
-  const month = String(jstDate.getMonth() + 1).padStart(2, '0');
-  const day = String(jstDate.getDate()).padStart(2, '0');
-  return `${year}-${month}-${day}`;
+const formatDateJST = (date: Date): string => {
+  const jstDate = new Date(date.getTime() + (9 * 60 * 60 * 1000));
+  return jstDate.toISOString().split('T')[0];
 };
 
-// TypeScriptの型定義
+// ----------------------------------------------------
+// TIPOS E VARIÁVEIS
+// ----------------------------------------------------
+
 interface TimeslotBatchCreatorProps {
   onTimeslotsCreated?: () => void;
 }
@@ -53,66 +54,335 @@ interface DayTimeSlot {
   limit_slots: number;
 }
 
+interface DaySchedule {
+  date: string;
+  selectedTimes: string[];
+}
+
 const API_BASE_URL = import.meta.env.VITE_API_URL+'/api/timeslots';
 
 type TabType = 'times' | 'days';
 
+// ----------------------------------------------------
+// COMPONENTE PRINCIPAL
+// ----------------------------------------------------
+
 const TimeslotBatchCreator: React.FC<TimeslotBatchCreatorProps> = ({ onTimeslotsCreated }) => {
-  const [activeTab, setActiveTab] = useState<TabType>('days');
-  // 🔥 CORREÇÃO: Usar data do Japão
-  const [selectedDate, setSelectedDate] = useState<string>(formatDateForJapan(getJapanDate())); 
-  const [selectedTimes, setSelectedTimes] = useState<string[]>([]); 
+  
+  const jstToday = getJSTDate();
+  const [selectedDate, setSelectedDate] = useState<string>(formatDateJST(jstToday));
   const [timeSlots, setTimeSlots] = useState<TimeSlot[]>([]);
   const [existingDayTimeSlots, setExistingDayTimeSlots] = useState<DayTimeSlot[]>([]);
+  const [activeTab, setActiveTab] = useState<TabType>('days');
+  const [currentMonth, setCurrentMonth] = useState(jstToday);
   
-  const handleSelectAllTimes = (): void => {
-    const allTimes = timeSlots.map(slot => slot.time_value);
-    setSelectedTimes(allTimes);
-  }
+  const [monthSchedule, setMonthSchedule] = useState<DaySchedule[]>([]);
 
-  const handleDeselectAllTimes = (): void => {
-    setSelectedTimes([]);
-  }
-
-  // 新しい状態: 時間追加フォーム
+  // Estados de UI e Feedback
   const [newTime, setNewTime] = useState<string>('');
   const [isAddingTime, setIsAddingTime] = useState<boolean>(false);
-  
-  // フィードバックの状態（成功/エラー）
   const [statusMessage, setStatusMessage] = useState<string | null>(null);
   const [isError, setIsError] = useState<boolean>(false);
   const [isLoading, setIsLoading] = useState<boolean>(false);
   const [isLoadingTimes, setIsLoadingTimes] = useState<boolean>(true);
-  const [, setIsLoadingExisting] = useState<boolean>(false);
+  const [isLoadingExisting, setIsLoadingExisting] = useState<boolean>(false);
 
-  // 既存の時間帯があるかチェック
-  const hasExistingSlots = existingDayTimeSlots.length > 0;
-
-  // 🔥 CORREÇÃO: Usar data atual do Japão
-  const [currentMonth, setCurrentMonth] = useState(getJapanDate());
-
+  // Calendário
   const monthStart = startOfMonth(currentMonth);
   const monthEnd = endOfMonth(currentMonth);
   const monthDays = eachDayOfInterval({ start: monthStart, end: monthEnd });
 
-  const nextMonth = () => setCurrentMonth(prev => addMonths(prev, 1));
-  const prevMonth = () => setCurrentMonth(prev => subMonths(prev, 1));
-
-  // 🔥 CORREÇÃO: Usar formatação para Japão
-  const handleDateSelect = (date: Date) => {
-    const dateKey = formatDateForJapan(date);
-    setSelectedDate(dateKey);
-    console.log('Data selecionada (JST):', dateKey);
+  // 🔥 CORRIGIR: Funções de navegação do mês
+  const nextMonth = () => {
+    setCurrentMonth(prev => addMonths(prev, 1));
   };
 
+  const prevMonth = () => {
+    setCurrentMonth(prev => subMonths(prev, 1));
+  };
+
+  // 🔥 SIMPLIFICAR: Função para inicializar o schedule
+  const initializeMonthSchedule = (month: Date = currentMonth) => {
+    const monthStart = startOfMonth(month);
+    const monthEnd = endOfMonth(month);
+    const days = eachDayOfInterval({ start: monthStart, end: monthEnd });
+    
+    const allTimeValues = timeSlots.map(slot => slot.time_value);
+    
+    const newSchedule: DaySchedule[] = days.map(day => ({
+      date: formatDateJST(day),
+      selectedTimes: [...allTimeValues] // Todos os horários selecionados por padrão
+    }));
+    
+    setMonthSchedule(newSchedule);
+  };
+
+  // Função para selecionar data
+  const handleDateSelect = (date: Date) => {
+    const dateKey = formatDateJST(date);
+    setSelectedDate(dateKey);
+  };
+
+  // Função para verificar se a data está selecionada
   const isDateSelected = (date: Date) => {
     if (!selectedDate) return false;
-    
-    const dateToCompare = formatDateForJapan(date);
-    return dateToCompare === selectedDate;
+    return formatDateJST(date) === selectedDate;
   };
 
-  // すべての利用可能な時間を取得
+  // Função para verificar se é hoje
+  const isToday = (date: Date) => {
+    return formatDateJST(date) === formatDateJST(jstToday);
+  };
+
+  // 🔥 FUNÇÃO: Obter horários selecionados para a data atual
+  const getSelectedTimesForDate = (date: string): string[] => {
+    const daySchedule = monthSchedule.find(day => day.date === date);
+    return daySchedule ? daySchedule.selectedTimes : [];
+  };
+
+  // 🔥 FUNÇÃO: Atualizar horários para uma data específica
+  const updateSelectedTimesForDate = (date: string, times: string[]) => {
+    setMonthSchedule(prev => 
+      prev.map(day => 
+        day.date === date ? { ...day, selectedTimes: times } : day
+      )
+    );
+  };
+
+  // ----------------------------------------------------
+  // MANIPULADORES DE TEMPO
+  // ----------------------------------------------------
+
+  const handleSelectAllTimes = (): void => {
+    const allTimes = timeSlots.map(slot => slot.time_value);
+    updateSelectedTimesForDate(selectedDate, allTimes);
+  }
+
+  const handleDeselectAllTimes = (): void => {
+    updateSelectedTimesForDate(selectedDate, []);
+  }
+
+  const handleTimeToggle = (time: string): void => {
+    const currentTimes = getSelectedTimesForDate(selectedDate);
+    const newTimes = currentTimes.includes(time) 
+      ? currentTimes.filter(t => t !== time)
+      : [...currentTimes, time].sort();
+    
+    updateSelectedTimesForDate(selectedDate, newTimes);
+  };
+
+  // Aplicar a mesma configuração a todos os dias do mês
+  const handleDeselectAllDays = (): void => {
+    setMonthSchedule(prev => 
+      prev.map(day => ({ ...day, selectedTimes: [] }))
+    );
+    setStatusMessage('すべての日の時間帯を解除しました。');
+    setIsError(false);
+  };
+
+  // Resetar todos os dias para todos os horários selecionados
+  const handleResetAllDays = (): void => {
+    const allTimes = timeSlots.map(slot => slot.time_value);
+    setMonthSchedule(prev => 
+      prev.map(day => ({ ...day, selectedTimes: [...allTimes] }))
+    );
+    setStatusMessage('すべての日をリセットしました（すべての時間帯を選択）。');
+    setIsError(false);
+  };
+
+  // ----------------------------------------------------
+  // FUNÇÕES PARA SALVAMENTO
+  // ----------------------------------------------------
+
+  // Função auxiliar para deletar um slot de tempo
+const deleteTimeSlot = async (slotId: number): Promise<boolean> => {
+  try {
+    const response = await fetch(`${API_BASE_URL}/${slotId}`, {
+      method: 'DELETE',
+    });
+
+    if (!response.ok) {
+      throw new Error(`HTTP error! status: ${response.status}`);
+    }
+
+    const data = await response.json();
+    return data?.success || false;
+  } catch (error) {
+    console.error('削除エラー:', error);
+    return false;
+  }
+};
+
+  // 🔥 SIMPLIFICAR: Função para carregar dados existentes
+const loadExistingData = async () => {
+  try {
+    setIsLoadingExisting(true);
+    const response = await fetch(`${API_BASE_URL}/`);
+    const data = await response.json();
+    
+    console.log('Dados carregados da API:', data);
+    
+    if (data.success && data.timeslots) {
+      setExistingDayTimeSlots(data.timeslots);
+      
+      const currentMonthString = format(currentMonth, 'yyyy-MM');
+      const currentMonthSlots = data.timeslots.filter((slot: DayTimeSlot) => 
+        slot.date.startsWith(currentMonthString)
+      );
+
+      console.log(`Slots do mês atual (${currentMonthString}):`, currentMonthSlots.length);
+
+      // Se há dados para o mês atual, sincronizar
+      if (currentMonthSlots.length > 0) {
+        const monthStart = startOfMonth(currentMonth);
+        const monthEnd = endOfMonth(currentMonth);
+        const monthDays = eachDayOfInterval({ start: monthStart, end: monthEnd });
+        
+        const newSchedule: DaySchedule[] = monthDays.map(day => {
+          const dayDate = formatDateJST(day);
+          const existingTimesForDay = data.timeslots
+            .filter((slot: DayTimeSlot) => slot.date === dayDate)
+            .map((slot: DayTimeSlot) => slot.time);
+          
+          console.log(`Data ${dayDate}: ${existingTimesForDay.length} horários existentes`);
+          
+          return {
+            date: dayDate,
+            selectedTimes: existingTimesForDay
+          };
+        });
+        
+        setMonthSchedule(newSchedule);
+        console.log('Schedule sincronizado com dados existentes');
+      } else {
+        // Se não há dados, inicializar com padrão
+        console.log('Nenhum dado existente, inicializando com padrão');
+        initializeMonthSchedule();
+      }
+    } else {
+      // Se não há timeslots, inicializar com padrão
+      console.log('Resposta sem timeslots, inicializando com padrão');
+      initializeMonthSchedule();
+    }
+  } catch (error) {
+    console.error('既存データ読み込みエラー:', error);
+    // Em caso de erro, inicializar com padrão
+    initializeMonthSchedule();
+  } finally {
+    setIsLoadingExisting(false);
+  }
+};
+
+  // Salvar todos os dias do mês
+const handleSaveAllMonth = async (e: React.FormEvent): Promise<void> => {
+  e.preventDefault();
+  setStatusMessage(null);
+  setIsError(false);
+  setIsLoading(true);
+
+  try {
+    let totalInserted = 0;
+    let totalDeleted = 0;
+
+    // 1. Primeiro deletar TODOS os slots existentes do mês
+    const currentMonthString = format(currentMonth, 'yyyy-MM');
+    const slotsToDelete = existingDayTimeSlots.filter(slot => 
+      slot.date.startsWith(currentMonthString)
+    );
+
+    console.log(`Deletando ${slotsToDelete.length} slots existentes do mês ${currentMonthString}`);
+
+    // Deletar em paralelo para melhor performance
+    const deletePromises = slotsToDelete.map(slot => deleteTimeSlot(slot.id));
+    const deleteResults = await Promise.allSettled(deletePromises);
+    
+    totalDeleted = deleteResults.filter(result => 
+      result.status === 'fulfilled' && result.value === true
+    ).length;
+
+    console.log(`${totalDeleted} slots deletados com sucesso`);
+
+    // 2. Aguardar um pouco para garantir que as deleções foram processadas
+    await new Promise(resolve => setTimeout(resolve, 100));
+
+    // 3. Depois adicionar os novos slots baseados no monthSchedule atual
+    const timeConfigs = new Map<string, string[]>();
+    
+    monthSchedule.forEach(day => {
+      if (day.selectedTimes.length > 0) {
+        const timeKey = day.selectedTimes.join(',');
+        if (!timeConfigs.has(timeKey)) {
+          timeConfigs.set(timeKey, []);
+        }
+        timeConfigs.get(timeKey)!.push(day.date);
+      }
+    });
+
+    console.log(`Configurações únicas a serem enviadas: ${timeConfigs.size}`);
+
+    // Para cada configuração única de horários, enviar em lote
+    for (const [timeKey, dates] of timeConfigs) {
+      const times = timeKey.split(',');
+      
+      const payload = {
+        dates: dates,
+        times: times,
+        limit_slots: 10
+      };
+
+      console.log(`Enviando lote para datas: ${dates.join(', ')} com horários: ${times.join(', ')}`);
+
+      const response = await fetch(`${API_BASE_URL}/batch`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload),
+      });
+
+      const data: ApiResponse = await response.json();
+      
+      if (!response.ok || !data.success) {
+        throw new Error(data.error || `日付 ${dates[0]} などの登録に失敗しました。`);
+      }
+
+      totalInserted += data.inserted;
+      console.log(`Lote inserido: ${data.inserted}, ignorados: ${data.skipped}`);
+    }
+
+    // 4. Atualizar a lista de slots existentes
+    await loadExistingData();
+
+    // 5. Mensagem de resultado
+    let message = `成功！${format(currentMonth, 'yyyy年MM月', { locale: ja })}の時間帯を更新しました。`;
+    
+    if (totalDeleted > 0) {
+      message += ` ${totalDeleted}個の古い時間帯を削除し、`;
+    }
+    
+    if (totalInserted > 0) {
+      message += ` ${totalInserted}個の新しい時間帯を追加しました。`;
+    } else {
+      message += ` すべての時間帯を削除しました。`;
+    }
+
+    setStatusMessage(message);
+    setIsError(false);
+
+    if (onTimeslotsCreated) {
+      onTimeslotsCreated();
+    }
+
+  } catch (error) {
+    console.error('データ送信エラー:', error);
+    setIsError(true);
+    setStatusMessage(`エラー: ${error instanceof Error ? error.message : '不明なエラー'}。API接続を確認してください。`);
+  } finally {
+    setIsLoading(false);
+  }
+};
+  // ----------------------------------------------------
+  // FETCHERS E APIS
+  // ----------------------------------------------------
+
   const fetchTimeSlots = async () => {
     try {
       setIsLoadingTimes(true);
@@ -132,48 +402,26 @@ const TimeslotBatchCreator: React.FC<TimeslotBatchCreatorProps> = ({ onTimeslots
     }
   };
 
+  // 🔥 SIMPLIFICAR: useEffect principal
   useEffect(() => {
-    fetchTimeSlots();
-  }, []);
-
-  // 選択された日付の既存の時間帯を取得
-  useEffect(() => {
-    const fetchExistingTimeSlots = async () => {
-      if (!selectedDate) return;
-
-      try {
-        setIsLoadingExisting(true);
-        const response = await fetch(`${API_BASE_URL}/`);
-        const data = await response.json();
-        
-        if (data.success && data.timeslots) {
-          const existingForSelectedDate = data.timeslots.filter(
-            (slot: DayTimeSlot) => slot.date === selectedDate
-          );
-          setExistingDayTimeSlots(existingForSelectedDate);
-          
-          const existingTimes = existingForSelectedDate.map((slot: DayTimeSlot) => slot.time);
-          setSelectedTimes(existingTimes);
-        }
-      } catch (error) {
-        console.error('既存時間帯取得エラー:', error);
-      } finally {
-        setIsLoadingExisting(false);
-      }
-    };
-
     if (activeTab === 'days') {
-      fetchExistingTimeSlots();
+      const loadData = async () => {
+        setIsLoadingExisting(true);
+        await fetchTimeSlots();
+        await loadExistingData();
+        setIsLoadingExisting(false);
+      };
+      loadData();
     }
-  }, [selectedDate, activeTab]);
+  }, [activeTab, currentMonth]);
 
-  // 新しい時間を追加する関数
+  // Função para adicionar novo tempo
   const handleAddTime = async (e: React.FormEvent) => {
     e.preventDefault();
     
-    if (!newTime) {
+    if (!newTime || timeSlots.some(slot => slot.time_value === newTime)) {
       setIsError(true);
-      setStatusMessage('時間を入力してください。');
+      setStatusMessage('有効で重複しない時間を入力してください。');
       return;
     }
 
@@ -188,7 +436,7 @@ const TimeslotBatchCreator: React.FC<TimeslotBatchCreatorProps> = ({ onTimeslots
         body: JSON.stringify({ time_value: newTime }),
       });
 
-      const data = await response.json();
+      const data: ApiResponse = await response.json();
       
       if (!response.ok || !data.success) {
         throw new Error(data.error || '時間の追加に失敗しました。');
@@ -198,7 +446,6 @@ const TimeslotBatchCreator: React.FC<TimeslotBatchCreatorProps> = ({ onTimeslots
       setIsError(false);
       setNewTime('');
       
-      // 時間リストを再読み込み
       await fetchTimeSlots();
       
     } catch (error) {
@@ -210,7 +457,7 @@ const TimeslotBatchCreator: React.FC<TimeslotBatchCreatorProps> = ({ onTimeslots
     }
   };
 
-  // 時間を削除する関数
+  // Função para deletar um tempo
   const handleDeleteTime = async (timeId: number, timeValue: string) => {
     if (!window.confirm(`時間 ${timeValue} を削除してもよろしいですか？\nこの時間が使用されている日付からも削除されます。`)) {
       return;
@@ -221,7 +468,7 @@ const TimeslotBatchCreator: React.FC<TimeslotBatchCreatorProps> = ({ onTimeslots
         method: 'DELETE',
       });
 
-      const data = await response.json();
+      const data: ApiResponse = await response.json();
       
       if (!response.ok || !data.success) {
         throw new Error(data.error || '時間の削除に失敗しました。');
@@ -230,7 +477,6 @@ const TimeslotBatchCreator: React.FC<TimeslotBatchCreatorProps> = ({ onTimeslots
       setStatusMessage(`時間 ${timeValue} を削除しました！`);
       setIsError(false);
       
-      // 時間リストを再読み込み
       await fetchTimeSlots();
       
     } catch (error) {
@@ -240,145 +486,8 @@ const TimeslotBatchCreator: React.FC<TimeslotBatchCreatorProps> = ({ onTimeslots
     }
   };
 
-  // 時間の選択/選択解除のハンドラー
-  const handleTimeToggle = (time: string): void => {
-    setSelectedTimes(prev => {
-      if (prev.includes(time)) {
-        return prev.filter(t => t !== time);
-      } else {
-        return [...prev, time].sort();
-      }
-    });
-  };
-
-  // 時間帯を削除する関数
-  const deleteTimeSlot = async (slotId: number): Promise<boolean> => {
-    try {
-      const response = await fetch(`${API_BASE_URL}/${slotId}`, {
-        method: 'DELETE',
-      });
-
-      console.log('🗑️ 削除レスポンス status:', response.status);
-      
-      const responseText = await response.text();
-      console.log('🗑️ 削除レスポンス text:', responseText);
-
-      let data;
-      try {
-        data = responseText ? JSON.parse(responseText) : {};
-      } catch (parseError) {
-        console.error('❌ JSON parse error:', parseError);
-        return response.ok;
-      }
-
-      return data.success || response.ok;
-    } catch (error) {
-      console.error('削除エラー:', error);
-      return false;
-    }
-  };
-
-  // フォーム送信のハンドラー
-  const handleSubmit = async (e: React.FormEvent): Promise<void> => {
-    e.preventDefault();
-    setStatusMessage(null);
-    setIsError(false);
-    
-    if (!selectedDate) {
-      setIsError(true);
-      setStatusMessage('日付を選択してください。');
-      return;
-    }
-
-    setIsLoading(true);
-
-    try {
-      let deletedCount = 0;
-      let insertedCount = 0;
-      let skippedCount = 0;
-
-      // 1. 削除された時間帯を処理
-      const timesToDelete = existingDayTimeSlots
-        .filter(slot => !selectedTimes.includes(slot.time))
-        .map(slot => slot.id);
-
-      console.log('🗑️ 削除する時間帯:', timesToDelete);
-
-      // 各削除を実行
-      for (const slotId of timesToDelete) {
-        const success = await deleteTimeSlot(slotId);
-        if (success) {
-          deletedCount++;
-        }
-      }
-
-      // 2. 新しく追加する時間帯を処理
-      const existingTimes = existingDayTimeSlots.map(slot => slot.time);
-      const timesToAdd = selectedTimes.filter(time => !existingTimes.includes(time));
-
-      console.log('➕ 追加する時間帯:', timesToAdd);
-
-      if (timesToAdd.length > 0) {
-        const payload = {
-          dates: [selectedDate],
-          times: timesToAdd,
-          limit_slots: 10
-        };
-
-        const response = await fetch(`${API_BASE_URL}/batch`, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify(payload),
-        });
-
-        const data: ApiResponse = await response.json();
-        
-        if (!response.ok || !data.success) {
-          throw new Error(data.error || '時間帯の登録に失敗しました。');
-        }
-
-        insertedCount = data.inserted;
-        skippedCount = data.skipped;
-      }
-
-      // 3. 既存の時間帯を再読み込み
-      const existingResponse = await fetch(`${API_BASE_URL}/`);
-      const existingData = await existingResponse.json();
-      if (existingData.success && existingData.timeslots) {
-        const existingForSelectedDate = existingData.timeslots.filter(
-          (slot: DayTimeSlot) => slot.date === selectedDate
-        );
-        setExistingDayTimeSlots(existingForSelectedDate);
-      }
-
-      // 4. 結果メッセージを表示
-      let message = '';
-      if (deletedCount > 0 && insertedCount > 0) {
-        message = `成功！${deletedCount}個の時間帯を削除し、${insertedCount}個の時間帯を追加しました。`;
-      } else if (deletedCount > 0) {
-        message = `成功！${deletedCount}個の時間帯を削除しました。`;
-      } else if (insertedCount > 0) {
-        message = `成功！${insertedCount}個の時間帯を追加しました。${skippedCount > 0 ? `(${skippedCount}個は既に存在していたためスキップされました)` : ''}`;
-      } else {
-        message = '変更はありません。';
-      }
-
-      setStatusMessage(message);
-      setIsError(false);
-
-      if (onTimeslotsCreated) {
-        onTimeslotsCreated();
-      }
-
-    } catch (error) {
-      console.error('データ送信エラー:', error);
-      setIsError(true);
-      setStatusMessage(`エラー: ${error instanceof Error ? error.message : '不明なエラー'}。API接続を確認してください。`);
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
+  // Horários selecionados para a data atual
+  const currentSelectedTimes = getSelectedTimesForDate(selectedDate);
 
   return (
     <div className="timeslot-batch-creator">
@@ -390,7 +499,7 @@ const TimeslotBatchCreator: React.FC<TimeslotBatchCreatorProps> = ({ onTimeslots
           className={`timeslot-batch-creator__tab ${activeTab === 'days' ? 'timeslot-batch-creator__tab--active' : ''}`}
           onClick={() => setActiveTab('days')}
         >
-          📅 日別時間帯管理
+          📅 月別編集
         </button>
         <button 
           className={`timeslot-batch-creator__tab ${activeTab === 'times' ? 'timeslot-batch-creator__tab--active' : ''}`}
@@ -407,150 +516,169 @@ const TimeslotBatchCreator: React.FC<TimeslotBatchCreatorProps> = ({ onTimeslots
         {activeTab === 'days' && (
           <div className="timeslot-batch-creator__day-management">
 
-            <h3 className="timeslot-batch-creator__subtitle">日別時間帯設定</h3>
-            <p>日付を選択し、時間帯を管理してください。チェックを外すと時間帯が削除されます。</p>
+            <h3 className="timeslot-batch-creator__subtitle">月別時間帯編集</h3>
+            <p>日付を選択して時間帯を編集してください。すべての時間帯が最初は選択されています。</p>
 
-            <form onSubmit={handleSubmit}>
+            <form onSubmit={handleSaveAllMonth}>
               <div className='timeslot-content'>
                 <div className="timeslot-batch-creator__form-row">
                   <div className="timeslot-batch-creator__form-group">
-                    <label htmlFor="date" className="timeslot-batch-creator__label">収集日:</label>
+                    <label htmlFor="date" className="timeslot-batch-creator__label">設定日:</label>
+                    
                     <div className="month-calendar">
-                    <div className="calendar-header">
-                      <button onClick={prevMonth}>‹</button>
-                      <h3>{format(currentMonth, 'yyyy年MM月', { locale: ja })}</h3>
-                      <button onClick={nextMonth}>›</button>
-                    </div>
-                    
-                    <div className="calendar-grid">
-                      {['日', '月', '火', '水', '木', '金', '土'].map(day => (
-                        <div key={day} className="calendar-weekday">{day}</div>
-                      ))}
-                      
-                      {monthDays.map(day => (
-                        <button
-                          key={day.toString()}
-                          className={`calendar-day ${
-                            isDateSelected(day) ? 'selected' : ''
-                          }`}
-                          onClick={() => handleDateSelect(day)}
-                        >
-                          {format(day, 'd')}
-                        </button>
-                      ))}
-                    </div>
-                    
-                    {/* {selectedDate && (
-                      <div className="selected-date">
-                        選択された日付: {selectedDate}
+                      <div className="calendar-header">
+                        <button type="button" onClick={prevMonth}>‹</button>
+                        <h3>{format(currentMonth, 'yyyy年MM月', { locale: ja })}</h3>
+                        <button type="button" onClick={nextMonth}>›</button>
                       </div>
-                    )} */}
-                  </div>
+                      
+                      <div className="calendar-grid">
+                        {['日', '月', '火', '水', '木', '金', '土'].map(day => (
+                          <div key={day} className="calendar-weekday">{day}</div>
+                        ))}
+                        
+                        {monthDays.map(day => {
+                          const dayDate = formatDateJST(day);
+                          const daySelectedTimes = getSelectedTimesForDate(dayDate);
+                          const isFullySelected = daySelectedTimes.length === timeSlots.length;
+                          const isPartiallySelected = daySelectedTimes.length > 0 && daySelectedTimes.length < timeSlots.length;
+                          
+                          return (
+                            <button
+                              key={day.toString()}
+                              type="button"
+                              className={`calendar-day ${
+                                isDateSelected(day) ? 'selected' : ''
+                              } ${
+                                isToday(day) ? 'today' : ''
+                              } ${
+                                isFullySelected ? 'calendar-day--fully-selected' : 
+                                isPartiallySelected ? 'calendar-day--partially-selected' : 
+                                'calendar-day--none-selected'
+                              }`}
+                              onClick={() => handleDateSelect(day)}
+                              title={`${format(day, 'M月d日')} - ${daySelectedTimes.length}個の時間帯が選択中`}
+                            >
+                              {format(day, 'd')}
+                              {isPartiallySelected && <span className="calendar-day-partial-indicator">•</span>}
+                            </button>
+                          );
+                        })}
+                      </div>
+                    </div>
+                    {/* <div className="selected-date">
+                      編集中: {selectedDate} ({currentSelectedTimes.length}個の時間帯が選択中)
+                    </div> */}
                   </div>
                 </div>
 
-<div className='timeslot-add-content'>
-                {/* 現在登録されている時間帯表示 */}
-                {hasExistingSlots && (
+                <div className='timeslot-add-content'>
                   <div className="timeslot-batch-creator__current-slots">
                     <h4 className="timeslot-batch-creator__subtitle">
-                      📋 {selectedDate} の登録済み時間帯
+                      📋 {selectedDate} の時間帯設定
                     </h4>
                     <p className="timeslot-batch-creator__help-text">
                       ※ チェックを外すと時間帯が削除されます
                     </p>
-                  </div>
-                )}
-
-                {/* 時間選択 */}
-                <div className="timeslot-batch-creator__form-group">
-                  <label className="timeslot-batch-creator__label">
-                    時間帯の選択 ({selectedTimes.length}個選択中)
-                  </label>
-                  
-                  {isLoadingTimes ? (
-                    <div className="timeslot-batch-creator__loading">
-                      時間を読み込み中...
-                    </div>
-                  ) : timeSlots.length === 0 ? (
-                    <div className="timeslot-batch-creator__error">
-                      時間が見つかりません。まず「時間管理」タブで時間を登録してください。
-                    </div>
-                  ) : (
-                    <>
-                      <div className="timeslot-batch-creator__time-grid">
+                    
+                    {/* Botões de ação em massa */}
+                    <div className="timeslot-batch-creator__bulk-actions">
+                      <div className='timeslot-batch-selec-all'>
                         <div>
-                          <div className="timeslot-batch-creator__bulk-actions">
-                            <div className='timeslot-batch-selec-all'>
-                              <button
-                                type="button"
-                                className="timeslot-batch-creator__bulk-button timeslot-batch-creator__bulk-button--select"
-                                onClick={handleSelectAllTimes}
-                                disabled={timeSlots.length === 0 || selectedTimes.length === timeSlots.length}
-                              >
-                                すべて選択
-                              </button>
-                              <button
-                                type="button"
-                                className="timeslot-batch-creator__bulk-button timeslot-batch-creator__bulk-button--deselect"
-                                onClick={handleDeselectAllTimes}
-                                disabled={selectedTimes.length === 0}
-                              >
-                                すべて解除
-                              </button>
-
-                            </div>
-                          </div>
+                          <button
+                            type="button"
+                            className="timeslot-batch-creator__bulk-button timeslot-batch-creator__bulk-button--select"
+                            onClick={handleSelectAllTimes}
+                            disabled={timeSlots.length === 0 || currentSelectedTimes.length === timeSlots.length}
+                          >
+                            すべて選択
+                          </button>
+                          <button
+                            type="button"
+                            className="timeslot-batch-creator__bulk-button timeslot-batch-creator__bulk-button--deselect"
+                            onClick={handleDeselectAllTimes}
+                            disabled={currentSelectedTimes.length === 0}
+                          >
+                            すべて解除
+                          </button>
                         </div>
-
-                        {timeSlots.map((timeSlot) => {
-                          const isExisting = existingDayTimeSlots.some(slot => slot.time === timeSlot.time_value);
-                          const isSelected = selectedTimes.includes(timeSlot.time_value);
-                          
-                          return (
-                            <div 
-                              key={timeSlot.id}
-                              className={`timeslot-batch-creator__time-button ${
-                                isSelected ? 'timeslot-batch-creator__time-button--selected' : ''
-                              } ${
-                                isExisting ? 'timeslot-batch-creator__time-button--existing' : ''
-                              }`}
-                              onClick={() => handleTimeToggle(timeSlot.time_value)}
-                              title={isExisting ? '登録済み - チェックを外すと削除されます' : 'クリックで選択'}
-                            >
-                              {timeSlot.time_value}
-                              {isExisting && <span className="timeslot-batch-creator__existing-badge"> 登録済み</span>}
-                            </div>
-                          );
-                        })}
+                        <div>
+                          <button
+                            type="button"
+                            className="timeslot-batch-creator__bulk-button timeslot-batch-creator__bulk-button--deselect-all"
+                            onClick={handleDeselectAllDays}
+                          >
+                            すべて選択解除
+                          </button>
+                          <button
+                            type="button"
+                            className="timeslot-batch-creator__bulk-button timeslot-batch-creator__bulk-button--reset-all"
+                            onClick={handleResetAllDays}
+                          >
+                            すべて選択
+                          </button>
+                        </div>
                       </div>
-                      
-                      <div className="timeslot-batch-creator__selection-info">
-                        <p className="timeslot-batch-creator__selected-count">
-                          <strong>選択された時間: {selectedTimes.length}個 / {timeSlots.length}個</strong>
-                        </p>
-                        {selectedTimes.length > 0 && (
-                          <p className="timeslot-batch-creator__selected-times">
-                            {selectedTimes.join('、 ')}
+                    </div>
+                  </div>
+
+                  {/* 時間選択 */}
+                  <div className="timeslot-batch-creator__form-group">
+                    {isLoadingTimes || isLoadingExisting ? (
+                      <div className="timeslot-batch-creator__loading">
+                        時間を読み込み中...
+                      </div>
+                    ) : timeSlots.length === 0 ? (
+                      <div className="timeslot-batch-creator__error">
+                        時間が見つかりません。まず「時間管理」タブで時間を登録してください。
+                      </div>
+                    ) : (
+                      <>
+                        <div className="timeslot-batch-creator__time-grid">
+                          {timeSlots.map((timeSlot) => {
+                            const isSelected = currentSelectedTimes.includes(timeSlot.time_value);
+                            
+                            return (
+                              <div 
+                                key={timeSlot.id}
+                                className={`timeslot-batch-creator__time-button ${
+                                  isSelected ? 'timeslot-batch-creator__time-button--selected' : ''
+                                }`}
+                                onClick={() => handleTimeToggle(timeSlot.time_value)}
+                                title="クリックで選択/解除"
+                              >
+                                {timeSlot.time_value}
+                              </div>
+                            );
+                          })}
+                        </div>
+                        
+                        {/* <div className="timeslot-batch-creator__selection-info">
+                          <p className="timeslot-batch-creator__selected-count">
+                            <strong>
+                              {currentSelectedTimes.length === timeSlots.length 
+                                ? 'すべての時間帯が選択されています' 
+                                : `${currentSelectedTimes.length}個の時間帯が選択されています`}
+                            </strong>
                           </p>
-                        )}
-                      </div>
-                    </>
-                  )}
+                        </div> */}
+                      </>
+                    )}
+                  </div>
                 </div>
-
-      </div>
               </div>
 
-            <button 
-              type="submit" 
-              className="timeslot-batch-creator__submit-button"
-              disabled={isLoading || !selectedDate}
-            >
-              {isLoading ? '保存中...' : `変更を保存`}
-            </button>
-          </form>
-        </div>
+              <div className='timeslot-batch-creator__submit-div'>
+                <button 
+                  type="submit" 
+                  className="timeslot-batch-creator__submit-button"
+                  disabled={isLoading || isLoadingExisting}
+                >
+                  {isLoading ? '保存中...' : `${format(currentMonth, 'yyyy年MM月', { locale: ja })}の全${monthSchedule.length}日分を保存`}
+                </button>
+              </div>
+            </form>
+          </div>
         )}
 
         {/* Aba: Gerenciamento de Horários */}
@@ -559,7 +687,6 @@ const TimeslotBatchCreator: React.FC<TimeslotBatchCreatorProps> = ({ onTimeslots
             <h3 className="timeslot-batch-creator__subtitle">時間管理</h3>
             <p>利用可能な時間を追加または削除します。</p>
             
-            {/* 時間追加フォーム */}
             <form onSubmit={handleAddTime} className="timeslot-batch-creator__add-time-form">
               <div className="timeslot-batch-creator__form-group">
                 <label htmlFor="newTime" className="timeslot-batch-creator__label">新しい時間:</label>
@@ -570,6 +697,7 @@ const TimeslotBatchCreator: React.FC<TimeslotBatchCreatorProps> = ({ onTimeslots
                   onChange={(e) => setNewTime(e.target.value)}
                   required
                   className="timeslot-batch-creator__input"
+                  placeholder="例: 11:00〜12:00"
                 />
               </div>
               <button 
@@ -581,7 +709,6 @@ const TimeslotBatchCreator: React.FC<TimeslotBatchCreatorProps> = ({ onTimeslots
               </button>
             </form>
 
-            {/* 時間リスト */}
             <div className="timeslot-batch-creator__time-list">
               <h4 className="timeslot-batch-creator__list-title">利用可能な時間 ({timeSlots.length}個)</h4>
               {timeSlots.length === 0 ? (
