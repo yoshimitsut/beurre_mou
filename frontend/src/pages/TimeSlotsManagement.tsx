@@ -9,6 +9,9 @@ import {
   eachDayOfInterval, 
   addMonths,
   subMonths,
+  getDay,
+  subDays,
+  addDays
 } from 'date-fns';
 import { ja } from 'date-fns/locale';
 
@@ -68,7 +71,6 @@ type TabType = 'times' | 'days';
 // ----------------------------------------------------
 
 const TimeslotBatchCreator: React.FC<TimeslotBatchCreatorProps> = ({ onTimeslotsCreated }) => {
-  
   const jstToday = getJSTDate();
   const [selectedDate, setSelectedDate] = useState<string>(formatDateJST(jstToday));
   const [timeSlots, setTimeSlots] = useState<TimeSlot[]>([]);
@@ -87,10 +89,54 @@ const TimeslotBatchCreator: React.FC<TimeslotBatchCreatorProps> = ({ onTimeslots
   const [isLoadingTimes, setIsLoadingTimes] = useState<boolean>(true);
   const [isLoadingExisting, setIsLoadingExisting] = useState<boolean>(false);
 
+  // 🔥 FUNÇÃO CORRIGIDA: Gerar dias do calendário com preenchimento
+  const generateCalendarDays = (month: Date) => {
+    const monthStart = startOfMonth(month);
+    const monthEnd = endOfMonth(month);
+    
+    // Dias do mês atual
+    const monthDays = eachDayOfInterval({ start: monthStart, end: monthEnd });
+    
+    // Dias do mês anterior para preencher o início
+    const startDayOfWeek = getDay(monthStart); // 0 = Domingo, 1 = Segunda, etc.
+    const daysFromPrevMonth = startDayOfWeek; // Número de dias do mês anterior para mostrar
+    
+    const prevMonthEnd = endOfMonth(subMonths(month, 1));
+    const prevMonthDays = eachDayOfInterval({
+      start: subDays(prevMonthEnd, daysFromPrevMonth - 1),
+      end: prevMonthEnd
+    }).slice(-daysFromPrevMonth || 0);
+
+    // Dias do próximo mês para completar (6 semanas no total)
+    const totalCells = 42; // 6 semanas * 7 dias
+    const nextMonthStart = startOfMonth(addMonths(month, 1));
+    const remainingDays = totalCells - (prevMonthDays.length + monthDays.length);
+    const nextMonthDays = eachDayOfInterval({
+      start: nextMonthStart,
+      end: addDays(nextMonthStart, Math.max(0, remainingDays - 1))
+    });
+
+    return [
+      ...prevMonthDays.map(day => ({ 
+        date: day, 
+        isCurrentMonth: false, 
+        isOtherMonth: true 
+      })),
+      ...monthDays.map(day => ({ 
+        date: day, 
+        isCurrentMonth: true, 
+        isOtherMonth: false 
+      })),
+      ...nextMonthDays.map(day => ({ 
+        date: day, 
+        isCurrentMonth: false, 
+        isOtherMonth: true 
+      }))
+    ];
+  };
+
   // Calendário
-  const monthStart = startOfMonth(currentMonth);
-  const monthEnd = endOfMonth(currentMonth);
-  const monthDays = eachDayOfInterval({ start: monthStart, end: monthEnd });
+  const calendarDays = generateCalendarDays(currentMonth);
 
   // 🔥 CORRIGIR: Funções de navegação do mês
   const nextMonth = () => {
@@ -537,38 +583,47 @@ const handleSaveAllMonth = async (e: React.FormEvent): Promise<void> => {
                           <div key={day} className="calendar-weekday">{day}</div>
                         ))}
                         
-                        {monthDays.map(day => {
-                          const dayDate = formatDateJST(day);
+                        {calendarDays.map(({ date, isCurrentMonth }) => {
+                          if (!isCurrentMonth) {
+                            // Dias de outros meses - mostrar vazios
+                            return (
+                              <div
+                                key={date.toString()}
+                                className="calendar-day calendar-day--other-month"
+                              >
+                                {format(date, 'd')}
+                              </div>
+                            );
+                          }
+
+                          const dayDate = formatDateJST(date);
                           const daySelectedTimes = getSelectedTimesForDate(dayDate);
                           const isFullySelected = daySelectedTimes.length === timeSlots.length;
                           const isPartiallySelected = daySelectedTimes.length > 0 && daySelectedTimes.length < timeSlots.length;
                           
                           return (
                             <button
-                              key={day.toString()}
+                              key={date.toString()}
                               type="button"
                               className={`calendar-day ${
-                                isDateSelected(day) ? 'selected' : ''
+                                isDateSelected(date) ? 'selected' : ''
                               } ${
-                                isToday(day) ? 'today' : ''
+                                isToday(date) ? 'today' : ''
                               } ${
                                 isFullySelected ? 'calendar-day--fully-selected' : 
                                 isPartiallySelected ? 'calendar-day--partially-selected' : 
                                 'calendar-day--none-selected'
                               }`}
-                              onClick={() => handleDateSelect(day)}
-                              title={`${format(day, 'M月d日')} - ${daySelectedTimes.length}個の時間帯が選択中`}
+                              onClick={() => handleDateSelect(date)}
+                              title={`${format(date, 'M月d日')} - ${daySelectedTimes.length}個の時間帯が選択中`}
                             >
-                              {format(day, 'd')}
+                              {format(date, 'd')}
                               {isPartiallySelected && <span className="calendar-day-partial-indicator">•</span>}
                             </button>
                           );
                         })}
                       </div>
                     </div>
-                    {/* <div className="selected-date">
-                      編集中: {selectedDate} ({currentSelectedTimes.length}個の時間帯が選択中)
-                    </div> */}
                   </div>
                 </div>
 
@@ -652,16 +707,6 @@ const handleSaveAllMonth = async (e: React.FormEvent): Promise<void> => {
                             );
                           })}
                         </div>
-                        
-                        {/* <div className="timeslot-batch-creator__selection-info">
-                          <p className="timeslot-batch-creator__selected-count">
-                            <strong>
-                              {currentSelectedTimes.length === timeSlots.length 
-                                ? 'すべての時間帯が選択されています' 
-                                : `${currentSelectedTimes.length}個の時間帯が選択されています`}
-                            </strong>
-                          </p>
-                        </div> */}
                       </>
                     )}
                   </div>

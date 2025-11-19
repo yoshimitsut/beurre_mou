@@ -600,6 +600,45 @@
   border-color: #545b62;
 }
 
+/* Estilos para dias de outros meses */
+.calendar-day--other-month {
+  padding: 12px 8px;
+  border: 2px solid transparent;
+  background: #f9f9f9;
+  cursor: default;
+  text-align: center;
+  border-radius: 8px;
+  font-size: 14px;
+  color: transparent !important;
+  min-height: 44px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* Garantir que o grid tenha sempre 42 células (6 semanas) */
+.calendar-grid {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  grid-template-rows: repeat(6, 1fr);
+  gap: 4px;
+  text-align: center;
+  min-height: 264px; /* 6 linhas * 44px */
+}
+
+/* Ajustes para responsividade */
+@media (max-width: 480px) {
+  .calendar-grid {
+    min-height: 240px; /* Um pouco menor em mobile */
+  }
+  
+  .calendar-day--other-month {
+    padding: 10px 6px;
+    min-height: 40px;
+    font-size: 13px;
+  }
+}
+
 /* Responsivo */
 @media (max-width: 480px) {
   .month-calendar {

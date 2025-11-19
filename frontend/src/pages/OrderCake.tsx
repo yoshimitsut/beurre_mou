@@ -46,7 +46,7 @@ export default function OrderCake() {
 
   const [, setFruitOption] = useState<"有り" | "無し">("無し");
 
-  // const diasEspecificosPorMes = [
+  // const diasEspecificosPorMes = [  
   //   { day: 14, month: 11 }, 
   //   { day: 15, month: 11 }, 
   //   { day: 22, month: 11 }, 
@@ -66,7 +66,7 @@ export default function OrderCake() {
   //   { day: 19, month: 12 }, 
   //   { day: 25, month: 12 }, 
   //   { day: 26, month: 12 },
-  // ];
+  // ]; 
 
   // const gerarDiasBloqueadosInicio = () => {
   //   const datas = [];
@@ -277,7 +277,7 @@ const isDateAllowed = (date: Date) => {
           </div>
           <div className='notice'>
             <div className='selectable'></div>
-            <span>予約可能日  /  <span className='yassumi'>x</span> 予約不可</span>
+            <span>予約可能日  /  <span className='yassumi'>休</span> 予約不可</span>
           </div>
         </div>
       </div>
@@ -342,8 +342,8 @@ const renderDayContents = (day: number, date: Date) => {
   return (
     <div className={`day-cell ${extraClass}`}>
       <span>{day}</span>
-      {!isSelectable && <span className="yassumi">✕</span>}
-      {isSelectable && <div className="selectable"></div>}
+      {!isSelectable && <span className="yassumi day-content">休</span>}
+      {isSelectable && <div className="selectable day-content"></div>}
     </div>
   );
 };
@@ -698,23 +698,23 @@ const customStylesHour: StylesConfig<TimeOptionType, false> = {
             <div className='input-group'>
               <label htmlFor="datepicker" className='datepicker'>*受け取り希望日</label>
               <DatePicker
-                selected={selectedDate}
-                onChange={(date) => setSelectedDate(date)}
-                minDate={today}
-                maxDate={maxDate}
-                // includeDates={availableDatesFromSQL}
-                excludeDates={excludedDates}
-                filterDate={isDateAllowed}
-                dateFormat="yyyy年MM月dd日"
-                locale={ja}
-                placeholderText="日付を選択"
-                dayClassName={getDayClassName}
-                className="react-datepicker"
-                calendarClassName="datepicker-calendar"
-                calendarContainer={MyContainer}
-                required
-                renderDayContents={renderDayContents}
-              />
+  selected={selectedDate}
+  onChange={(date) => setSelectedDate(date)}
+  minDate={today}
+  maxDate={maxDate}
+  excludeDates={excludedDates}
+  filterDate={isDateAllowed}
+  dateFormat="yyyy年MM月dd日"
+  locale={ja}
+  placeholderText="日付を選択"
+  dayClassName={getDayClassName}
+  className="react-datepicker"
+  calendarClassName="datepicker-calendar"
+  calendarContainer={MyContainer}
+  required
+  renderDayContents={renderDayContents}
+  // Não adicione showOtherMonths - use apenas CSS
+/>
             </div>
 
             <div className='input-group'>
