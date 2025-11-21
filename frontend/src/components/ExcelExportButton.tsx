@@ -1,5 +1,5 @@
-import * as XLSX from 'xlsx';
 import React from 'react';
+import ExcelJS from 'exceljs';
 
 import type { Order, OrderCake } from '../types/types';
 
@@ -7,66 +7,99 @@ type ExcelExportButtonProps = {
   data: Order[];
   filename: string;
   sheetName: string;
-}
+};
 
-// 🔥 CORREÇÃO: Mapear os valores do banco para os labels
+// 🔥 Mapeamento dos status
 const statusOptions: Record<string, string> = {
-  "a": "未",
-  "b": "オンライン予約", 
-  "c": "店頭支払い済",
-  "d": "お渡し済",
-  "e": "キャンセル",
+  a: "未",
+  b: "オンライン予約",
+  c: "店頭支払い済",
+  d: "お渡し済",
+  e: "キャンセル",
 };
 
-const formatDataForExcel = (orders: Order[]) => {
-  return orders.flatMap((order) => {
-    return order.cakes.map((cake: OrderCake) => ({
-      '受付番号': String(order.id_order).padStart(4, "0"),
-      'お会計': statusOptions[order.status] || order.status,
-      'お名前': `${order.first_name} ${order.last_name}`,
-      'ケーキ名': cake.name,
-      'サイズ/価格': cake.size,
-      '個数': cake.amount,
-      '受取日': order.date,
-      '受け取り時間': order.pickupHour,
-      'メッセージ ケーキ': cake.message_cake || 'なし',
-      'その他': order.message || 'なし',
-      '注文日': order.date_order && order.date_order.split('T')[0],
-      '電話番号': order.tel,
-      'メールアドレス': order.email,
-    }))
-  })
-}
+// 🔥 Tipo para garantir que todas as linhas sejam indexáveis
+type ExcelRow = Record<string, string>;
 
-const handleExport = (data: Order[], filename: string, sheetName: string) => {
+/**
+ * Converte orders → formato seguro para Excel (somente strings)
+ */
+const formatDataForExcel = (orders: Order[]): ExcelRow[] => {
+  return orders.flatMap((order) =>
+    order.cakes.map((cake: OrderCake) => {
+      const row: ExcelRow = {
+        "受付番号": String(order.id_order).padStart(4, "0"),
+        "お会計": statusOptions[order.status] || order.status,
+        "お名前": `${order.first_name} ${order.last_name}`,
+        "ケーキ名": cake.name,
+        "サイズ/価格": String(cake.size ?? ""),
+        "個数": String(cake.amount),
+        "受取日": order.date,
+        "受け取り時間": order.pickupHour,
+        "メッセージ ケーキ": cake.message_cake || "なし",
+        "その他": order.message || "なし",
+        "注文日": order.date_order?.split("T")[0] ?? "",
+        "電話番号": order.tel,
+        "メールアドレス": order.email,
+      };
+      return row;
+    })
+  );
+};
+
+const handleExport = async (data: Order[], filename: string, sheetName: string) => {
+  const workbook = new ExcelJS.Workbook();
+  const worksheet = workbook.addWorksheet(sheetName);
+
   const formattedData = formatDataForExcel(data);
-  
-  // 🔥 CORREÇÃO: Remover as opções inválidas
-  const worksheet = XLSX.utils.json_to_sheet(formattedData);
-  
-  // 🔥 CORREÇÃO: Forçar células como string manualmente
-  const range = XLSX.utils.decode_range(worksheet['!ref'] || 'A1');
-  for (let R = range.s.r; R <= range.e.r; ++R) {
-    for (let C = range.s.c; C <= range.e.c; ++C) {
-      const cell_address = { c: C, r: R };
-      const cell_ref = XLSX.utils.encode_cell(cell_address);
-      if (worksheet[cell_ref]) {
-        worksheet[cell_ref].t = 's'; // 's' = string
-      }
-    }
-  }
-  
-  const workbook = XLSX.utils.book_new();
-  XLSX.utils.book_append_sheet(workbook, worksheet, sheetName);
-  XLSX.writeFile(workbook, filename);
+  if (formattedData.length === 0) return;
+
+  const headers = Object.keys(formattedData[0]);
+
+  // console.log("headers:", headers);
+  // console.log("first row:", formattedData[0]);
+
+  // 👉 ⭐ NECESSÁRIO PARA QUE addRow(obj) FUNCIONE
+  worksheet.columns = headers.map(h => ({
+    header: h,
+    key: h,
+    width: 20,
+  }));
+
+  // 👉 Agora funciona
+  formattedData.forEach((row) => {
+    worksheet.addRow(row);
+  });
+
+  // Gerar arquivo
+  const buffer = await workbook.xlsx.writeBuffer();
+  const blob = new Blob([buffer], {
+    type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+  });
+
+  const url = URL.createObjectURL(blob);
+  const link = document.createElement("a");
+  link.href = url;
+  link.download = filename;
+  link.click();
+  URL.revokeObjectURL(url);
 };
 
-const ExcelExportButton: React.FC<ExcelExportButtonProps> = ({ data, filename, sheetName}) => {
+
+
+const ExcelExportButton: React.FC<ExcelExportButtonProps> = ({
+  data,
+  filename,
+  sheetName,
+}) => {
   return (
-    <button onClick={() => handleExport(data, filename, sheetName)} className='list-btn excel-btn'>
-      <img src='/icons/file-download.ico' alt='excel icon' />
+    <button
+      onClick={() => handleExport(data, filename, sheetName)}
+      className="list-btn excel-btn"
+    >
+      <img src="/icons/file-download.ico" alt="excel icon" />
     </button>
-  )
-}
+  );
+};
 
 export default ExcelExportButton;
