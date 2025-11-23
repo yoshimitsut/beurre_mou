@@ -606,7 +606,22 @@ const handleSaveAllMonth = async (e: React.FormEvent): Promise<void> => {
                   <div className="timeslot-batch-creator__form-row">
                     <div className="timeslot-batch-creator__form-group">
                       <label htmlFor="date" className="timeslot-batch-creator__label">設定日:</label>
-                      
+                      <div className='timeslot-batch-selec-all-day'>
+                          <button
+                            type="button"
+                            className="timeslot-batch-creator__bulk-button timeslot-batch-creator__bulk-button--deselect-all"
+                            onClick={handleDeselectAllDays}
+                          >
+                            すべて選択解除
+                          </button>
+                          <button
+                            type="button"
+                            className="timeslot-batch-creator__bulk-button timeslot-batch-creator__bulk-button--reset-all"
+                            onClick={handleResetAllDays}
+                          >
+                            すべて選択
+                          </button>
+                        </div>
                       <div className="month-calendar">
                         <div className="calendar-header">
                           <button type="button" onClick={prevMonth}>‹</button>
@@ -669,22 +684,6 @@ const handleSaveAllMonth = async (e: React.FormEvent): Promise<void> => {
                         <h4 className="timeslot-batch-creator__subtitle">
                           📋 {selectedDate} の時間帯設定
                         </h4>
-                        <div className='timeslot-batch-selec-all-day'>
-                          <button
-                            type="button"
-                            className="timeslot-batch-creator__bulk-button timeslot-batch-creator__bulk-button--deselect-all"
-                            onClick={handleDeselectAllDays}
-                          >
-                            すべて選択解除
-                          </button>
-                          <button
-                            type="button"
-                            className="timeslot-batch-creator__bulk-button timeslot-batch-creator__bulk-button--reset-all"
-                            onClick={handleResetAllDays}
-                          >
-                            すべて選択
-                          </button>
-                        </div>
                       </div>
                       
                     </div>
@@ -747,7 +746,7 @@ const handleSaveAllMonth = async (e: React.FormEvent): Promise<void> => {
                       )}
                     </div>
                     <p className="timeslot-batch-creator__help-text">
-                      ※ チェックを外すと時間帯が削除されます。
+                      ※ 初期設定ではすべての時間帯が選択されています。
                     </p>
                   </div>
                 </div>
