@@ -14,7 +14,7 @@
   font-size: 24px;
   color: #333;
   margin-bottom: 20px;
-  border-bottom: 2px solid #eee;
+  /* border-bottom: 2px solid #eee; */
   padding-bottom: 10px;
 }
 
@@ -285,7 +285,7 @@
 
 .timeslot-batch-creator__time-items {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+  grid-template-columns: repeat(auto-fill, minmax(142px, 1fr));
   gap: 12px;
 }
 
@@ -309,13 +309,14 @@
   font-weight: 600;
   color: #495057;
   font-size: 16px;
+  padding-right: 5px;
 }
 
 .timeslot-batch-creator__delete-time-button {
   background-color: #dc3545;
   color: white;
   border: none;
-  padding: 6px 12px;
+  padding: 6px 8px;
   border-radius: 4px;
   cursor: pointer;
   font-size: 12px;
@@ -482,6 +483,20 @@
   display: flex;
   justify-content: space-between;
   width: 100%;
+  gap: 10px;
+  
+  button {
+    width: 95%;
+  }
+}
+
+.timeslot-batch-selec-all-day {
+  display: flex;
+  justify-content: space-between;
+  width: 100%;
+  gap: 10px;
+  padding-bottom: 1rem;
+
   button {
     width: 95%;
   }
@@ -491,7 +506,7 @@
   grid-column: 1 / -1;
   display: flex;
   gap: 10px;
-  margin-bottom: 15px;
+  margin-top: 15px;
   flex-wrap: wrap;
   width: 100%;
 }
@@ -671,6 +686,15 @@
   }
 }
 
+.timeslot-batch-creator-header {
+  display: flex;
+  justify-content: space-between;
+}
+
+.btn-back {
+    border: 2px solid #000;
+  }
+
 
 @media (max-width: 680px) {
   .timeslot-content {
@@ -705,10 +729,11 @@
   
   .timeslot-batch-creator__add-time-form .timeslot-batch-creator__form-group {
     margin-bottom: 15px;
+    display: contents;
   }
   
   .timeslot-batch-creator__time-items {
-    grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
+    grid-template-columns: repeat(auto-fill, minmax(142px, 1fr));
   }
   
   .timeslot-batch-creator__tab-content {
