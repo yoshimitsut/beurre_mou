@@ -599,7 +599,7 @@ const handleSaveAllMonth = async (e: React.FormEvent): Promise<void> => {
             <div className="timeslot-batch-creator__day-management">
 
               <h3 className="timeslot-batch-creator__subtitle">月別時間帯編集</h3>
-              <p>日付を選択して時間帯を編集してください。すべての時間帯が最初は選択されています。</p>
+              <p>日付を選択して時間帯を編集してください。</p>
 
               <form onSubmit={handleSaveAllMonth}>
                 <div className='timeslot-content'>
