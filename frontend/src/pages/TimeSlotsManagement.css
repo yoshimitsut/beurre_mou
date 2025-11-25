@@ -1,5 +1,18 @@
 /* TimeslotBatchCreator.css */
 
+/* RESET MAIS AGRESSIVO - Use apenas se necessário */
+* {
+  -webkit-tap-highlight-color: transparent !important;
+}
+
+button, 
+input[type="button"], 
+input[type="submit"] {
+  -webkit-appearance: none !important;
+  -moz-appearance: none !important;
+  appearance: none !important;
+}
+
 .timeslot-batch-creator {
   padding: 30px;
   background-color: #ffffff;
@@ -14,7 +27,6 @@
   font-size: 24px;
   color: #333;
   margin-bottom: 20px;
-  /* border-bottom: 2px solid #eee; */
   padding-bottom: 10px;
 }
 
@@ -75,6 +87,7 @@
   font-weight: bold;
   box-shadow: 0 2px 4px rgba(0, 123, 255, 0.3);
 }
+
 .timeslot-batch-creator__submit-div {
   width: 100%;
   display: flex;
@@ -84,13 +97,13 @@
 .timeslot-batch-creator__submit-button {
   background-color: #28a745;
   color: white;
-  padding: 12px 25px;
+  padding: 8px 25px;
   border: none;
   border-radius: 6px;
   cursor: pointer;
   font-size: 16px;
   font-weight: bold;
-  margin-top: 20px;
+  margin-top: 10px;
   transition: background-color 0.3s;
 }
 
@@ -116,23 +129,6 @@
   border: 1px solid #c3e6cb;
 }
 
-.timeslot-batch-creator__message--error {
-  color: #721c24;
-  background-color: #f8d7da;
-  border: 1px solid #f5c6cb;
-}
-
-.timeslot-batch-creator__selected-times {
-  margin-top: 10px;
-  font-size: 14px;
-  color: #777;
-}
-
-.timeslot-batch-creator__selected-times strong {
-  margin-left: 5px;
-}
-
-
 .timeslot-batch-creator__loading {
   padding: 20px;
   text-align: center;
@@ -142,18 +138,6 @@
   border-radius: 6px;
   border: 1px solid #e9ecef;
 }
-
-.timeslot-batch-creator__error {
-  padding: 20px;
-  text-align: center;
-  color: #721c24;
-  background-color: #f8d7da;
-  border: 1px solid #f5c6cb;
-  border-radius: 6px;
-  font-weight: bold;
-}
-
-/* TimeSlotsManagement.css - Estilos para o sistema de abas */
 
 /* Sistema de abas */
 .timeslot-batch-creator__tabs {
@@ -343,133 +327,6 @@
   gap: 2rem;
 }
 
-
-/* MonthCalendar.css */
-.month-calendar {
-  border: 1px solid #e0e0e0;
-  border-radius: 12px;
-  padding: 20px;
-  max-width: 350px;
-  background: white;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
-  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
-}
-
-.calendar-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-bottom: 20px;
-  padding-bottom: 16px;
-  border-bottom: 1px solid #f0f0f0;
-}
-
-.calendar-header button {
-  background: #f8f9fa;
-  border: 1px solid #dee2e6;
-  border-radius: 6px;
-  padding: 8px 12px;
-  cursor: pointer;
-  font-size: 16px;
-  transition: all 0.2s;
-}
-
-.calendar-header button:hover {
-  background: #e9ecef;
-  border-color: #adb5bd;
-}
-
-.calendar-header h3 {
-  margin: 0;
-  font-size: 18px;
-  font-weight: 600;
-  color: #333;
-}
-
-.calendar-grid {
-  display: grid;
-  grid-template-columns: repeat(7, 1fr);
-  gap: 4px;
-  text-align: center;
-}
-
-.calendar-weekday {
-  padding: 12px 8px;
-  font-weight: 600;
-  font-size: 14px;
-  color: #666;
-  background: #f8f9fa;
-  border-radius: 6px;
-}
-
-/* Estilo para domingos */
-.calendar-weekday:nth-child(1) {
-  color: #e74c3c;
-}
-
-/* Estilo para sábados */
-.calendar-weekday:nth-child(7) {
-  color: #3498db;
-}
-
-.calendar-day {
-  padding: 12px 8px;
-  border: 2px solid transparent;
-  background: white;
-  cursor: pointer;
-  text-align: center;
-  border-radius: 8px;
-  font-size: 14px;
-  transition: all 0.2s;
-  min-height: 44px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
-
-.calendar-day:hover {
-  background: #f8f9fa;
-  border-color: #dee2e6;
-}
-
-.calendar-day.selected {
-  background: #007bff;
-  color: white;
-  border-color: #007bff;
-  font-weight: 600;
-}
-
-/* Estilo para domingos */
-.calendar-day:nth-child(7n + 1) {
-  color: #e74c3c;
-}
-
-.calendar-day.selected:nth-child(7n + 1) {
-  background: #e74c3c;
-  color: white;
-}
-
-/* Estilo para sábados */
-.calendar-day:nth-child(7n) {
-  color: #3498db;
-}
-
-.calendar-day.selected:nth-child(7n) {
-  background: #3498db;
-  color: white;
-}
-
-.selected-date {
-  margin-top: 16px;
-  padding: 12px;
-  background: #f8f9fa;
-  border-radius: 8px;
-  text-align: center;
-  font-weight: 500;
-  color: #333;
-  border: 1px solid #e9ecef;
-}
-
 .timeslot-batch-creator__help-text{
   font-size: 0.8rem;
 }
@@ -478,7 +335,6 @@
   font-size: 0.8;
 }
 
-/* TimeSlotsManagement.css - Adicione estas regras */
 .timeslot-batch-selec-all{
   display: flex;
   justify-content: space-between;
@@ -517,7 +373,7 @@
   border-radius: 6px;
   background: white;
   cursor: pointer;
-  font-size: 14px;
+  font-size: 13px;
   transition: all 0.2s;
 }
 
@@ -554,54 +410,9 @@
   transform: none;
 }
 
-.timeslot-batch-creator__selected-count {
-  margin-top: 10px;
-  padding: 8px;
-  background: #f8f9fa;
-  border-radius: 4px;
-  border-left: 4px solid #007bff;
-}
-
-
 .timeslot-add-content {
   padding-top: 2.5rem;
   width: 100%;
-}
-
-/* Indicadores visuais para os dias no calendário */
-.calendar-day--fully-selected {
-  background: #28a745 !important;
-  color: white !important;
-}
-
-.calendar-day--partially-selected {
-  background: #ffc107 !important;
-  color: black !important;
-}
-
-.calendar-day--none-selected {
-  /* background: #dc3545 !important; */
-  /* color: white !important; */
-}
-
-.calendar-day-partial-indicator {
-  position: absolute;
-  top: 2px;
-  right: 2px;
-  font-size: 12px;
-  font-weight: bold;
-}
-
-/* Botões adicionais */
-.timeslot-batch-creator__bulk-button--apply-all {
-  background: #17a2b8;
-  color: white;
-  border-color: #17a2b8;
-}
-
-.timeslot-batch-creator__bulk-button--apply-all:hover:not(:disabled) {
-  background: #138496;
-  border-color: #138496;
 }
 
 .timeslot-batch-creator__bulk-button--reset-all {
@@ -615,87 +426,203 @@
   border-color: #545b62;
 }
 
-/* Estilos para dias de outros meses */
-.calendar-day--other-month {
-  padding: 12px 8px;
-  border: 2px solid transparent;
-  background: #f9f9f9;
-  cursor: default;
-  text-align: center;
-  border-radius: 8px;
-  font-size: 14px;
-  color: transparent !important;
-  min-height: 44px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
-
-/* Garantir que o grid tenha sempre 42 células (6 semanas) */
-.calendar-grid {
-  display: grid;
-  grid-template-columns: repeat(7, 1fr);
-  grid-template-rows: repeat(6, 1fr);
-  gap: 4px;
-  text-align: center;
-  min-height: 264px; /* 6 linhas * 44px */
-}
-
-/* Ajustes para responsividade */
-@media (max-width: 480px) {
-  .calendar-grid {
-    min-height: 240px; /* Um pouco menor em mobile */
-  }
-  
-  .calendar-day--other-month {
-    padding: 10px 6px;
-    min-height: 40px;
-    font-size: 13px;
-  }
-}
-
-/* Responsivo */
-@media (max-width: 480px) {
-  .month-calendar {
-    padding: 16px;
-    max-width: 100%;
-  }
-  
-  .calendar-day {
-    padding: 10px 6px;
-    min-height: 40px;
-    font-size: 13px;
-  }
-  
-  .calendar-weekday {
-    padding: 10px 6px;
-    font-size: 13px;
-  }
-
-  .timeslot-batch-creator__subtitle {
-    font-size: 18px;
-  }
-
-  .timeslot-batch-creator__help-text 
-  .timeslot-batch-creator__label 
-  .timeslot-batch-creator__selection-info 
-  .timeslot-batch-creator__day-management
-  .timeslot-batch-creator__message 
-  .timeslot-batch-creator__message--success{
-    font-size: 14px;
-  }
-}
-
 .timeslot-batch-creator-header {
   display: flex;
   justify-content: space-between;
 }
 
 .btn-back {
-    border: 2px solid #000;
+  border: 2px solid #000;
+}
+
+/* Adicione ao seu TimeSlotsManagement.css */
+.date-picker-container {
+  border: 1px solid #ddd;
+  border-radius: 8px;
+  padding: 15px;
+  background: white;
+  margin-bottom: 15px;
+}
+
+/* Sobrescreva estilos do react-datepicker */
+.react-datepicker {
+  border: none !important;
+  font-family: inherit !important;
+  width: 100% !important;
+}
+
+.react-datepicker__month-container {
+  float: none !important;
+  width: 100% !important;
+}
+
+.react-datepicker__header {
+  background: white !important;
+  border-bottom: 1px solid #eee !important;
+}
+
+.react-datepicker__day--selected {
+  background: #007bff !important;
+  border-radius: 5px !important;
+}
+
+.react-datepicker__day--keyboard-selected {
+  background: #e9ecef !important;
+  color: black !important;
+}
+
+.react-datepicker__day:hover {
+  border-radius: 5px !important;
+  background: #f8f9fa !important;
+}
+
+.selected-date-info {
+  margin-top: 15px;
+  padding: 10px;
+  background: #f8f9fa;
+  border-radius: 6px;
+  text-align: center;
+  font-size: 14px;
+}
+
+.calendar-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0 10px;
+}
+
+.calendar-header button {
+  background: none;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  padding: 5px 10px;
+  cursor: pointer;
+}
+
+.calendar-header button:hover {
+  background: #f8f9fa;
+}
+
+.calendar-month {
+  font-weight: bold;
+  font-size: 16px;
+}
+
+/* Estilos para o calendário com indicadores de slots */
+.react-datepicker__day-content {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 100%;
+  width: 100%;
+}
+
+.react-datepicker__day--has-slots {
+  background-color: #e3f2fd;
+  border-radius: 5px;
+  font-weight: bold;
+}
+
+.react-datepicker__day--has-slots:hover {
+  background-color: #bbdefb;
+}
+
+.day-slot-indicator {
+  position: absolute;
+  bottom: 2px;
+  right: 2px;
+  width: 6px;
+  height: 6px;
+  background-color: #2196f3;
+  border-radius: 5px;
+}
+
+.calendar-day--fully-selected {
+  background-color: #007bff !important;
+  color: white !important;
+
+}
+
+.react-datepicker__day--selected {
+  background-color: #007bff !important;
+  color: white !important;
+}
+
+.react-datepicker__day--today {
+  background-color: #3a2a95d9 !important;
+  border-radius: 5px;
+}
+
+.react-datepicker__day--today.react-datepicker__day--has-slots {
+  background-color: #c8e6c9;
+}
+
+/* Legenda do calendário */
+.calendar-legend {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 15px;
+  margin-top: 15px;
+  padding: 10px;
+  background-color: #f8f9fa;
+  border-radius: 5px;
+  font-size: 12px;
+}
+
+.legend-item {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+}
+
+.legend-color {
+  width: 16px;
+  height: 16px;
+  border-radius: 5px;
+  border: 1px solid #ddd;
+}
+
+.legend-has-slots {
+  background-color: #e3f2fd;
+}
+
+.legend-today {
+  background-color: #351cc4d9;
+}
+
+.legend-selected {
+  background-color: #007bff;
+}
+
+/* Ajustes para o calendário */
+.date-picker-container .react-datepicker {
+  font-family: inherit;
+  border: 1px solid #ddd;
+  border-radius: 8px;
+}
+
+.date-picker-container .react-datepicker__day {
+  border-radius: 5px;
+  margin: 0.166rem;
+  padding: 0.1rem;
+}
+
+.date-picker-container .react-datepicker__day:hover {
+  border-radius: 5px;
+}
+
+.react-datepicker__day--outside-month {
+  color: transparent;
+
+  div {
+    display: none;
   }
+}
 
 
+/* Responsivo */
 @media (max-width: 680px) {
   .timeslot-content {
     flex-direction: column;
@@ -714,10 +641,6 @@
 
 /* Responsividade */
 @media (max-width: 768px) {
-  /* .timeslot-batch-creator__tabs {
-    flex-direction: column;
-  } */
-  
   .timeslot-batch-creator__tab {
     text-align: center;
   }
