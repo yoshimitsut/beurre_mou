@@ -277,7 +277,7 @@ const isDateAllowed = (date: Date) => {
           </div>
           <div className='notice'>
             <div className='selectable'></div>
-            <span>予約可能日  /  <span className='yassumi'>休</span> 予約不可</span>
+            <span>予約可能日  /  <span className='yassumi'>x</span> 予約不可</span>
           </div>
         </div>
       </div>
@@ -342,7 +342,7 @@ const renderDayContents = (day: number, date: Date) => {
   return (
     <div className={`day-cell ${extraClass}`}>
       <span>{day}</span>
-      {!isSelectable && <span className="yassumi day-content">休</span>}
+      {!isSelectable && <span className="yassumi day-content">x</span>}
       {isSelectable && <div className="selectable day-content"></div>}
     </div>
   );
