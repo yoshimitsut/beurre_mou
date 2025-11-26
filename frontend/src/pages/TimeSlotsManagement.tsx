@@ -577,260 +577,262 @@ const handleSaveAllMonth = async (e: React.FormEvent): Promise<void> => {
 
   return (
     <>
-      <div className="timeslot-batch-creator">
+      <div className="timeslot-page">
+        <div className="timeslot-batch-creator">
 
-        <div className='timeslot-batch-creator-header'>
-          <h2 className="timeslot-batch-creator__title">📅 時間帯管理</h2>
-          <div className="table-order-actions-header" onClick={() => navigate("/list")}>
-            <div className='btn-back'>
-              <img src="/icons/btn-back.png" alt="list icon" />
-            </div>
-          </div>
-        </div>
-        
-        {/* Abas de navegação */}
-        <div className="timeslot-batch-creator__tabs">
-          <button 
-            className={`timeslot-batch-creator__tab ${activeTab === 'days' ? 'timeslot-batch-creator__tab--active' : ''}`}
-            onClick={() => setActiveTab('days')}
-          >
-            📅 月別編集
-          </button>
-          <button 
-            className={`timeslot-batch-creator__tab ${activeTab === 'times' ? 'timeslot-batch-creator__tab--active' : ''}`}
-            onClick={() => setActiveTab('times')}
-          >
-            ⏰ 時間管理
-          </button>
-        </div>
-
-        {/* Conteúdo das abas */}
-        <div className="timeslot-batch-creator__tab-content">
-          
-          {/* Aba: Gerenciamento de Dias */}
-          {activeTab === 'days' && (
-            <div className="timeslot-batch-creator__day-management">
-
-              <h3 className="timeslot-batch-creator__subtitle">月別時間帯編集</h3>
-              <p>日付を選択して時間帯を編集してください。</p>
-
-              <form onSubmit={handleSaveAllMonth}>
-                <div className='timeslot-content'>
-                  <div className="timeslot-batch-creator__form-row">
-                    <div className="timeslot-batch-creator__form-group">
-                      <label htmlFor="date" className="timeslot-batch-creator__label">設定日:</label>
-                      <div className='timeslot-batch-selec-all-day'>
-                          <button
-                            type="button"
-                            className="timeslot-batch-creator__bulk-button timeslot-batch-creator__bulk-button--deselect-all"
-                            onClick={handleDeselectAllDays}
-                          >
-                            すべて選択解除
-                          </button>
-                          <button
-                            type="button"
-                            className="timeslot-batch-creator__bulk-button timeslot-batch-creator__bulk-button--reset-all"
-                            onClick={handleSelectAllDays}
-                          >
-                            すべて選択
-                          </button>
-                        </div>
-
-                      <div className="date-picker-container">
-                        <DatePicker
-                          selected={selectedDate}
-                          onChange={handleDateSelect}
-                          onMonthChange={handleMonthChange}
-                          inline
-                          locale={ja}
-                          renderDayContents={renderDayContents}
-                          renderCustomHeader={({
-                            date,
-                            decreaseMonth,
-                            increaseMonth,
-                            prevMonthButtonDisabled,
-                            nextMonthButtonDisabled,
-                          }) => (
-                            <div className="calendar-header">
-                              <button 
-                                onClick={() => {decreaseMonth();
-                                  handleMonthChange(startOfMonth(new Date(date.getFullYear(), date.getMonth() -1, 1)))
-                                }} 
-                                disabled={prevMonthButtonDisabled}
-                                type="button"
-                              >
-                                ‹
-                              </button>
-                              <span className="calendar-month">
-                                {format(date, 'yyyy年MM月', { locale: ja })}
-                              </span>
-                              <button 
-                                onClick={() => {
-                                    increaseMonth();
-                                    handleMonthChange(startOfMonth(new Date(date.getFullYear(), date.getMonth() + 1, 1))); 
-                                }}
-                                disabled={nextMonthButtonDisabled}
-                                type="button"
-                              >
-                                ›
-                              </button>
-                            </div>
-                          )}
-                        />
-                      </div>
-
-                      {/* <div className="selected-date-info">
-                        <strong>選択中の日付:</strong> {format(selectedDate, 'yyyy年MM月dd日', { locale: ja })}
-                      </div> */}
-                    </div>
-                  </div>
-
-                  <div className='timeslot-add-content'>
-                    <div className="timeslot-batch-creator__current-slots">
-                      <div>
-                        <h4 className="timeslot-batch-creator__subtitle">
-                          📋 {format(selectedDate, 'yyyy年MM月dd日', { locale: ja })} の時間帯設定
-                        </h4>
-                      </div>
-                      
-                    </div>
-
-                    {/* 時間選択 */}
-                    <div className="timeslot-batch-creator__form-group">
-                      {isLoadingTimes || isLoadingExisting ? (
-                        <div className="timeslot-batch-creator__loading">
-                          時間を読み込み中...
-                        </div>
-                      ) : timeSlots.length === 0 ? (
-                        <div className="timeslot-batch-creator__error">
-                          時間が見つかりません。まず「時間管理」タブで時間を登録してください。
-                        </div>
-                      ) : (
-                        <>
-                          <div className="timeslot-batch-creator__time-grid">
-                            {timeSlots.map((timeSlot) => {
-                              const isSelected = currentSelectedTimes.includes(timeSlot.time_value);
-                              
-                              return (
-                                <div 
-                                  key={timeSlot.id}
-                                  className={`timeslot-batch-creator__time-button ${
-                                    isSelected ? 'timeslot-batch-creator__time-button--selected' : ''
-                                  }`}
-                                  onClick={() => handleTimeToggle(timeSlot.time_value)}
-                                  title="クリックで選択/解除"
-                                >
-                                  {timeSlot.time_value}
-                                </div>
-                              );
-                            })}
-
-                            <div className="timeslot-batch-creator__bulk-actions">
-                              <div className='timeslot-batch-selec-all'>
-                                  <button
-                                    type="button"
-                                    className="timeslot-batch-creator__bulk-button timeslot-batch-creator__bulk-button--select"
-                                    onClick={handleSelectAllTimes}
-                                    disabled={timeSlots.length === 0 || currentSelectedTimes.length === timeSlots.length}
-                                  >
-                                    すべて選択
-                                  </button>
-                                  <button
-                                    type="button"
-                                    className="timeslot-batch-creator__bulk-button timeslot-batch-creator__bulk-button--deselect"
-                                    onClick={handleDeselectAllTimes}
-                                    disabled={currentSelectedTimes.length === 0}
-                                  >
-                                    すべて解除
-                                  </button>
-                              </div>
-                            </div>
-                          </div>
-                        </>
-                      )}
-                    </div>
-                    <p className="timeslot-batch-creator__help-text">
-                      ※ 初期設定ではすべての時間帯が選択されています。
-                    </p>
-                  </div>
-                </div>
-
-                <div className='timeslot-batch-creator__submit-div'>
-                  <button 
-                    type="submit" 
-                    className="timeslot-batch-creator__submit-button"
-                    disabled={isLoading || isLoadingExisting}
-                  >
-                    {isLoading ? '保存中...' : `${format(viewedMonth, 'yyyy年MM月', { locale: ja })}の全${monthSchedule.length}日分を保存`}                  
-                  </button>
-                </div>
-              </form>
-            </div>
-          )}
-
-          {/* Aba: Gerenciamento de Horários */}
-          {activeTab === 'times' && (
-            <div className="timeslot-batch-creator__time-management">
-              <h3 className="timeslot-batch-creator__subtitle">時間管理</h3>
-              <p>利用可能な時間を追加または削除します。</p>
-              
-              <form onSubmit={handleAddTime} className="timeslot-batch-creator__add-time-form">
-                <div className="timeslot-batch-creator__form-group">
-                  <label htmlFor="newTime" className="timeslot-batch-creator__label">新しい時間:</label>
-                  <input
-                    id="newTime"
-                    type="text"
-                    value={newTime}
-                    onChange={(e) => setNewTime(e.target.value)}
-                    required
-                    className="timeslot-batch-creator__input"
-                    placeholder="例: 11:00〜12:00"
-                  />
-                </div>
-                <button 
-                  type="submit" 
-                  className="timeslot-batch-creator__add-button"
-                  disabled={isAddingTime || !newTime}
-                >
-                  {isAddingTime ? '追加中...' : '時間を追加'}
-                </button>
-              </form>
-
-              <div className="timeslot-batch-creator__time-list">
-                <h4 className="timeslot-batch-creator__list-title">利用可能な時間 ({timeSlots.length}個)</h4>
-                {timeSlots.length === 0 ? (
-                  <p className="timeslot-batch-creator__no-times">時間が登録されていません</p>
-                ) : (
-                  <div className="timeslot-batch-creator__time-items">
-                    {timeSlots.map((timeSlot) => (
-                      <div key={timeSlot.id} className="timeslot-batch-creator__time-item">
-                        <span className="timeslot-batch-creator__time-value">
-                          {timeSlot.time_value}
-                        </span>
-                        <button
-                          type="button"
-                          className="timeslot-batch-creator__delete-time-button"
-                          onClick={() => handleDeleteTime(timeSlot.id, timeSlot.time_value)}
-                          title="この時間を削除"
-                        >
-                          削除
-                        </button>
-                      </div>
-                    ))}
-                  </div>
-                )}
+          <div className='timeslot-batch-creator-header'>
+            <h2 className="timeslot-batch-creator__title">📅 時間帯管理</h2>
+            <div className="table-order-actions-header" onClick={() => navigate("/list")}>
+              <div className='btn-back'>
+                <img src="/icons/btn-back.png" alt="list icon" />
               </div>
             </div>
+          </div>
+          
+          {/* Abas de navegação */}
+          <div className="timeslot-batch-creator__tabs">
+            <button 
+              className={`timeslot-batch-creator__tab ${activeTab === 'days' ? 'timeslot-batch-creator__tab--active' : ''}`}
+              onClick={() => setActiveTab('days')}
+            >
+              📅 月別編集
+            </button>
+            <button 
+              className={`timeslot-batch-creator__tab ${activeTab === 'times' ? 'timeslot-batch-creator__tab--active' : ''}`}
+              onClick={() => setActiveTab('times')}
+            >
+              ⏰ 時間管理
+            </button>
+          </div>
+
+          {/* Conteúdo das abas */}
+          <div className="timeslot-batch-creator__tab-content">
+            
+            {/* Aba: Gerenciamento de Dias */}
+            {activeTab === 'days' && (
+              <div className="timeslot-batch-creator__day-management">
+
+                <h3 className="timeslot-batch-creator__subtitle">月別時間帯編集</h3>
+                <p>日付を選択して時間帯を編集してください。</p>
+
+                <form onSubmit={handleSaveAllMonth}>
+                  <div className='timeslot-content'>
+                    <div className="timeslot-batch-creator__form-row">
+                      <div className="timeslot-batch-creator__form-group">
+                        <label htmlFor="date" className="timeslot-batch-creator__label">設定日:</label>
+                        <div className='timeslot-batch-selec-all-day'>
+                            <button
+                              type="button"
+                              className="timeslot-batch-creator__bulk-button timeslot-batch-creator__bulk-button--deselect-all"
+                              onClick={handleDeselectAllDays}
+                            >
+                              すべて選択解除
+                            </button>
+                            <button
+                              type="button"
+                              className="timeslot-batch-creator__bulk-button timeslot-batch-creator__bulk-button--reset-all"
+                              onClick={handleSelectAllDays}
+                            >
+                              すべて選択
+                            </button>
+                          </div>
+
+                        <div className="timeslot-date-picker-container">
+                          <DatePicker
+                            selected={selectedDate}
+                            onChange={handleDateSelect}
+                            onMonthChange={handleMonthChange}
+                            inline
+                            locale={ja}
+                            renderDayContents={renderDayContents}
+                            renderCustomHeader={({
+                              date,
+                              decreaseMonth,
+                              increaseMonth,
+                              prevMonthButtonDisabled,
+                              nextMonthButtonDisabled,
+                            }) => (
+                              <div className="calendar-header">
+                                <button 
+                                  onClick={() => {decreaseMonth();
+                                    handleMonthChange(startOfMonth(new Date(date.getFullYear(), date.getMonth() -1, 1)))
+                                  }} 
+                                  disabled={prevMonthButtonDisabled}
+                                  type="button"
+                                >
+                                  ‹
+                                </button>
+                                <span className="calendar-month">
+                                  {format(date, 'yyyy年MM月', { locale: ja })}
+                                </span>
+                                <button 
+                                  onClick={() => {
+                                      increaseMonth();
+                                      handleMonthChange(startOfMonth(new Date(date.getFullYear(), date.getMonth() + 1, 1))); 
+                                  }}
+                                  disabled={nextMonthButtonDisabled}
+                                  type="button"
+                                >
+                                  ›
+                                </button>
+                              </div>
+                            )}
+                          />
+                        </div>
+
+                        {/* <div className="selected-date-info">
+                          <strong>選択中の日付:</strong> {format(selectedDate, 'yyyy年MM月dd日', { locale: ja })}
+                        </div> */}
+                      </div>
+                    </div>
+
+                    <div className='timeslot-add-content'>
+                      <div className="timeslot-batch-creator__current-slots">
+                        <div>
+                          <h4 className="timeslot-batch-creator__subtitle">
+                            📋 {format(selectedDate, 'yyyy年MM月dd日', { locale: ja })} の時間帯設定
+                          </h4>
+                        </div>
+                        
+                      </div>
+
+                      {/* 時間選択 */}
+                      <div className="timeslot-batch-creator__form-group">
+                        {isLoadingTimes || isLoadingExisting ? (
+                          <div className="timeslot-batch-creator__loading">
+                            時間を読み込み中...
+                          </div>
+                        ) : timeSlots.length === 0 ? (
+                          <div className="timeslot-batch-creator__error">
+                            時間が見つかりません。まず「時間管理」タブで時間を登録してください。
+                          </div>
+                        ) : (
+                          <>
+                            <div className="timeslot-batch-creator__time-grid">
+                              {timeSlots.map((timeSlot) => {
+                                const isSelected = currentSelectedTimes.includes(timeSlot.time_value);
+                                
+                                return (
+                                  <div 
+                                    key={timeSlot.id}
+                                    className={`timeslot-batch-creator__time-button ${
+                                      isSelected ? 'timeslot-batch-creator__time-button--selected' : ''
+                                    }`}
+                                    onClick={() => handleTimeToggle(timeSlot.time_value)}
+                                    title="クリックで選択/解除"
+                                  >
+                                    {timeSlot.time_value}
+                                  </div>
+                                );
+                              })}
+
+                              <div className="timeslot-batch-creator__bulk-actions">
+                                <div className='timeslot-batch-selec-all'>
+                                    <button
+                                      type="button"
+                                      className="timeslot-batch-creator__bulk-button timeslot-batch-creator__bulk-button--select"
+                                      onClick={handleSelectAllTimes}
+                                      disabled={timeSlots.length === 0 || currentSelectedTimes.length === timeSlots.length}
+                                    >
+                                      すべて選択
+                                    </button>
+                                    <button
+                                      type="button"
+                                      className="timeslot-batch-creator__bulk-button timeslot-batch-creator__bulk-button--deselect"
+                                      onClick={handleDeselectAllTimes}
+                                      disabled={currentSelectedTimes.length === 0}
+                                    >
+                                      すべて解除
+                                    </button>
+                                </div>
+                              </div>
+                            </div>
+                          </>
+                        )}
+                      </div>
+                      <p className="timeslot-batch-creator__help-text">
+                        ※ 初期設定ではすべての時間帯が選択されています。
+                      </p>
+                    </div>
+                  </div>
+
+                  <div className='timeslot-batch-creator__submit-div'>
+                    <button 
+                      type="submit" 
+                      className="timeslot-batch-creator__submit-button"
+                      disabled={isLoading || isLoadingExisting}
+                    >
+                      {isLoading ? '保存中...' : `${format(viewedMonth, 'yyyy年MM月', { locale: ja })}の全${monthSchedule.length}日分を保存`}                  
+                    </button>
+                  </div>
+                </form>
+              </div>
+            )}
+
+            {/* Aba: Gerenciamento de Horários */}
+            {activeTab === 'times' && (
+              <div className="timeslot-batch-creator__time-management">
+                <h3 className="timeslot-batch-creator__subtitle">時間管理</h3>
+                <p>利用可能な時間を追加または削除します。</p>
+                
+                <form onSubmit={handleAddTime} className="timeslot-batch-creator__add-time-form">
+                  <div className="timeslot-batch-creator__form-group">
+                    <label htmlFor="newTime" className="timeslot-batch-creator__label">新しい時間:</label>
+                    <input
+                      id="newTime"
+                      type="text"
+                      value={newTime}
+                      onChange={(e) => setNewTime(e.target.value)}
+                      required
+                      className="timeslot-batch-creator__input"
+                      placeholder="例: 11:00〜12:00"
+                    />
+                  </div>
+                  <button 
+                    type="submit" 
+                    className="timeslot-batch-creator__add-button"
+                    disabled={isAddingTime || !newTime}
+                  >
+                    {isAddingTime ? '追加中...' : '時間を追加'}
+                  </button>
+                </form>
+
+                <div className="timeslot-batch-creator__time-list">
+                  <h4 className="timeslot-batch-creator__list-title">利用可能な時間 ({timeSlots.length}個)</h4>
+                  {timeSlots.length === 0 ? (
+                    <p className="timeslot-batch-creator__no-times">時間が登録されていません</p>
+                  ) : (
+                    <div className="timeslot-batch-creator__time-items">
+                      {timeSlots.map((timeSlot) => (
+                        <div key={timeSlot.id} className="timeslot-batch-creator__time-item">
+                          <span className="timeslot-batch-creator__time-value">
+                            {timeSlot.time_value}
+                          </span>
+                          <button
+                            type="button"
+                            className="timeslot-batch-creator__delete-time-button"
+                            onClick={() => handleDeleteTime(timeSlot.id, timeSlot.time_value)}
+                            title="この時間を削除"
+                          >
+                            削除
+                          </button>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              </div>
+            )}
+          </div>
+
+          {statusMessage && (
+            <div className={`timeslot-batch-creator__message ${
+              isError ? 'timeslot-batch-creator__message--error' : 'timeslot-batch-creator__message--success'
+            }`}>
+              {statusMessage}
+            </div>
           )}
         </div>
-
-        {statusMessage && (
-          <div className={`timeslot-batch-creator__message ${
-            isError ? 'timeslot-batch-creator__message--error' : 'timeslot-batch-creator__message--success'
-          }`}>
-            {statusMessage}
-          </div>
-        )}
       </div>
     </>
   );
