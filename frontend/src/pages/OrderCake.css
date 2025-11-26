@@ -230,6 +230,24 @@ body {
     color: #000;
   }
 
+
+  .react-datepicker__day--outside-month{
+    border: 1px solid #c8c8c8;
+    .day-cell {
+      color: transparent;
+      .yassumi {
+        color: transparent;
+      }
+      .selectable {
+        display: none;
+      }
+    }
+    .day-content {
+      color: transparent;
+      display: none;
+    }
+  }
+
   .react-datepicker__day-name {
     width: 11vw;
     max-width: 65px;
