@@ -1186,7 +1186,7 @@ useEffect(() => {
 
         <div className='btn-actions'>
           <button onClick={() => navigate("/admin/date")} className='list-btn qrcode-btn'>
-            <img src="/icons/calendar_icon.ico" alt="QRコードアイコン" />
+            <img src="/icons/calendar_icon.png" alt="QRコードアイコン" />
           </button>
           <ExcelExportButton data={orders} filename='注文ケーキ.xlsx' sheetName='注文' />
           <button onClick={() => setShowScanner(true)} className='list-btn qrcode-btn'>
