@@ -108,8 +108,14 @@ input[type="submit"] {
 }
 
 .timeslot-batch-creator__submit-button:disabled {
-  opacity: 0.6;
+  opacity: 0.8;
   cursor: not-allowed;
+}
+
+.calendar-day--none-selected {
+  background-color: #fff !important;
+  color: #383838 !important;
+  font-weight:normal !important;
 }
 
 .timeslot-batch-creator__submit-button:hover:not(:disabled) {
@@ -416,14 +422,14 @@ input[type="submit"] {
 }
 
 .timeslot-batch-creator__bulk-button--reset-all {
-  background: #6c757d;
+  background: #28a745;
   color: white;
-  border-color: #6c757d;
+  border-color: #28a745;
 }
 
 .timeslot-batch-creator__bulk-button--reset-all:hover:not(:disabled) {
-  background: #545b62;
-  border-color: #545b62;
+  background: #28a745;
+  border-color: #28a745;
 }
 
 .timeslot-batch-creator-header {
@@ -449,6 +455,15 @@ input[type="submit"] {
   border: none !important;
   font-family: inherit !important;
   width: 100% !important;
+}
+
+.react-datepicker__day-name, 
+.react-datepicker__day, 
+.react-datepicker__time-name {
+  font-size: 0.9rem;
+  width: 2.3rem;
+  height: 2.3rem;
+  /* border: 1px solid #000; */
 }
 
 .react-datepicker__month-container {
@@ -520,14 +535,15 @@ input[type="submit"] {
 }
 
 .react-datepicker__day--has-slots {
-  background-color: #e3f2fd;
+  background-color: #41a93bcd;
   border-radius: 5px;
   font-weight: bold;
+  color: #fff;
 }
 
-.react-datepicker__day--has-slots:hover {
-  background-color: #bbdefb;
-}
+/* .react-datepicker__day--has-slots:hover {
+  background-color: #58be52cd;
+} */
 
 .day-slot-indicator {
   position: absolute;
@@ -535,24 +551,23 @@ input[type="submit"] {
   right: 2px;
   width: 6px;
   height: 6px;
-  background-color: #2196f3;
+  background-color: #ff0000a8;
   border-radius: 5px;
 }
 
 .calendar-day--fully-selected {
-  background-color: #007bff !important;
-  color: white !important;
-
-}
-
-.react-datepicker__day--selected {
-  background-color: #007bff !important;
+  background-color: #0a9a02 !important;
   color: white !important;
 }
 
 .react-datepicker__day--today {
-  background-color: #3a2a95d9 !important;
+  background-color: #828282d9 !important;
   border-radius: 5px;
+}
+
+.react-datepicker__day--selected {
+  background-color: #1026cc !important;
+  color: white !important;
 }
 
 .react-datepicker__day--today.react-datepicker__day--has-slots {
@@ -585,7 +600,7 @@ input[type="submit"] {
 }
 
 .legend-has-slots {
-  background-color: #e3f2fd;
+  background-color: #e3fdeb;
 }
 
 .legend-today {
@@ -615,12 +630,35 @@ input[type="submit"] {
 
 .react-datepicker__day--outside-month {
   color: transparent;
+  height: 1px;
 
   div {
     display: none;
   }
 }
 
+@media (max-width: 680px) {
+  .timeslot-batch-creator {
+    padding: 1rem;
+  }
+  
+  .timeslot-batch-creator__tab-content {
+    padding: 0.5rem !important;
+  }
+
+  .react-datepicker__day--outside-month {
+    height: 1px !important;
+  }
+
+  .react-datepicker__day-name, 
+  .react-datepicker__day, 
+  .react-datepicker__time-name {
+    font-size: 0.9rem;
+    width: 9vw;
+    height: 2.5rem;
+    /* border: 1px solid #000; */
+  }
+}
 
 /* Responsivo */
 @media (max-width: 680px) {
@@ -636,6 +674,9 @@ input[type="submit"] {
   }
   .timeslot-content {
     align-items: center;
+  }
+  .timeslot-batch-creator__form-row {
+    width: 100% !important;
   }
 }
 
