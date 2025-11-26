@@ -198,10 +198,10 @@ ul {
 
 .list-order-table th.situation-cell,
 .list-order-table td.situation-cell {
-  min-width: 165px; 
+  min-width: 161px; 
 }
 
-.id-order-cell {
+.id-cell {
   width: 30px !important;
 }
 
@@ -411,8 +411,17 @@ ul {
     display: none;
   }
   .list-btn {
+    width: 28vw !important;
     img {
       width: 1.5rem;
+    }
+  }
+}
+
+@media (max-width: 415px) {
+  .list-btn {
+    img {
+      width: 23vw !important;
     }
   }
 }
