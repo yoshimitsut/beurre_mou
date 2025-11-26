@@ -193,6 +193,8 @@ body {
 
   .react-datepicker-wrapper{
     width: 100%;
+    border: 1px solid #c0bfbf;
+    border-radius: 5px;
   }
 
 
