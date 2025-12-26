@@ -595,6 +595,8 @@ useEffect(() => {
               </tbody>
             </table>
           </div>
+
+          
         )}
       </>
     );
@@ -834,10 +836,10 @@ useEffect(() => {
                   isLoading={isUpdating && updatingOrderId === order.id_order}
                 />
                 <div className="order-header">
-                  <span>受付番号: {String(order.id_order).padStart(4, "0")}</span>
+                  <span><strong>受付番号:</strong> {String(order.id_order).padStart(4, "0")}</span>
                 </div>
-                <p>お名前: {order.first_name} {order.last_name}</p>
-                <p>受取日: {formatDateJP(order.date)} {order.pickupHour}</p>
+                <p><strong>お名前:</strong> {order.first_name} {order.last_name}</p>
+                <p><strong>受取日:</strong> {formatDateJP(order.date)} {order.pickupHour}</p>
                 <details>
                   <summary>ご注文内容</summary>
                   <ul>
@@ -855,8 +857,8 @@ useEffect(() => {
                       </li>
                     ))}
                   </ul>
-                  <p>電話番号: {order.tel}</p>
-                  <p>メッセージ: {order.message || " "}</p>
+                  <p><strong>電話番号:</strong> {order.tel}</p>
+                  <p><strong>メッセージ:</strong> {order.message || " "}</p>
                 </details>
                 <button
                   onClick={() => setEditingOrder(order)}
@@ -880,31 +882,31 @@ useEffect(() => {
     </>
   );
 
-  // 🔹 COMPONENTE PARA PEDIDOS COM DATA ANTERIOR
-  const PastDateOrdersTable = () => {
-    const sortedPastDateOrders = useMemo(() => {
-      return [...pastDateOrders].sort((a, b) => {
-        // Ordena por data (mais recente primeiro)
-        const dateA = new Date(a.date).getTime();
-        const dateB = new Date(b.date).getTime();
-        
-        if (dateA !== dateB) {
-          return dateB - dateA; // Mais recente primeiro
-        }
-        
-        // Se for a mesma data, ordena por horário
-        const timeA = a.pickupHour || "";
-        const timeB = b.pickupHour || "";
-        return timeA.localeCompare(timeB, "ja");
-      });
-    }, [pastDateOrders]);
+// 🔹 COMPONENTE PARA PEDIDOS COM DATA ANTERIOR (COM MOBILE)
+const PastDateOrdersTable = () => {
+  const sortedPastDateOrders = useMemo(() => {
+    return [...pastDateOrders].sort((a, b) => {
+      const dateA = new Date(a.date).getTime();
+      const dateB = new Date(b.date).getTime();
+      
+      if (dateA !== dateB) {
+        return dateB - dateA;
+      }
+      
+      const timeA = a.pickupHour || "";
+      const timeB = b.pickupHour || "";
+      return timeA.localeCompare(timeB, "ja");
+    });
+  }, [pastDateOrders]);
 
-    return (
-      <>
-        {sortedPastDateOrders.length === 0 ? (
-          <p>過去の日付の注文はありません。</p>
-        ) : (
-          <div className="table-wrapper scroll-cell table-order-container">
+  return (
+    <>
+      {sortedPastDateOrders.length === 0 ? (
+        <p>過去の日付の注文はありません。</p>
+      ) : (
+        <>
+          {/* Tabela Desktop */}
+          <div className="desktop-table table-wrapper scroll-cell table-order-container">
             <table className="list-order-table table-order">
               <thead>
                 <tr>
@@ -993,36 +995,92 @@ useEffect(() => {
               </tbody>
             </table>
           </div>
-        )}
-      </>
-    );
-  };
 
-  // 🔹 COMPONENTE PARA PEDIDOS FINALIZADOS
-  const CompletedOrdersTable = () => {
-    const sortedCompletedOrders = useMemo(() => {
-      return [...completedOrders].sort((a, b) => {
-        // Ordena por data (mais recente primeiro)
-        const dateA = new Date(a.date).getTime();
-        const dateB = new Date(b.date).getTime();
-        
-        if (dateA !== dateB) {
-          return dateB - dateA; // Mais recente primeiro
-        }
-        
-        // Se for a mesma data, ordena por horário
-        const timeA = a.pickupHour || "";
-        const timeB = b.pickupHour || "";
-        return timeA.localeCompare(timeB, "ja");
-      });
-    }, [completedOrders]);
+          {/* Cards Mobile */}
+          <div className="mobile-orders">
+            {sortedPastDateOrders.map((order) => (
+              <div className="order-card" key={order.id_order}>
+                  <Select<StatusOption, false>
+                    options={statusOptions}
+                    value={statusOptions.find((opt) => opt.value === order.status)}
+                    onChange={(selected: SingleValue<StatusOption>) => {
+                      if (selected) handleStatusChange(order.id_order, selected.value);
+                    }}
+                    styles={customStyles}
+                    isSearchable={false}
+                    isDisabled={isUpdating}
+                    isLoading={isUpdating && updatingOrderId === order.id_order}
+                  />
+                {/* <div className="order-header">
+                </div> */}
+                <span className="order-id">受付番号: {String(order.id_order).padStart(4, "0")}</span>
+                <p><strong>お名前:</strong> {order.first_name} {order.last_name}</p>
+                <p><strong>受取日時:</strong> {formatDateJP(order.date)} {order.pickupHour}</p>
+                <details>
+                  <summary>ご注文内容</summary>
+                  <ul>
+                    {order.cakes.map((cake, index) => (
+                      <li key={`${cake.cake_id}-${index}`}>
+                        <strong>{cake.name}</strong><br />
+                        サイズ: {cake.size}<br />
+                        個数: {cake.amount}<br />
+                        フルーツ盛り: {cake.fruit_option}<br />
+                        プレートメッセージ: {cake.message_cake || "なし"}
+                      </li>
+                    ))}
+                  </ul>
+                  <p><strong>電話番号:</strong> {order.tel}</p>
+                  <p><strong>メール:</strong> {order.email}</p>
+                  <p><strong>その他メッセージ:</strong> {order.message || "なし"}</p>
+                </details>
+                <button
+                  onClick={() => setEditingOrder(order)}
+                  style={{
+                    marginTop: "0.5rem",
+                    padding: "0.5rem 1rem",
+                    backgroundColor: "#007bff",
+                    color: "white",
+                    border: "none",
+                    borderRadius: "4px",
+                    cursor: "pointer"
+                  }}
+                >
+                  編集
+                </button>
+              </div>
+            ))}
+          </div>
+        </>
+      )}
+    </>
+  );
+};
 
-    return (
-      <>
-        {sortedCompletedOrders.length === 0 ? (
-          <p>お渡し済みの注文はありません。</p>
-        ) : (
-          <div className="table-wrapper scroll-cell table-order-container">
+// 🔹 COMPONENTE PARA PEDIDOS FINALIZADOS (COM MOBILE)
+const CompletedOrdersTable = () => {
+  const sortedCompletedOrders = useMemo(() => {
+    return [...completedOrders].sort((a, b) => {
+      const dateA = new Date(a.date).getTime();
+      const dateB = new Date(b.date).getTime();
+      
+      if (dateA !== dateB) {
+        return dateB - dateA;
+      }
+      
+      const timeA = a.pickupHour || "";
+      const timeB = b.pickupHour || "";
+      return timeA.localeCompare(timeB, "ja");
+    });
+  }, [completedOrders]);
+
+  return (
+    <>
+      {sortedCompletedOrders.length === 0 ? (
+        <p>お渡し済みの注文はありません。</p>
+      ) : (
+        <>
+          {/* Tabela Desktop */}
+          <div className="desktop-table table-wrapper scroll-cell table-order-container">
             <table className="list-order-table table-order">
               <thead>
                 <tr>
@@ -1081,36 +1139,68 @@ useEffect(() => {
               </tbody>
             </table>
           </div>
-        )}
-      </>
-    );
-  };
 
-  // 🔹 COMPONENTE PARA PEDIDOS CANCELADOS
-  const CancelledOrdersTable = () => {
-    const sortedCancelledOrders = useMemo(() => {
-      return [...cancelledOrders].sort((a, b) => {
-        // Ordena por data (mais recente primeiro)
-        const dateA = new Date(a.date).getTime();
-        const dateB = new Date(b.date).getTime();
-        
-        if (dateA !== dateB) {
-          return dateB - dateA; // Mais recente primeiro
-        }
-        
-        // Se for a mesma data, ordena por horário
-        const timeA = a.pickupHour || "";
-        const timeB = b.pickupHour || "";
-        return timeA.localeCompare(timeB, "ja");
-      });
-    }, [cancelledOrders]);
+          {/* Cards Mobile */}
+          <div className="mobile-orders">
+            {sortedCompletedOrders.map((order) => (
+              <div className="order-card" key={order.id_order}>
+                <div className="order-header">
+                  <span className="order-status status-completed">✅ お渡し済み</span>
+                  <span className="order-id">受付番号: {String(order.id_order).padStart(4, "0")}</span>
+                </div>
+                <p><strong>お名前:</strong> {order.first_name} {order.last_name}</p>
+                <p><strong>受取日時:</strong> {formatDateJP(order.date)} {order.pickupHour}</p>
+                <details>
+                  <summary>ご注文内容</summary>
+                  <ul>
+                    {order.cakes.map((cake, index) => (
+                      <li key={`${cake.cake_id}-${index}`}>
+                        <strong>{cake.name}</strong><br />
+                        サイズ: {cake.size}<br />
+                        個数: {cake.amount}<br />
+                        フルーツ盛り: {cake.fruit_option}<br />
+                        プレートメッセージ: {cake.message_cake || "なし"}
+                      </li>
+                    ))}
+                  </ul>
+                  <p><strong>電話番号:</strong> {order.tel}</p>
+                  <p><strong>メール:</strong> {order.email}</p>
+                  <p><strong>その他メッセージ:</strong> {order.message || "なし"}</p>
+                </details>
+              </div>
+            ))}
+          </div>
+        </>
+      )}
+    </>
+  );
+};
 
-    return (
-      <>
-        {sortedCancelledOrders.length === 0 ? (
-          <p>キャンセルされた注文はありません。</p>
-        ) : (
-          <div className="table-wrapper scroll-cell table-order-container">
+// 🔹 COMPONENTE PARA PEDIDOS CANCELADOS (COM MOBILE)
+const CancelledOrdersTable = () => {
+  const sortedCancelledOrders = useMemo(() => {
+    return [...cancelledOrders].sort((a, b) => {
+      const dateA = new Date(a.date).getTime();
+      const dateB = new Date(b.date).getTime();
+      
+      if (dateA !== dateB) {
+        return dateB - dateA;
+      }
+      
+      const timeA = a.pickupHour || "";
+      const timeB = b.pickupHour || "";
+      return timeA.localeCompare(timeB, "ja");
+    });
+  }, [cancelledOrders]);
+
+  return (
+    <>
+      {sortedCancelledOrders.length === 0 ? (
+        <p>キャンセルされた注文はありません。</p>
+      ) : (
+        <>
+          {/* Tabela Desktop */}
+          <div className="desktop-table table-wrapper scroll-cell table-order-container">
             <table className="list-order-table table-order">
               <thead>
                 <tr>
@@ -1168,10 +1258,42 @@ useEffect(() => {
               </tbody>
             </table>
           </div>
-        )}
-      </>
-    );
-  };
+
+          {/* Cards Mobile */}
+          <div className="mobile-orders">
+            {sortedCancelledOrders.map((order) => (
+              <div className="order-card" key={order.id_order}>
+                <div className="order-header">
+                  <span className="order-status status-cancelled">❌ キャンセル</span>
+                  <span className="order-id">受付番号: {String(order.id_order).padStart(4, "0")}</span>
+                </div>
+                <p><strong>お名前:</strong> {order.first_name} {order.last_name}</p>
+                <p><strong>受取日時:</strong> {formatDateJP(order.date)} {order.pickupHour}</p>
+                <details>
+                  <summary>ご注文内容</summary>
+                  <ul>
+                    {order.cakes.map((cake, index) => (
+                      <li key={`${cake.cake_id}-${index}`}>
+                        <strong>{cake.name}</strong><br />
+                        サイズ: {cake.size}<br />
+                        個数: {cake.amount}<br />
+                        フルーツ盛り: {cake.fruit_option}<br />
+                        プレートメッセージ: {cake.message_cake || "なし"}
+                      </li>
+                    ))}
+                  </ul>
+                  <p><strong>電話番号:</strong> {order.tel}</p>
+                  <p><strong>メール:</strong> {order.email}</p>
+                  <p><strong>その他メッセージ:</strong> {order.message || "なし"}</p>
+                </details>
+              </div>
+            ))}
+          </div>
+        </>
+      )}
+    </>
+  );
+};
 
   return (
     <div className='list-order-container'>

@@ -425,3 +425,98 @@ ul {
     }
   }
 }
+
+/* No seu ListOrder.css */
+
+/* Para desktop: mostrar tabela, esconder cards mobile */
+@media (min-width: 768px) {
+  .desktop-table {
+    display: block !important;
+  }
+  .mobile-orders {
+    display: none !important;
+  }
+}
+
+/* Para mobile: esconder tabela, mostrar cards mobile */
+@media (max-width: 767px) {
+  .desktop-table {
+    display: none !important;
+  }
+  .mobile-orders {
+    display: block !important;
+  }
+}
+
+/* Estilização dos cards mobile */
+.mobile-orders {
+  width: 100%;
+}
+
+.order-card {
+  background: white;
+  border: 1px solid #ddd;
+  border-radius: 8px;
+  padding: 16px;
+  margin-bottom: 16px;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+
+.order-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 12px;
+}
+
+.order-id {
+  font-weight: bold;
+  color: #333;
+}
+
+.order-status {
+  padding: 4px 8px;
+  border-radius: 4px;
+  font-size: 0.9rem;
+  font-weight: bold;
+}
+
+.status-completed {
+  background-color: #d4edda;
+  color: #155724;
+}
+
+.status-cancelled {
+  background-color: #f8d7da;
+  color: #721c24;
+}
+
+.order-card p {
+  margin: 8px 0;
+  font-size: 0.95rem;
+}
+
+.order-card details {
+  margin-top: 12px;
+  background: #f9f9f9;
+  padding: 12px;
+  border-radius: 4px;
+}
+
+.order-card summary {
+  cursor: pointer;
+  font-weight: bold;
+  margin-bottom: 8px;
+}
+
+.order-card ul {
+  margin-left: 16px;
+}
+
+.order-card li {
+  margin-bottom: 8px;
+  padding: 8px;
+  background: white;
+  border-radius: 4px;
+  border-left: 3px solid #007bff;
+}

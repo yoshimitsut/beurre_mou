@@ -607,33 +607,30 @@ const customStylesHour: StylesConfig<TimeOptionType, false> = {
                   )}
 
                   <div className="input-group-radio">
-  <div className="pill-group">
-    <label className={`pill ${item.fruit_option === "無し" ? "active" : ""}`}>
-      <input
-        type="radio"
-        name={`fruit-option-${index}`}  
-        value="無し"
-        checked={item.fruit_option === "無し"}
-        onChange={() => updateCake(index, "fruit_option", "無し")}
-      />
-      <span style={{width:"120px", textAlign: "start"}}>通常盛り</span><span style={{width:"5rem", textAlign: "end"}}>+0円</span> 
-    </label>
-    <label className={`pill ${item.fruit_option === "有り" ? "active" : ""}`}>
-      <input
-        type="radio"
-        name={`fruit-option-${index}`} 
-        value="有り"
-        checked={item.fruit_option === "有り"}
-        onChange={() => updateCake(index, "fruit_option", "有り")}
-      />
-      <span style={{width:"125px", textAlign: "start"}}>フルーツ増し</span><span style={{width:"5rem", textAlign: "end"}}>+648円</span>      
-    </label>
-  </div>
-  <label className='select-group-radio'>*フルーツ盛り</label>
-</div>
-
-
-
+                    <div className="pill-group">
+                      <label className={`pill ${item.fruit_option === "無し" ? "active" : ""}`}>
+                        <input
+                          type="radio"
+                          name={`fruit-option-${index}`}  
+                          value="無し"
+                          checked={item.fruit_option === "無し"}
+                          onChange={() => updateCake(index, "fruit_option", "無し")}
+                        />
+                        <span style={{width:"120px", textAlign: "start"}}>通常盛り</span><span style={{width:"5rem", textAlign: "end"}}>+0円</span> 
+                      </label>
+                      <label className={`pill ${item.fruit_option === "有り" ? "active" : ""}`}>
+                        <input
+                          type="radio"
+                          name={`fruit-option-${index}`} 
+                          value="有り"
+                          checked={item.fruit_option === "有り"}
+                          onChange={() => updateCake(index, "fruit_option", "有り")}
+                        />
+                        <span style={{width:"125px", textAlign: "start"}}>フルーツ増し</span><span style={{width:"5rem", textAlign: "end"}}>+648円</span>      
+                      </label>
+                    </div>
+                    <label className='select-group-radio'>*フルーツ盛り</label>
+                  </div>
                   
                   <div className='input-group'>
                     <Select<OptionType>
