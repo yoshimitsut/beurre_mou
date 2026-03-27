@@ -46,75 +46,6 @@ export default function OrderCake() {
 
   const [, setFruitOption] = useState<"有り" | "無し">("無し");
 
-  // const diasEspecificosPorMes = [  
-  //   { day: 14, month: 11 }, 
-  //   { day: 15, month: 11 }, 
-  //   { day: 22, month: 11 }, 
-  //   { day: 23, month: 11 },
-  //   { day: 24, month: 11 },
-  //   { day: 25, month: 11 }, 
-  //   { day: 26, month: 11 },
-
-  //   { day: 4, month: 12 }, 
-  //   { day: 5, month: 12 }, 
-  //   { day: 6, month: 12 },
-  //   { day: 7, month: 12 }, 
-  //   { day: 8, month: 12 }, 
-  //   { day: 9, month: 12 }, 
-  //   { day: 13, month: 12 },
-  //   { day: 18, month: 12 }, 
-  //   { day: 19, month: 12 }, 
-  //   { day: 25, month: 12 }, 
-  //   { day: 26, month: 12 },
-  // ]; 
-
-  // const gerarDiasBloqueadosInicio = () => {
-  //   const datas = [];
-  //   let data = today;
-  //   while (datas.length < diasABloquear) {
-  //     datas.push(data);
-  //     data = addDays(data, 1);
-  //   }
-  //   return datas;
-  // };
-
-  // const gerarDatasEspecificasComMes = () => {
-  //   const datas: Date[] = [];
-  //   diasEspecificosPorMes.forEach(({ day, month }) => {
-  //     const date = new Date(today.getFullYear(), month, day);
-  //     if (isAfter(date, today)) {
-  //       datas.push(date);
-  //     }
-  //   });
-  //   return datas;
-  // };
-
-  // const excludedDates = [
-  //   ...gerarDiasBloqueadosInicio(),
-  //   ...gerarDatasEspecificasComMes(),
-  // ];
-
-  // const isDateAllowed = (date: Date) => !excludedDates.some((d) => isSameDay(d, date));
-
-  // const timeSlots: TimeOptionType[] = [
-  //   { id: 1, value: "11:00〜12:00", label: "11:00〜12:00" },
-  //   { id: 2, value: "12:00〜13:00", label: "12:00〜13:00" },
-  //   { id: 3, value: "13:00〜14:00", label: "13:00〜14:00" },
-  //   { id: 4, value: "14:00〜15:00", label: "14:00〜15:00" },
-  //   { id: 5, value: "15:00〜16:00", label: "15:00〜16:00" },
-  //   { id: 6, value: "16:00〜17:00", label: "16:00〜17:00" },
-  //   { id: 7, value: "17:00〜18:00", label: "17:00〜18:00" },
-  //   { id: 8, value: "18:00〜19:00", label: "18:00〜19:00" }
-  // ];
-
-
-
-
-
-
-
-
-
 
 
   // Carragar bolos
@@ -240,11 +171,6 @@ const isDateAllowed = (date: Date) => {
     return blockedDates;
   }, [today, diasABloquear]);
 
- 
-
-  
-
-
 
   const selectedCakeName = searchParams.get("cake");
   useEffect(() => {
@@ -306,27 +232,6 @@ const isDateAllowed = (date: Date) => {
       )
     );
   };
-
-  // const handleDateChange = (date: Date | null) => {
-  //   setSelectedDate(date);
-  // };
-
-  // const renderDayContents = (day: number, date: Date) => {
-  //   const isBlocked = excludedDates.some(d => isSameDay(d, date));
-  //   const dayOfWeek = getDay(date);
-    
-  //   const extraClass =
-  //     dayOfWeek === 0 ? "domingo-vermelho" :
-  //     dayOfWeek === 6 ? "sabado-azul" : "";
-
-  //   return (
-  //     <div className={`day-cell ${extraClass}`}>
-  //       <span>{day}</span>
-  //       {isBlocked && <span className="yassumi">x</span>}
-  //       {!isBlocked && isAfter(date, today) && <div className="selectable"></div>}
-  //     </div>
-  //   );
-  // };
   
 const renderDayContents = (day: number, date: Date) => {
   const isSelectable = isDateAllowed(date);
@@ -695,23 +600,22 @@ const customStylesHour: StylesConfig<TimeOptionType, false> = {
             <div className='input-group'>
               <label htmlFor="datepicker" className='datepicker'>*受け取り希望日</label>
               <DatePicker
-  selected={selectedDate}
-  onChange={(date) => setSelectedDate(date)}
-  minDate={today}
-  maxDate={maxDate}
-  excludeDates={excludedDates}
-  filterDate={isDateAllowed}
-  dateFormat="yyyy年MM月dd日"
-  locale={ja}
-  placeholderText="日付を選択"
-  dayClassName={getDayClassName}
-  className="react-datepicker"
-  calendarClassName="datepicker-calendar"
-  calendarContainer={MyContainer}
-  required
-  renderDayContents={renderDayContents}
-  // Não adicione showOtherMonths - use apenas CSS
-/>
+                selected={selectedDate}
+                onChange={(date) => setSelectedDate(date)}
+                minDate={today}
+                maxDate={maxDate}
+                excludeDates={excludedDates}
+                filterDate={isDateAllowed}
+                dateFormat="yyyy年MM月dd日"
+                locale={ja}
+                placeholderText="日付を選択"
+                dayClassName={getDayClassName}
+                className="react-datepicker react-datepicker-input"
+                calendarClassName="datepicker-calendar"
+                calendarContainer={MyContainer}
+                required
+                renderDayContents={renderDayContents}
+              />
             </div>
 
             <div className='input-group'>

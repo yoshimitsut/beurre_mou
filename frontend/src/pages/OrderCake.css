@@ -153,25 +153,29 @@ body {
   }
 
   .react-datepicker-popper {
-  position: fixed !important;
-  top: 0 !important;
-  left: 0 !important;
-  transform: none !important;
-  width: 100% !important;
-  height: 100% !important;
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  background: white; /* fundo */
-  z-index: 9999; /* acima de tudo */
-}
+    position: fixed !important;
+    top: 0 !important;
+    left: 0 !important;
+    transform: none !important;
+    width: 100% !important;
+    height: 100% !important;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    background: white; /* fundo */
+    z-index: 9999; /* acima de tudo */
+  }
 
-.react-datepicker {
-  font-size: 1.2rem;
-  width: 100%;
-  height: auto;
-  /* max-width: 500px; centraliza se quiser */
-}
+  .react-datepicker {
+    font-size: 1.2rem;
+    width: 100%;
+    height: auto;
+    /* max-width: 500px; centraliza se quiser */
+  }
+
+  .react-datepicker-input {
+    border: none !important;
+  }
 
   .react-datepicker__header h2 {
     font-size: 1.5rem;
