@@ -10,6 +10,8 @@ import CakeInformationSize from './pages/CakeInformationsSize';
 import OrderCakeStore from './pages/OrderCakeStore';
 import StoreLogin from './pages/StoreLogin';
 import ProtectedRoute from './components/ProtectedRoute';
+import CakeManagement from './pages/CakeManagement';
+
 
 import TimeSlotsManagement from './pages/TimeSlotsManagement';
 
@@ -43,6 +45,12 @@ function App() {
         <Route path="/admin/date" element={
           <ProtectedRoute>
             <TimeSlotsManagement />
+          </ProtectedRoute>
+        } />
+
+        <Route path="/admin/cake" element={
+          <ProtectedRoute>
+            <CakeManagement />
           </ProtectedRoute>
         } />
 

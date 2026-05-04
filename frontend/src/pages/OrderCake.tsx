@@ -72,12 +72,15 @@ export default function OrderCake() {
         
         // CORREÇÃO: As datas já vêm no formato "2025-11-14", não precisa do split
         const uniqueDates = [...new Set(
-          data.timeslots.map((slot: TimeslotSQL) => slot.date) // Removido o split("T")[0]
+          data.timeslots.map((slot: TimeslotSQL) => {
+            const d = slot.date;
+            return d.includes('T') ? d.split('T')[0] : d.split(' ')[0];
+          })
         )] as string[];
         
         setAvailableDates(uniqueDates);
-        console.log('📅 Datas disponíveis com horários:', uniqueDates);
-        console.log('⏰ Horários carregados:', data.timeslots.length);
+        console.log('📅 Datas disponíveis processadas:', uniqueDates);
+        console.log('⏰ Total de slots carregados:', data.timeslots.length);
       } else {
         console.error("Formato inesperado de timeslots:", data);
         setTimeSlotsData([]);
@@ -104,7 +107,9 @@ useEffect(() => {
 
   // CORREÇÃO: Remover o split aqui também
   const availableSlots = timeSlotsData.filter((slot: TimeslotSQL) => {
-    return slot.date === formattedDate; // Comparação direta, sem split
+    const d = slot.date;
+    const slotDate = d.includes('T') ? d.split('T')[0] : d.split(' ')[0];
+    return slotDate === formattedDate;
   });
 
   console.log('⏰ Horários disponíveis:', availableSlots);
@@ -125,51 +130,77 @@ useEffect(() => {
   }
 }, [selectedDate, timeSlotsData, pickupHour]);
 
-// 🔹 FUNÇÃO CORRIGIDA PARA VERIFICAR DATAS DISPONÍVEIS
-const isDateAllowed = (date: Date) => {
-  const dateStr = format(date, 'yyyy-MM-dd');
-  
-  // 1. Verificar se a data é anterior à data atual
-  const isPastDate = date < today;
-  if (isPastDate) {
-    console.log(`🚫 Data ${dateStr} é anterior à data atual`);
-    return false;
-  }
-  
-  // 2. Verificar se a data está bloqueada (próximos 2 dias)
-  const isBlocked = excludedDates.some(blockedDate => 
-    isSameDay(blockedDate, date)
-  );
-  if (isBlocked) {
-    console.log(`🚫 Data ${dateStr} está bloqueada (próximos 2 dias)`);
-    return false;
-  }
-  
-  // 3. Verificar se a data tem horários disponíveis
-  const hasAvailableSlots = availableDates.includes(dateStr);
-  if (!hasAvailableSlots) {
-    console.log(`❌ Data ${dateStr} não tem horários disponíveis no banco`);
-    return false;
-  }
-  
-  console.log(`✅ Data ${dateStr} está disponível`);
-  return true;
-};
-
-
   // 🔹 GERAR DATAS BLOQUEADAS (apenas os próximos X dias)
   const excludedDates = useMemo(() => {
     const blockedDates: Date[] = [];
-    
-    // Bloquear apenas os próximos X dias
     for (let i = 0; i < diasABloquear; i++) {
-      const blockedDate = addDays(today, i);
-      blockedDates.push(blockedDate);
+      blockedDates.push(addDays(today, i));
     }
-
-    console.log('🚫 Datas bloqueadas:', blockedDates.map(d => format(d, 'yyyy-MM-dd')));
     return blockedDates;
   }, [today, diasABloquear]);
+
+  // 🔹 CALCULAR DATAS PERMITIDAS PELOS BOLOS (CUSTOM DATES)
+  const includedDatesFromCakes = useMemo(() => {
+    if (!cakesData || cakesData.length === 0) return undefined;
+    
+    let intersection: Date[] | undefined = undefined;
+    let hasCustomCake = false;
+
+    cakes.forEach(item => {
+      const cakeData = cakesData.find(c => c.id === item.cake_id);
+      if (cakeData && cakeData.date_mode === 'custom') {
+        hasCustomCake = true;
+        const customDates = JSON.parse(cakeData.custom_dates || '[]').map((d: string) => {
+          const [y, m, day] = d.split('-').map(Number);
+          return new Date(y, m - 1, day);
+        });
+        
+        if (intersection === undefined) {
+          intersection = customDates;
+        } else {
+          intersection = intersection.filter(d1 => 
+            customDates.some((d2: Date) => isSameDay(d1, d2))
+          );
+        }
+      }
+    });
+
+    return hasCustomCake ? (intersection || []) : undefined;
+  }, [cakes, cakesData]);
+
+  // 🔹 FUNÇÃO PARA VERIFICAR DATAS DISPONÍVEIS
+  const isDateAllowed = (date: Date) => {
+    const dateStr = format(date, 'yyyy-MM-dd');
+    
+    // 0. Verificar se a data é permitida pelos bolos customizados
+    if (includedDatesFromCakes) {
+      if (!includedDatesFromCakes.some(d => isSameDay(d, date))) {
+        console.log(`🚫 Data ${dateStr} rejeitada: Não está nas datas customizadas do bolo`);
+        return false;
+      }
+    } else {
+      // Se não for customizado, verificar bloqueio padrão (preparação)
+      if (excludedDates.some(blockedDate => isSameDay(blockedDate, date))) {
+        console.log(`🚫 Data ${dateStr} rejeitada: Período de preparação`);
+        return false;
+      }
+    }
+
+    // 1. Verificar se a data é anterior à data atual
+    if (date < new Date(new Date().setHours(0,0,0,0))) {
+      console.log(`🚫 Data ${dateStr} rejeitada: Data passada`);
+      return false;
+    }
+    
+    // 2. Verificar se a data tem horários disponíveis no banco
+    if (!availableDates.includes(dateStr)) {
+      console.log(`❌ Data ${dateStr} rejeitada: Sem horários disponíveis no banco (availableDates)`);
+      return false;
+    }
+    
+    console.log(`✅ Data ${dateStr} permitida`);
+    return true;
+  };
 
 
   const selectedCakeName = searchParams.get("cake");
@@ -604,7 +635,8 @@ const customStylesHour: StylesConfig<TimeOptionType, false> = {
                 onChange={(date) => setSelectedDate(date)}
                 minDate={today}
                 maxDate={maxDate}
-                excludeDates={excludedDates}
+                excludeDates={!includedDatesFromCakes ? excludedDates : undefined}
+                includeDates={includedDatesFromCakes}
                 filterDate={isDateAllowed}
                 dateFormat="yyyy年MM月dd日"
                 locale={ja}

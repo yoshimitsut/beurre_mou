@@ -15,10 +15,9 @@ export type DateTimePickerProps = {
   setSelectedDate: (date: Date | null) => void;
   selectedTime: string;
   setSelectedTime: (time: string) => void;
-  // allowedDates: Date[];
-  // timeSlotsData?: TimeslotSQL[]; // ← opcional, caso venha do backend
   placeholderDate?: string;
   placeholderTime?: string;
+  includeDates?: Date[];
 };
 
 // type MyContainerProps = {
@@ -83,8 +82,7 @@ export default function DateTimePicker({
   setSelectedDate,
   selectedTime,
   setSelectedTime,
-  // allowedDates,
-  // timeSlotsData,
+  includeDates,
 }: DateTimePickerProps) {
   const [pickupHour, setPickupHour] = useState(selectedTime || "");
 
@@ -125,8 +123,9 @@ export default function DateTimePicker({
           onChange={(date) => setSelectedDate(date)}
           minDate={today}
           maxDate={maxDate}
-          excludeDates={excludedDates}
-          filterDate={isDateAllowed}
+          excludeDates={!includeDates ? excludedDates : undefined}
+          includeDates={includeDates}
+          filterDate={!includeDates ? isDateAllowed : undefined}
           dateFormat="yyyy年MM月dd日"
           locale={ja}
           placeholderText="日付を選択"

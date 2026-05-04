@@ -62,7 +62,7 @@ export default function EditOrderModal({
         size: firstSize?.size || "",
         price: firstSize?.price || 0,
         message_cake: "",
-        fruit_option: "無し", // 🔹 Corrigido para "なし"
+        fruit_option: "無し",
       };
       
       setCakes(prev => [...prev, newCake]);

@@ -17,6 +17,8 @@ export type Cake = {
   name: string;
   description: string | null; // pode ser null no banco
   image: string | null;       // pode ser null
+  date_mode?: 'standard' | 'custom';
+  custom_dates?: string;      // JSON array string
   sizes: SizeOption[];        // associação via cake_sizes
 };
 
