@@ -231,7 +231,7 @@ export default function OrderCake() {
         <CalendarContainer className={className}>{children}</CalendarContainer>
         <div className='calendar-notice'>
           <div style={{ padding: "20px" }}>
-            <p>３日前よりご予約可能</p>
+            {!includedDatesFromCakes && <p>３日前よりご予約可能</p>}
           </div>
           <div className='notice'>
             <div className='selectable'></div>
