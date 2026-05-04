@@ -10,6 +10,7 @@ import type { Cake, OrderCake, OptionType, MyContainerProps, SizeOption, TimeOpt
 import "./OrderCake.css";
 
 const API_URL = import.meta.env.VITE_API_URL;
+const FOLDER_URL = import.meta.env.VITE_FOLDER_URL;
 
 type CustomOptionType = OptionType & {
   isDisabled?: boolean;
@@ -33,7 +34,7 @@ export default function OrderCake() {
   const [timeSlotsData, setTimeSlotsData] = useState<TimeslotSQL[]>([]);
   const [availableDates, setAvailableDates] = useState<string[]>([]);
   const [hoursOptions, setHoursOptions] = useState<TimeOptionType[]>([]);
-  
+
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [pickupHour, setPickupHour] = useState("時間を選択");
   const [, setText] = useState("");
@@ -62,73 +63,73 @@ export default function OrderCake() {
       .catch(err => console.error("Erro ao carregar bolos:", err));
   }, []);
 
-    // 🔹 CARREGAR DATAS E HORÁRIOS DISPONÍVEIS DO BANCO
-    useEffect(() => {
-  fetch(`${API_URL}/api/timeslots/`)
-    .then(res => res.json())
-    .then((data) => {
-      if (data.success && Array.isArray(data.timeslots)) {
-        setTimeSlotsData(data.timeslots);
-        
-        // CORREÇÃO: As datas já vêm no formato "2025-11-14", não precisa do split
-        const uniqueDates = [...new Set(
-          data.timeslots.map((slot: TimeslotSQL) => {
-            const d = slot.date;
-            return d.includes('T') ? d.split('T')[0] : d.split(' ')[0];
-          })
-        )] as string[];
-        
-        setAvailableDates(uniqueDates);
-        console.log('📅 Datas disponíveis processadas:', uniqueDates);
-        console.log('⏰ Total de slots carregados:', data.timeslots.length);
-      } else {
-        console.error("Formato inesperado de timeslots:", data);
+  // 🔹 CARREGAR DATAS E HORÁRIOS DISPONÍVEIS DO BANCO
+  useEffect(() => {
+    fetch(`${API_URL}/api/timeslots/`)
+      .then(res => res.json())
+      .then((data) => {
+        if (data.success && Array.isArray(data.timeslots)) {
+          setTimeSlotsData(data.timeslots);
+
+          // CORREÇÃO: As datas já vêm no formato "2025-11-14", não precisa do split
+          const uniqueDates = [...new Set(
+            data.timeslots.map((slot: TimeslotSQL) => {
+              const d = slot.date;
+              return d.includes('T') ? d.split('T')[0] : d.split(' ')[0];
+            })
+          )] as string[];
+
+          setAvailableDates(uniqueDates);
+          console.log('📅 Datas disponíveis processadas:', uniqueDates);
+          console.log('⏰ Total de slots carregados:', data.timeslots.length);
+        } else {
+          console.error("Formato inesperado de timeslots:", data);
+          setTimeSlotsData([]);
+          setAvailableDates([]);
+        }
+      })
+      .catch(err => {
+        console.error("Erro ao carregar datas:", err);
         setTimeSlotsData([]);
         setAvailableDates([]);
-      }
-    })
-    .catch(err => {
-      console.error("Erro ao carregar datas:", err);
-      setTimeSlotsData([]);
-      setAvailableDates([]);
+      });
+  }, []);
+
+
+  useEffect(() => {
+    if (!selectedDate) {
+      setHoursOptions([]);
+      setPickupHour("時間を選択");
+      return;
+    }
+
+    const formattedDate = format(selectedDate, 'yyyy-MM-dd');
+    console.log('📅 Buscando horários para:', formattedDate);
+
+    // CORREÇÃO: Remover o split aqui também
+    const availableSlots = timeSlotsData.filter((slot: TimeslotSQL) => {
+      const d = slot.date;
+      const slotDate = d.includes('T') ? d.split('T')[0] : d.split(' ')[0];
+      return slotDate === formattedDate;
     });
-}, []);
 
+    console.log('⏰ Horários disponíveis:', availableSlots);
 
-useEffect(() => {
-  if (!selectedDate) {
-    setHoursOptions([]);
-    setPickupHour("時間を選択");
-    return;
-  }
+    // Converter para options do Select
+    const options: TimeOptionType[] = availableSlots.map((slot: TimeslotSQL) => ({
+      id: slot.id,
+      value: slot.time,
+      label: `${slot.time}`,
+      isDisabled: false
+    }));
 
-  const formattedDate = format(selectedDate, 'yyyy-MM-dd');
-  console.log('📅 Buscando horários para:', formattedDate);
+    setHoursOptions(options);
 
-  // CORREÇÃO: Remover o split aqui também
-  const availableSlots = timeSlotsData.filter((slot: TimeslotSQL) => {
-    const d = slot.date;
-    const slotDate = d.includes('T') ? d.split('T')[0] : d.split(' ')[0];
-    return slotDate === formattedDate;
-  });
-
-  console.log('⏰ Horários disponíveis:', availableSlots);
-
-  // Converter para options do Select
-  const options: TimeOptionType[] = availableSlots.map((slot: TimeslotSQL) => ({
-    id: slot.id,
-    value: slot.time,
-    label: `${slot.time}`,
-    isDisabled: false
-  }));
-
-  setHoursOptions(options);
-
-  // Resetar o horário selecionado se não estiver mais disponível
-  if (pickupHour !== "時間を選択" && !options.find(opt => opt.value === pickupHour)) {
-    setPickupHour("時間を選択");
-  }
-}, [selectedDate, timeSlotsData, pickupHour]);
+    // Resetar o horário selecionado se não estiver mais disponível
+    if (pickupHour !== "時間を選択" && !options.find(opt => opt.value === pickupHour)) {
+      setPickupHour("時間を選択");
+    }
+  }, [selectedDate, timeSlotsData, pickupHour]);
 
   // 🔹 GERAR DATAS BLOQUEADAS (apenas os próximos X dias)
   const excludedDates = useMemo(() => {
@@ -142,7 +143,7 @@ useEffect(() => {
   // 🔹 CALCULAR DATAS PERMITIDAS PELOS BOLOS (CUSTOM DATES)
   const includedDatesFromCakes = useMemo(() => {
     if (!cakesData || cakesData.length === 0) return undefined;
-    
+
     let intersection: Date[] | undefined = undefined;
     let hasCustomCake = false;
 
@@ -154,11 +155,11 @@ useEffect(() => {
           const [y, m, day] = d.split('-').map(Number);
           return new Date(y, m - 1, day);
         });
-        
+
         if (intersection === undefined) {
           intersection = customDates;
         } else {
-          intersection = intersection.filter(d1 => 
+          intersection = intersection.filter(d1 =>
             customDates.some((d2: Date) => isSameDay(d1, d2))
           );
         }
@@ -171,7 +172,7 @@ useEffect(() => {
   // 🔹 FUNÇÃO PARA VERIFICAR DATAS DISPONÍVEIS
   const isDateAllowed = (date: Date) => {
     const dateStr = format(date, 'yyyy-MM-dd');
-    
+
     // 0. Verificar se a data é permitida pelos bolos customizados
     if (includedDatesFromCakes) {
       if (!includedDatesFromCakes.some(d => isSameDay(d, date))) {
@@ -187,17 +188,17 @@ useEffect(() => {
     }
 
     // 1. Verificar se a data é anterior à data atual
-    if (date < new Date(new Date().setHours(0,0,0,0))) {
+    if (date < new Date(new Date().setHours(0, 0, 0, 0))) {
       console.log(`🚫 Data ${dateStr} rejeitada: Data passada`);
       return false;
     }
-    
+
     // 2. Verificar se a data tem horários disponíveis no banco
     if (!availableDates.includes(dateStr)) {
       console.log(`❌ Data ${dateStr} rejeitada: Sem horários disponíveis no banco (availableDates)`);
       return false;
     }
-    
+
     console.log(`✅ Data ${dateStr} permitida`);
     return true;
   };
@@ -263,48 +264,48 @@ useEffect(() => {
       )
     );
   };
-  
-const renderDayContents = (day: number, date: Date) => {
-  const isSelectable = isDateAllowed(date);
-  const dayOfWeek = getDay(date);
-  const dateStr = format(date, 'yyyy-MM-dd');
-  
-  const extraClass =
-    dayOfWeek === 0 ? "domingo-vermelho" :
-    dayOfWeek === 6 ? "sabado-azul" : "";
 
-  console.log(`🎨 Renderizando: ${dateStr}, Selecionável: ${isSelectable}`); // Debug adicional
+  const renderDayContents = (day: number, date: Date) => {
+    const isSelectable = isDateAllowed(date);
+    const dayOfWeek = getDay(date);
+    const dateStr = format(date, 'yyyy-MM-dd');
 
-  return (
-    <div className={`day-cell ${extraClass}`}>
-      <span>{day}</span>
-      {!isSelectable && <span className="yassumi day-content">x</span>}
-      {isSelectable && <div className="selectable day-content"></div>}
-    </div>
-  );
-};
+    const extraClass =
+      dayOfWeek === 0 ? "domingo-vermelho" :
+        dayOfWeek === 6 ? "sabado-azul" : "";
 
-const getDayClassName = (date: Date) => {
-  const baseClass = "react-datepicker__day";
-  const isSelectable = isDateAllowed(date);
-  
-  if (!isSelectable) {
-    return `${baseClass} react-datepicker__day--disabled`;
-  }
-  
-  if (isSameDay(date, today)) {
-    return `${baseClass} hoje-azul`;
-  }
-  
-  if (getDay(date) === 0) {
-    return `${baseClass} domingo-vermelho`;
-  }
-  
-  return baseClass;
-};
+    console.log(`🎨 Renderizando: ${dateStr}, Selecionável: ${isSelectable}`); // Debug adicional
 
-const customStylesHour: StylesConfig<TimeOptionType, false> = {
-  option: (provided, state) => ({
+    return (
+      <div className={`day-cell ${extraClass}`}>
+        <span>{day}</span>
+        {!isSelectable && <span className="yassumi day-content">x</span>}
+        {isSelectable && <div className="selectable day-content"></div>}
+      </div>
+    );
+  };
+
+  const getDayClassName = (date: Date) => {
+    const baseClass = "react-datepicker__day";
+    const isSelectable = isDateAllowed(date);
+
+    if (!isSelectable) {
+      return `${baseClass} react-datepicker__day--disabled`;
+    }
+
+    if (isSameDay(date, today)) {
+      return `${baseClass} hoje-azul`;
+    }
+
+    if (getDay(date) === 0) {
+      return `${baseClass} domingo-vermelho`;
+    }
+
+    return baseClass;
+  };
+
+  const customStylesHour: StylesConfig<TimeOptionType, false> = {
+    option: (provided, state) => ({
       ...provided,
       backgroundColor: state.isSelected ? '#fdd111' : state.isFocused ? '#fdeca2' : 'white',
       color: state.isDisabled ? '#999' : '#333',
@@ -326,7 +327,7 @@ const customStylesHour: StylesConfig<TimeOptionType, false> = {
       ...provided,
       zIndex: 9999,
     }),
-};
+  };
 
   const customStyles: StylesConfig<OptionType, false, GroupBase<OptionType>> = {
     option: (provided, state) => ({
@@ -396,7 +397,7 @@ const customStylesHour: StylesConfig<TimeOptionType, false> = {
       last_name: (document.getElementById("last-name") as HTMLInputElement).value,
       email: (document.getElementById("email") as HTMLInputElement).value,
       tel: (document.getElementById("tel") as HTMLInputElement).value,
-      date: getLocalDateString(selectedDate), 
+      date: getLocalDateString(selectedDate),
       date_order: format(new Date(), "yyyy-MM-dd"),
       pickupHour,
       status: 'b',
@@ -413,8 +414,8 @@ const customStylesHour: StylesConfig<TimeOptionType, false> = {
           fruit_option: c.fruit_option
         };
       })
-    }; 
-    
+    };
+
     try {
       const res = await fetch(`${API_URL}/api/reservar`, {
         method: "POST",
@@ -486,7 +487,11 @@ const customStylesHour: StylesConfig<TimeOptionType, false> = {
                     </div>
                   )}
                   {selectedCakeData && (
-                    <img className='img-cake-order' src={`image/${selectedCakeData.image}`} alt={selectedCakeData.name} />
+                    <img
+                      className='img-cake-order'
+                      src={`${API_URL}/image/${FOLDER_URL}/${selectedCakeData.image}`}
+                      alt={selectedCakeData.name}
+                    />
                   )}
                   <div className='input-group'>
                     <Select<CustomOptionType>
@@ -524,7 +529,7 @@ const customStylesHour: StylesConfig<TimeOptionType, false> = {
                   {selectedCakeData && (
                     <div className='input-group'>
                       <Select<SizeOption>
-                        options={sizeOptions} 
+                        options={sizeOptions}
                         value={selectedSize || null}
                         onChange={(selected) => {
                           if (selected) {
@@ -547,27 +552,27 @@ const customStylesHour: StylesConfig<TimeOptionType, false> = {
                       <label className={`pill ${item.fruit_option === "無し" ? "active" : ""}`}>
                         <input
                           type="radio"
-                          name={`fruit-option-${index}`}  
+                          name={`fruit-option-${index}`}
                           value="無し"
                           checked={item.fruit_option === "無し"}
                           onChange={() => updateCake(index, "fruit_option", "無し")}
                         />
-                        <span style={{width:"120px", textAlign: "start"}}>通常盛り</span><span style={{width:"5rem", textAlign: "end"}}>+0円</span> 
+                        <span style={{ width: "120px", textAlign: "start" }}>通常盛り</span><span style={{ width: "5rem", textAlign: "end" }}>+0円</span>
                       </label>
                       <label className={`pill ${item.fruit_option === "有り" ? "active" : ""}`}>
                         <input
                           type="radio"
-                          name={`fruit-option-${index}`} 
+                          name={`fruit-option-${index}`}
                           value="有り"
                           checked={item.fruit_option === "有り"}
                           onChange={() => updateCake(index, "fruit_option", "有り")}
                         />
-                        <span style={{width:"125px", textAlign: "start"}}>フルーツ増し</span><span style={{width:"5rem", textAlign: "end"}}>+648円</span>      
+                        <span style={{ width: "125px", textAlign: "start" }}>フルーツ増し</span><span style={{ width: "5rem", textAlign: "end" }}>+648円</span>
                       </label>
                     </div>
                     <label className='select-group-radio'>*フルーツ盛り</label>
                   </div>
-                  
+
                   <div className='input-group'>
                     <Select<OptionType>
                       options={Array.from({ length: 10 }, (_, i) => ({ value: String(i + 1), label: String(i + 1) }))}
@@ -581,9 +586,9 @@ const customStylesHour: StylesConfig<TimeOptionType, false> = {
                     />
                     <label className='select-group'>*個数:</label>
                   </div>
-                  
 
-                  
+
+
                   <div className='input-group'>
                     <label htmlFor="message_cake">メッセージプレート</label>
                     <textarea name="message_cake" id="message_cake" placeholder="ご要望がある場合のみご記入ください。"
@@ -625,7 +630,7 @@ const customStylesHour: StylesConfig<TimeOptionType, false> = {
             </div>
           </div>
 
-          
+
           <div className="date-information">
             <label htmlFor="date" className='title-information'>*受取日時</label>
             <div className='input-group'>
@@ -666,7 +671,7 @@ const customStylesHour: StylesConfig<TimeOptionType, false> = {
             </div>
 
 
-            <div className='input-group' style={{display: 'none'}}>
+            <div className='input-group' style={{ display: 'none' }}>
               <label htmlFor="message">その他</label>
               <textarea name="message" id="message" placeholder=""></textarea>
             </div>
