@@ -8,15 +8,22 @@ const nodemailer = require('nodemailer');
 
 const timeslotRoutes = require('./routers/timeslotRoutes');
 
+const path = require('path');
+
 const app = express();
 const PORT = process.env.PORT || 3001;
 
 // const resend = new Resend(process.env.RESEND_API_KEY);
 const resend = new Resend("re_hzxu4eZx_9DppwUc2WC5bgcHWXPucpjR3");
 
+const cakeRoutes = require('./routers/cakeRoutes');
+
 app.use(cors());
 app.use(express.json());
 
+app.use('/image', express.static(path.resolve(process.cwd(), 'uploads')));
+
+app.use('/api/cake', cakeRoutes);
 
 // Teste de conexão
 app.get('/api/test', async (req, res) => {

@@ -68,6 +68,8 @@ services:
       - LETSENCRYPT_HOST=api.beurre-mou.com
     depends_on:
       - db
+    volumes:
+      - /var/www/uploads:/app/uploads
     networks:
       - backend-network
       - proxy-tier
