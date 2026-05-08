@@ -1,87 +1,307 @@
-@import url('https://fonts.googleapis.com/css2?family=Inter:ital,opsz,wght@0,14..32,100..900;1,14..32,100..900&family=Playfair+Display:ital,wght@0,400..900;1,400..900&family=Tangerine:wght@400;700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Noto+Serif+JP:wght@400;700&family=Playfair+Display:ital,wght@0,400..900;1,400..900&display=swap');
 
-.title-christmas-cake {
-  font-family: "Tangerine", sans-serif;
+/* Inherit standard fonts */
+.hero-page {
+  font-family: 'Noto Serif JP', serif;
+  background-color: #faf9f6;
+  /* Off-white background */
+  min-height: 100vh;
+  position: relative;
+  overflow-x: hidden;
 }
 
-.hero-main {
-background-color: #990000;
-height: 100hv;
-}
-
-.hero-wrapper {
-  padding: 10vh 5vw;
+/* Background Blur Effect */
+.hero-blur-bg {
+  position: fixed;
+  top: 0;
+  left: 0;
   width: 100vw;
   height: 100vh;
-  display: flex;
-  justify-content: center;
-  align-items: center;
+  background: radial-gradient(circle at top right, rgba(253, 209, 17, 0.05), transparent 40%),
+    radial-gradient(circle at bottom left, rgba(0, 123, 255, 0.03), transparent 40%);
+  pointer-events: none;
+  z-index: 0;
 }
 
-.hero-grid {
-  padding: 1vw 1vh 1vw 1vh;
-  display: grid;
-  grid-template-columns: repeat(3, 1fr); /* 3 colunas iguais */
-  grid-template-rows: repeat(2, 1fr);    /* 2 linhas iguais */
-  grid-auto-rows: 1fr;
+/* Header */
+.hero-header {
+  position: fixed;
+  top: 0;
   width: 100%;
-  height: 100%;
-  gap: 10px;
-  background-color: #fff;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 20px 40px;
+  background: transparent;
+  z-index: 100;
+  mix-blend-mode: difference;
 }
 
-.hero-cell {
-  position: relative;
-  overflow: hidden;
+.header-center .logo-img {
+  height: 50px;
+  cursor: pointer;
+  filter: invert(1);
+}
+
+.header-right {
+  display: flex;
+  align-items: center;
+  gap: 20px;
+}
+
+.instagram-link img {
+  width: 24px;
+  height: 24px;
+  filter: invert(1);
+}
+
+.menu-toggle {
+  background: none;
+  border: none;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
   cursor: pointer;
 }
 
-.hero-cell::after {
-  content: "";
-  position: absolute;
-  inset: 0;
-  background: rgba(0, 0, 0, 0.3); 
-  opacity: 0;
-  transition: opacity 0.3s ease;
-}
-
-.hero-cell:hover::after {
-  opacity: 1; /* só a imagem em hover escurece */
-}
-
-.hero-img {
-  width: 100%;
-  height: 100%;
-  object-fit: cover; /* preenche a área sem distorcer */
+.menu-toggle span {
   display: block;
-  transition: transform 0.3s ease;
+  width: 35px;
+  height: 2px;
+  background-color: white;
 }
 
-.hero-cell:hover .hero-img {
-  transform: scale(1.05);
+/* Hero Main Image */
+@keyframes zoomFadeIn {
+  from {
+    opacity: 0;
+    transform: scale(0.75);
+  }
+
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
 }
 
-.hero-cell.hero-cell.disabled {
-  filter: grayscale(100%) 
+@keyframes titleFadeIn {
+  from {
+    opacity: 0;
+    color: transparent;
+    text-shadow: none;
+  }
+
+  to {
+    opacity: 1;
+    color: white;
+    text-shadow: 0 4px 20px rgba(0, 0, 0, 0.5);
+  }
 }
 
-.hero-cell.disabled .overlay {
-  position: absolute;
-  inset: 0;
-  background-color: rgba(0, 0, 0, 0.397);
-  color: white;
+.hero-main-image {
+  width: 100vw;
+  height: 100vh;
+  /* Imagem profissional de bolo no estilo da Lien de Gateau */
+  background-image: url('https://images.unsplash.com/photo-1578985545062-69928b1d9587?auto=format&fit=crop&w=1920&q=80');
+  background-size: cover;
+  background-position: center;
+  animation: zoomFadeIn 1.2s cubic-bezier(0.2, 0.8, 0.2, 1) forwards;
+  position: relative;
   display: flex;
   justify-content: center;
   align-items: center;
-  font-weight: bold;
-  font-size: 2rem;
-  letter-spacing: 2px;
-  opacity: 1; /* sempre visível */
-  transition: background-color 0.3s ease;
 }
 
-@media (max-width: 768px) {
+.hero-main-image::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background-color: rgba(0, 0, 0, 0.4);
+  z-index: 1;
+}
+
+.fadeOverlay {
+  position: relative;
+  z-index: 2;
+  font-family: 'Playfair Display', serif;
+  font-size: 3.5rem;
+  letter-spacing: 0.2em;
+  opacity: 0;
+  animation: titleFadeIn 1.5s ease-out forwards;
+  animation-delay: 1.2s;
+  /* Starts after zoomFadeIn */
+}
+
+/* Main Content */
+.hero-main {
+  max-width: 1200px;
+  margin: 80px auto;
+  padding: 0 20px;
+  position: relative;
+  z-index: 10;
+}
+
+.hero-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+  gap: 40px;
+}
+
+.hero-item {
+  cursor: pointer;
+  background: white;
+  overflow: hidden;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.05);
+  transition: transform 0.4s ease, box-shadow 0.4s ease;
+  display: flex;
+  flex-direction: column;
+}
+
+.hero-item:hover {
+  transform: translateY(-10px);
+  box-shadow: 0 15px 40px rgba(0, 0, 0, 0.1);
+}
+
+.hero-item-image-wrapper {
+  width: 100%;
+  aspect-ratio: 1 / 1;
+  overflow: hidden;
+}
+
+.hero-item-image-wrapper img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  transition: transform 0.6s ease;
+}
+
+.hero-item:hover .hero-item-image-wrapper img {
+  transform: scale(1.05);
+}
+
+.hero-item-info {
+  background-color: #6a7c8e;
+  /* Blue-gray label bar similar to reference */
+  color: white;
+  padding: 20px;
+  text-align: center;
+}
+
+.hero-item-info h3 {
+  margin: 0;
+  font-size: 1.1rem;
+  font-weight: 400;
+  letter-spacing: 1px;
+}
+
+/* Footer */
+.hero-footer {
+  background-color: #1a1a1a;
+  color: white;
+  padding: 60px 20px 40px;
+  text-align: center;
+  position: relative;
+  z-index: 10;
+  margin-top: 100px;
+}
+
+.footer-links {
+  display: flex;
+  justify-content: center;
+  gap: 30px;
+  margin-bottom: 40px;
+}
+
+.footer-links a {
+  color: #aaa;
+  text-decoration: none;
+  font-size: 0.9rem;
+  transition: color 0.3s ease;
+}
+
+.footer-links a:hover {
+  color: white;
+}
+
+.footer-logo {
+  height: 40px;
+  filter: brightness(0) invert(1);
+  opacity: 0.8;
+}
+
+/* --- RESPONSIVIDADE --- */
+
+/* Tablet (Telas médias) */
+@media (max-width: 1024px) {
+  .hero-header {
+    padding: 15px 30px;
+  }
+
+  .hero-main {
+    margin: 60px auto;
+  }
+
+  .fadeOverlay {
+    font-size: 3rem;
+  }
+
   .hero-grid {
-    grid-template-columns: repeat(2, 1fr);
+    grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+    gap: 30px;
+  }
+}
+
+/* Mobile (Telas pequenas) */
+@media (max-width: 600px) {
+  .hero-header {
+    padding: 10px 15px;
+  }
+
+  .header-center .logo-img {
+    height: 40px;
+  }
+
+  .instagram-link img {
+    width: 20px;
+    height: 20px;
+  }
+
+  .menu-toggle span {
+    width: 30px;
+  }
+
+  .fadeOverlay {
+    font-size: 2rem;
+    letter-spacing: 0.1em;
+  }
+
+  .hero-main {
+    margin: 40px auto;
+    padding: 0 15px;
+  }
+
+  .hero-grid {
+    /* 1 coluna para mobile */
+    grid-template-columns: 1fr;
+    gap: 20px;
+  }
+
+  .hero-item-info {
+    padding: 15px;
+  }
+
+  .hero-footer {
+    padding: 40px 15px 30px;
+    margin-top: 60px;
+  }
+
+  .footer-links {
+    flex-direction: column;
+    gap: 15px;
+    margin-bottom: 30px;
+  }
+
+  .footer-logo {
+    height: 30px;
   }
 }

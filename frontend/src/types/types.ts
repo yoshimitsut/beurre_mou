@@ -5,7 +5,7 @@ import type { ReactNode } from "react";
 
 export type SizeOption = {
   id?: number;            // opcional: vem da tabela cake_sizes
-  cake_id:number;
+  cake_id: number;
   size?: string;
   price: number;
   stock: number;
@@ -19,6 +19,7 @@ export type Cake = {
   image: string | null;       // pode ser null
   date_mode?: 'standard' | 'custom';
   custom_dates?: string;      // JSON array string
+  is_active?: number;
   sizes: SizeOption[];        // associação via cake_sizes
 };
 
