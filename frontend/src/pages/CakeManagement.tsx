@@ -297,7 +297,7 @@ export default function CakeManagement() {
       name: cake.name,
       description: cake.description || '',
       image: cake.image || '',
-      is_active: cake.is_active === undefined ? true : Boolean(cake.is_active),
+      is_active: String(cake.is_active) === '1',
       date_mode: cake.date_mode || 'standard',
       custom_dates: cake.custom_dates ? JSON.parse(cake.custom_dates) : []
     });
@@ -362,7 +362,7 @@ export default function CakeManagement() {
 
                     <div className='cake-info-actions'>
                       <div className="cake-info">
-                        <h3>{cake.name} {cake.is_active === 0 && <span style={{ color: 'red', fontSize: '0.8em' }}>(非アクティブ)</span>}</h3>
+                        <h3>{cake.name} {String(cake.is_active) === '0' && <span style={{ color: 'red', fontSize: '0.8em' }}>(非アクティブ)</span>}</h3>
                         {cake.description && (
                           <p className="cake-description">{cake.description}</p>
                         )}

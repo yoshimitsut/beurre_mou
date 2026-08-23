@@ -132,7 +132,7 @@ router.post('/', (req, res, next) => {
       });
     }
 
-    const isActiveVal = (is_active === 'true' || is_active === true || is_active === '1' || is_active === 1 || is_active === undefined) ? 1 : 0;
+    const isActiveVal = (is_active === 'true' || is_active === true || is_active === '1' || is_active === 1) ? 1 : 0;
 
     // Pega o nome do arquivo
     const imageFilename = req.file ? req.file.filename : '';
@@ -219,7 +219,7 @@ router.put('/:id', (req, res, next) => {
     const cakeId = req.params.id;
     const { name, description, sizes, existingImage, is_active } = req.body;
 
-    const isActiveVal = (is_active === 'true' || is_active === true || is_active === '1' || is_active === 1 || is_active === undefined) ? 1 : 0;
+    const isActiveVal = (is_active === 'true' || is_active === true || is_active === '1' || is_active === 1) ? 1 : 0;
 
     // console.log('📦 Update - Dados:', { cakeId, name, description, sizes, existingImage });
 

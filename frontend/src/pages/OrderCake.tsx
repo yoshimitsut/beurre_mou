@@ -47,15 +47,13 @@ export default function OrderCake() {
 
   const [, setFruitOption] = useState<"有り" | "無し">("無し");
 
-
-
-  // Carragar bolos
   useEffect(() => {
     fetch(`${API_URL}/api/cake`)
       .then(res => res.json())
       .then(data => {
         if (Array.isArray(data.cakes)) {
-          setCakesData(data.cakes);
+          const activeCakes = data.cakes.filter((c: Cake) => String(c.is_active) === '1');
+          setCakesData(activeCakes);
         } else {
           console.error("Formato inesperado:", data);
         }
